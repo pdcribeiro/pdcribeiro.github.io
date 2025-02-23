@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./style.css">
+    <style>
+    </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+    import van from '/third-party/van.js';
+
+    const { a, button, div, h1, li, p, ul } = van.tags;
+
+    function app() {
+        const visible = van.state(false);
+
+        return [
+            button({ onclick: () => visible.val = !visible.val }, 'toggle'),
+            (dom = div()) => visible.val ? p('hello, world!') : dom,
+        ];
+    }
+
+    van.add(document.body, app());
+</script>
+
+</html>

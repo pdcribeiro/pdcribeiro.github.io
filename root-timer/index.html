@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <style>
+    </style>
+</head>
+
+<body class="p-4 pb-6 mx-auto max-w-screen-sm h-screen">
+</body>
+
+<script type="module">
+    import { repeatSound } from '/lib/audio.js';
+    import { range } from '/lib/utils.js';
+    import van from '/third-party/van.js';
+
+    const DANGER_COLOR = '#f004';
+    const ONE_MINUTE_IN_MS = 60 * 1000;
+    const UPDATE_INTERVAL = 100;
+
+    const defaults = {
+        STARTING_TIME: 10,
+        BONUS_TIME: 0,
+        NAMES: range(3).map((n) => `player ${n + 1}`),
+    };
+
+    const { a, button, div, h1, input, label, li, p, span, ul } = van.tags;
+
+    van.add(document.body, app());
+
+    function app() {
+        const currentPlayerIndex = van.state(null);
+        const times = van.state({});
+        const paused = van.state(false);
+
+        let interval;
+
+        const startingTimeInput = input({ placeholder: defaults.STARTING_TIME, class: 'px-2 py-0.5 mb-2 w-10 bg-neutral-50 rounded outline-none' });
+        const bonusTimeInput = input({ placeholder: defaults.BONUS_TIME, class: 'px-2 py-0.5 mb-2 w-10 bg-neutral-50 rounded outline-none' });
+        const nameInputs = defaults.NAMES.map((name) => input({ placeholder: name, class: 'px-2 py-0.5 mb-2 w-32 bg-neutral-50 rounded outline-none' }));
+
+        const playing = van.derive(() => currentPlayerIndex.val !== null);
+        const currentPlayer = van.derive(() => playing.val && getName(currentPlayerIndex.val));
+        const timeLeft = van.derive(() => playing.val && times.val[currentPlayer.val]);
+
+        van.derive(() => document.body.style.backgroundColor = playing.val && timeLeft.val < ONE_MINUTE_IN_MS ? DANGER_COLOR : '');
+
+        return () => !playing.val ? div({ class: 'h-full' },
+            div({ class: 'flex flex-col justify-center items-center h-1/2' },
+                label({ class: 'mb-2' }, 'starting time (minutes)'),
+                startingTimeInput,
+                label({ class: 'mb-2' }, 'bonus time (seconds)'),
+                bonusTimeInput,
+                label({ class: 'mt-4 mb-2' }, 'players'),
+                ...nameInputs,
+            ),
+            button({
+                class: 'w-full h-1/2 text-8xl bg-neutral-200 rounded shadow',
+                onclick: handleStartClick
+            }, 'start'),
+        ) : div({ class: 'relative h-full' },
+            button({
+                class: 'absolute top-0 right-0 px-2 py-1 rounded shadow',
+                onclick: stop
+            }, 'X'),
+            div({ class: 'flex flex-col justify-center items-center h-1/2' },
+                p({ class: 'mb-10 text-6xl' }, currentPlayer),
+                p({ class: 'mb-4 text-8xl' }, () => getFormattedTime(timeLeft.val)),
+                button({
+                    class: 'px-2 py-1 ml-2 rounded shadow',
+                    onclick: handlePauseClick
+                }, () => paused.val ? 'resume' : 'pause'),
+            ),
+            button({
+                class: 'w-full h-1/2 text-8xl bg-neutral-200 rounded shadow',
+                onclick: handleNextClick
+            }, 'next'),
+        );
+
+        function handleStartClick() {
+            currentPlayerIndex.val = 0;
+            const startingTime = (parseFloat(startingTimeInput.value) || defaults.STARTING_TIME) * ONE_MINUTE_IN_MS;
+            times.val = Object.fromEntries(nameInputs.map((_, i) => [getName(i), startingTime]));
+            paused.val = false;
+
+            interval = setInterval(() => {
+                if (!paused.val) {
+                    const updatedTime = times.val[currentPlayer.val] - UPDATE_INTERVAL;
+                    times.val = { ...times.val, [currentPlayer.val]: updatedTime };
+                    if (updatedTime <= 0) {
+                        currentPlayerIndex.val = getNextPlayerIndex();
+                        if (currentPlayerIndex.val === null) {
+                            stop();
+                        }
+                        repeatSound(3);
+                    }
+                }
+            }, UPDATE_INTERVAL);
+        }
+
+        function handlePauseClick() {
+            paused.val = !paused.val;
+            repeatSound(1);
+        }
+
+        function handleNextClick() {
+            const bonusTime = (parseInt(bonusTimeInput.value) || defaults.BONUS_TIME) * 1000;
+            times.val = { ...times.val, [currentPlayer.val]: times.val[currentPlayer.val] + bonusTime };
+            currentPlayerIndex.val = getNextPlayerIndex();
+            repeatSound(1);
+        }
+
+        function getName(index) {
+            return nameInputs[index].value || defaults.NAMES[index];
+        }
+
+        function getNextPlayerIndex() {
+            for (let i = 1; i < nameInputs.length; i++) {
+                const nextIndex = (currentPlayerIndex.val + i) % nameInputs.length;
+                if (times.val[getName(nextIndex)] > 0) {
+                    return nextIndex;
+                }
+            }
+            return null;
+        }
+
+        function stop() {
+            clearInterval(interval);
+            currentPlayerIndex.val = null;
+            times.val = {};
+        }
+    }
+
+    function getFormattedTime(raw) {
+        return new Date(raw).toISOString().substr(14, 5);
+    }
+</script>
+
+</html>

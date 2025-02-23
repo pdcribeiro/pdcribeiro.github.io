@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        p {
+            white-space: pre-wrap;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            width: 250px;
+            border: 1px solid #ccc;
+        }
+
+        li {
+            padding: 0 10px;
+            /* margin: 20px; */
+            background: lightgray;
+            border: 1px solid #000;
+        }
+
+        .placeholder {
+            background: rgba(0, 0, 0, 0.1);
+            border: 2px dashed #000;
+        }
+    </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+    import van from '/third-party/van.js';
+    import { getDragAndDropList } from '/components/DragAndDropList.js';
+
+    const { a, button, div, h1, input, li, p, ul } = van.tags;
+
+    function app() {
+        const items = van.state([
+            { text: 'lorem' },
+            { text: 'lorem ipsum' },
+            { text: 'lorem\nipsum' },
+            { text: 'lorem\nipsum\nipsum' },
+            { text: 'lorem' },
+            // repeated
+            // { text: 'lorem' },
+            // { text: 'lorem ipsum' },
+            // { text: 'lorem\nipsum' },
+            // { text: 'lorem\nipsum\nipsum' },
+            // { text: 'lorem' },
+            // { text: 'lorem' },
+            // { text: 'lorem ipsum' },
+            // { text: 'lorem\nipsum' },
+            // { text: 'lorem\nipsum\nipsum' },
+            // { text: 'lorem' },
+            // { text: 'lorem' },
+            // { text: 'lorem ipsum' },
+            // { text: 'lorem\nipsum' },
+            // { text: 'lorem\nipsum\nipsum' },
+            // { text: 'lorem' },
+            // { text: 'lorem' },
+            // { text: 'lorem ipsum' },
+            // { text: 'lorem\nipsum' },
+            // { text: 'lorem\nipsum\nipsum' },
+            // { text: 'lorem' },
+        ]);
+
+        const textInput = input({ value: 'some text' });
+        const indexInput = input({ type: 'number', value: 0 });
+
+        const { list, addItem, removeItem } = getDragAndDropList(
+            { class: 'max-h-152', onupdate },
+            items.val.map(getNewItemElement)
+        );
+
+        return div(
+            textInput,
+            indexInput,
+            button({ onclick: handleAddClick }, 'add'),
+            list,
+        );
+
+        function onupdate(originalIndex, newIndex) {
+            const clone = [...items.val];
+            const [movedItem] = clone.splice(originalIndex, 1);
+            clone.splice(newIndex, 0, movedItem);
+            items.val = clone;
+        }
+
+        function getNewItemElement(item) {
+            return Item({ item, ondelete: () => handleDelete(item) });
+        }
+
+        function handleDelete(item) {
+            const index = items.val.indexOf(item);
+            items.val = spliceArray(items.val, index, 1);
+            removeItem(index);
+        }
+
+        function handleAddClick(event) {
+            if (!textInput.value.length) {
+                return;
+            }
+
+            const newItem = { text: textInput.value };
+            const index = parseInt(indexInput.value);
+            items.val = spliceArray(items.val, index, 0, newItem);
+
+            const newElement = getNewItemElement(newItem);
+            addItem(newElement, index);
+
+            textInput.value = '';
+        }
+    }
+
+    function Item({ item, ondelete }) {
+        return div({ class: 'flex items-center' },
+            p(item.text),
+            button({ class: 'small ml-auto', onclick: ondelete }, 'x')
+        );
+    }
+
+    function spliceArray(array, start, deleteCount = 0, ...newItems) {
+        return [...array.slice(0, start), ...newItems, ...array.slice(start + deleteCount)];
+    }
+
+    van.add(document.body, app());
+</script>
+
+</html>

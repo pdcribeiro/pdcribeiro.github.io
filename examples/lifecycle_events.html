@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/style.css">
+    <style>
+    </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+    import van from '/third-party/van.js';
+    import life from '/components/LifecycleManager.js';
+
+    const { a, button, div, h1, p } = van.tags;
+
+    function app() {
+        const customVisible = van.state(false);
+        const regularVisible = van.state(false);
+        return div(
+            button({ onclick: () => customVisible.val = !customVisible.val }, 'toggle custom element'),
+            button({ onclick: () => regularVisible.val = !regularVisible.val }, 'toggle regular element'),
+            div(
+                () => customVisible.val ? CustomElement() : div(),
+                () => regularVisible.val ? RegularElement() : div(),
+            ),
+        );
+    }
+
+    function CustomElement() {
+        return div(
+            life({
+                onmount: () => console.log('mounted custom'),
+                onunmount: () => console.log('unmounted custom')
+            }),
+            'custom',
+        );
+    }
+
+    function RegularElement() {
+        return div({
+            onmount: () => console.log('mounted regular'),
+            onunmount: () => console.log('unmounted regular')
+        }, 'regular');
+    }
+
+    new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    node.dispatchEvent(new Event('mount'));
+                }
+            });
+            mutation.removedNodes.forEach((node) => {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    node.dispatchEvent(new Event('unmount'));
+                }
+            });
+        });
+    }).observe(document.body, { childList: true, subtree: true });
+
+    van.add(document.body, app())
+</script>
+
+</html>
+
+<!-- TODO
+* try web components or MutationObserver to handle unmount events
+-->

@@ -1,0 +1,199 @@
+/* Utilities */
+
+/* layout */
+/* display */
+.block {
+  display: block;
+}
+.inline-block {
+  display: inline-block;
+}
+.inline {
+  display: inline;
+}
+.flex {
+  display: flex;
+}
+.inline-flex {
+  display: inline-flex;
+}
+/* floats */
+.float-right {
+  float: right;
+}
+/* overflow */
+.overflow-x-auto {
+  overflow-x: auto;
+}
+.overflow-y-auto {
+  overflow-y: auto;
+}
+/* position */
+.fixed {
+  position: fixed;
+}
+.absolute {
+  position: absolute;
+}
+.relative {
+  position: relative;
+}
+.sticky {
+  position: sticky;
+}
+/* top / right / bottom / left */
+.top-0 {
+  top: 0;
+}
+
+/* flexbox & grid */
+.flex-col {
+  flex-direction: column;
+}
+.flex-wrap {
+  flex-wrap: wrap;
+}
+.gap-4 {
+  gap: 1rem;
+}
+.justify-center {
+  justify-content: center;
+}
+.items-center {
+  align-items: center;
+}
+
+/* spacing */
+/* padding */
+.p-0 {
+  padding: 0 !important;
+}
+.p-2 {
+  padding: 0.5rem !important;
+}
+.py-4 {
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+}
+.p-6 {
+  padding: 1.5rem !important;
+}
+.px-8 {
+  padding-left: 2rem !important;
+  padding-right: 2rem !important;
+}
+/* margin */
+.m-0 {
+  margin: 0 !important;
+}
+.m-4 {
+  margin: 1rem !important;
+}
+.my-4 {
+  margin-top: 1rem !important;
+  margin-bottom: 1rem !important;
+}
+.mb-4 {
+  margin-bottom: 1rem !important;
+}
+.ml-4 {
+  margin-left: 1rem !important;
+}
+.mb-6 {
+  margin-bottom: 1.5rem !important;
+}
+.mx-8 {
+  margin-left: 2rem !important;
+  margin-right: 2rem !important;
+}
+.mr-8 {
+  margin-right: 2rem !important;
+}
+.mb-8 {
+  margin-bottom: 2rem !important;
+}
+.m-auto {
+  margin: auto !important;
+}
+.mx-auto {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+.ml-auto {
+  margin-left: auto !important;
+}
+
+/* sizing */
+/* width */
+.w-full {
+  width: 100%;
+}
+.max-w-200 {
+  max-width: 50rem;
+}
+.max-w-screen-lg {
+  max-width: 1024px;
+}
+/* height */
+.h-14 {
+  height: 3.5rem;
+}
+.h-screen\/2 {
+  height: 50vh;
+}
+.min-h-4 {
+  min-height: 1rem;
+}
+.min-h-48 {
+  min-height: 12rem;
+}
+.min-h-screen {
+  min-height: 100vh;
+}
+.max-h-152 {
+  max-height: 38rem;
+}
+.max-h-screen\/2 {
+  max-height: 50vh;
+}
+/* size */
+.size-48 {
+  width: 12rem;
+  height: 12rem;
+}
+
+/* typography */
+.list-none {
+  list-style-type: none;
+}
+.text-center {
+  text-align: center;
+}
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+.whitespace-pre-wrap {
+  white-space: pre-wrap;
+}
+
+/* backgrounds */
+.bg-transparent {
+  background-color: transparent;
+}
+
+/* borders */
+.border-none {
+  border: none !important;
+}
+.outline-none,
+.outline-none:focus-visible {
+  outline: none !important;
+}
+
+/* interactivity */
+.snap-center {
+  scroll-snap-align: center;
+}
+.snap-x {
+  scroll-snap-type: x mandatory;
+}

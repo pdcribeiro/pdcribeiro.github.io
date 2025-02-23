@@ -1,0 +1,98 @@
+/* Base */
+
+:root {
+    --color-light: white;
+    --color-dark: black;
+    --color-neutral: #888;
+
+    --bg-color: var(--color-light);
+    --color: var(--color-dark);
+}
+
+html {
+    font-size: calc(15px + 0.3vw);
+    color: var(--color);
+    background-color: var(--bg-color);
+}
+
+a {
+    color: inherit;
+    /* text-decoration: none; */
+}
+
+ul,
+ol {
+    /* list-style-type: none; */
+    /* padding: 0; */
+}
+
+label:has(+ input, + textarea) {
+    display: inline-block;
+    margin-bottom: 0.5rem;
+}
+
+input,
+textarea {
+    display: block;
+    margin-bottom: 1rem;
+    width: 100%;
+}
+
+input:not([type="file"]),
+textarea {
+    color: inherit;
+    background-color: transparent;
+    border: 1px solid var(--color-neutral);
+}
+
+img {
+    object-fit: scale-down;
+    max-width: 100%;
+    height: auto;
+}
+
+button,
+.button {
+    padding: 0.5rem 1rem;
+    margin: 1rem 0;
+    background-color: transparent;
+    color: inherit;
+    border: 1px solid var(--color);
+    border-radius: 0.5rem;
+    /* text-align: center; */
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+}
+
+/* Custom */
+
+img.small {
+    width: 12rem;
+    height: 12rem;
+}
+
+button.small,
+.button.small {
+    padding: 0.25rem 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.bg-theme {
+    background-color: var(--bg-color);
+}
+
+.border {
+    border: 1px solid var(--color-neutral);
+}
+
+/* Components */
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background-color: color-mix(in srgb, var(--color) 50%, transparent);
+}
+.overlay.bg-theme {
+    background-color: color-mix(in srgb, var(--bg-color) 50%, transparent);
+}
