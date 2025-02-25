@@ -24,7 +24,7 @@
     const defaults = {
         STARTING_TIME: 10,
         BONUS_TIME: 0,
-        NAMES: range(3).map((n) => `player ${n + 1}`),
+        NAMES: range(6).map((n) => `player ${n + 1}`),
     };
 
     const { a, button, div, h1, input, label, li, p, span, ul } = van.tags;
@@ -55,7 +55,10 @@
                 label({ class: 'mb-2' }, 'bonus time (seconds)'),
                 bonusTimeInput,
                 label({ class: 'mt-4 mb-2' }, 'players'),
-                ...nameInputs,
+                div({ class: 'flex' },
+                    div({ class: 'flex flex-col' }, ...nameInputs.slice(0, 3)),
+                    div({ class: 'flex flex-col ml-8' }, ...nameInputs.slice(3)),
+                ),
             ),
             button({
                 class: 'w-full h-1/2 text-8xl bg-neutral-200 rounded shadow',
@@ -83,7 +86,7 @@
         function handleStartClick() {
             currentPlayerIndex.val = 0;
             const startingTime = (parseFloat(startingTimeInput.value) || defaults.STARTING_TIME) * ONE_MINUTE_IN_MS;
-            times.val = Object.fromEntries(nameInputs.map((_, i) => [getName(i), startingTime]));
+            times.val = Object.fromEntries(nameInputs.filter((ni) => ni.value).map((_, i) => [getName(i), startingTime]));
             paused.val = false;
 
             interval = setInterval(() => {
