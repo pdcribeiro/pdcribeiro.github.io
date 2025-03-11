@@ -21,15 +21,37 @@ describe('calling imported functions', () => {
 
 describe('before and after callbacks', () => {
   before(() => {
-
-  });
-
-  test('', () => {
-
+    console.log('before callback');
   });
 
   after(() => {
+    console.log('after callback');
+  });
 
+  test('test 1', () => {
+    console.log('test 1');
+  });
+
+  test('test 2', () => {
+    console.log('test 2');
+  });
+
+  describe('deeper stuff', () => {
+    before(() => {
+      console.log('deep before callback');
+    });
+
+    after(() => {
+      console.log('deep after callback');
+    });
+
+    test('deep test', () => {
+      console.log('deep test');
+    });
+  });
+
+  test('shallow test again', () => {
+    console.log('shallow test');
   });
 });
 
