@@ -9,7 +9,7 @@ export const DEFAULT_CONFIG = {
 
 export function loadConfig() {
     const config = localStorage.getItem(STORAGE_KEY)
-    return sanitizeConfig(JSON.parse(config))
+    return sanitizeConfig(JSON.parse(config) ?? {})
 }
 
 export function sanitizeConfig(config) {
