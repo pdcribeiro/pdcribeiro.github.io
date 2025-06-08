@@ -82,6 +82,9 @@ export const pomodoro = {
             },
             prevPhase() {
                 if (this.phase === PHASES.work) {
+                    if (this.workCount === 0) {
+                        return this
+                    }
                     const prevIsLongBreak = this.workCount % workCountUntilLongBreak === 0
                     const minutesRemaining = prevIsLongBreak ? longBreakDuration : shortBreakDuration
                     return {
