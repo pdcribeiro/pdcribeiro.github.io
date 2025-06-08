@@ -14,7 +14,8 @@ export function loadConfig() {
 
 export function sanitizeConfig(config) {
     return Object.fromEntries(
-        Object.entries(config)
+        Object.keys(DEFAULT_CONFIG)
+            .map(k => [k, config[k]])
             .map(([k, v]) => [k, Number.isInteger(v) && v > 0 ? v : DEFAULT_CONFIG[k]])
     )
 }
