@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pomodoro</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-dark: black;
+            --color-neutral: gray;
+            --color-light: white;
+        }
+
+        body {
+            font-family: monospace;
+            background-color: var(--color-dark);
+            color: var(--color-light);
+        }
+
+        time {
+            display: block;
+            margin-top: 20vh;
+            font-size: 6rem;
+            text-align: center;
+        }
+
+        span {
+            display: block;
+            margin-top: 1rem;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        fieldset {
+            display: flex;
+            justify-content: center;
+            padding: 0;
+            margin-top: 3rem;
+            border: none;
+        }
+
+        button {
+            padding: 0 1rem;
+            margin: 0 0.5rem;
+            font-size: 3rem;
+            color: inherit;
+            background: none;
+            border: none;
+        }
+
+        .config-toggle {
+            position: absolute;
+            top: 1vw;
+            right: 1vw;
+            margin: 0;
+            font-family: monospace;
+            color: var(--color-neutral);
+        }
+
+        textarea {
+            display: block;
+            margin: auto;
+            margin-top: 4vh;
+            color: var(--color-light);
+            background: none;
+            border: none;
+            resize: none;
+        }
+
+        .darken {
+            color: var(--color-neutral);
+        }
+
+        .lighten {
+            color: var(--color-light);
+        }
+    </style>
+</head>
+
+<body class="bg-theme">
+</body>
+
+<script type="module">
+    import { beep } from '/lib/audio.js'
+    import { cls } from '/lib/ui/utils.js'
+    import van, { injectTagsIntoWindow, render } from '/lib/ui/van-wrapper.js'
+    import { loadConfig, sanitizeConfig, saveConfig } from './config.js'
+    import { PHASES, pomodoro } from './pomodoro.js'
+
+    const TICK_INTERVAL_MS = 1000
+
+    injectTagsIntoWindow()
+    render(app)
+
+    function app() {
+        let currentConfig = loadConfig()
+        let tickInterval
+
+        const pomodoroState = van.state(pomodoro.init(currentConfig))
+        const phase = van.derive(() => pomodoroState.val.phase)
+        const working = van.derive(() => phase.val === PHASES.work)
+        const iteration = van.derive(() => (working.val ? pomodoroState.val.workCount : pomodoroState.val.workCount - 1) % 4 + 1)
+        const timerRunning = van.derive(() => pomodoroState.val.timerRunning)
+        van.derive(handlePhaseChange)
+
+        const configVisible = van.state(false)
+        const configTextarea = textarea({ rows: 4, cols: 10 })
+        van.derive(handleConfigToggle)
+
+        return main({ class: () => cls(configVisible.val && 'darken') },
+            () => time({ class: cls(!working.val && 'darken') },
+                formatTime(pomodoroState.val.timeRemaining)
+            ),
+            () => span(`${iteration.val} / 4`),
+            fieldset({ disabled: () => configVisible.val },
+                button({ onclick: () => clearIntervalAndUpdate(s => timerRunning.val ? s.stop() : s.prevPhase()) }, '⏮'),
+                () => timerRunning.val
+                    ? button({ onclick: () => clearIntervalAndUpdate(s => s.pause()) }, '⏸')
+                    : button({ onclick: start }, '⏵'),
+                button({ onclick: () => clearIntervalAndUpdate(s => s.nextPhase()) }, '⏭'),
+            ),
+            button({
+                class: () => cls('config-toggle', configVisible.val && 'lighten'),
+                onclick: () => configVisible.val = !configVisible.val
+            }, '⚙'),
+            () => configVisible.val ? configTextarea : div(),
+        )
+
+        function handlePhaseChange() {
+            if (phase.val === phase.oldVal) {
+                return
+            }
+            clearTickInterval()
+            if (pomodoroState.oldVal.timeRemaining <= 1) {
+                beep()
+            }
+        }
+
+        function handleConfigToggle() {
+            if (configVisible.val === configVisible.oldVal) {
+                return
+            }
+            if (configVisible.val) {
+                configTextarea.value = stringifyConfig(currentConfig)
+            } else {
+                const newConfig = parseConfig(configTextarea.value)
+                if (stringifyConfig(newConfig) !== stringifyConfig(currentConfig)) {
+                    const sanitizedConfig = sanitizeConfig(newConfig)
+                    pomodoroState.val = pomodoro.init(sanitizedConfig)
+                    saveConfig(sanitizedConfig)
+                    currentConfig = sanitizedConfig
+                }
+            }
+        }
+
+        function clearTickInterval() {
+            clearInterval(tickInterval)
+            tickInterval = null
+        }
+
+        function clearIntervalAndUpdate(callback) {
+            clearTickInterval()
+            update(callback)
+        }
+
+        function update(callback) {
+            pomodoroState.val = callback(pomodoroState.val)
+        }
+
+        function start() {
+            update(s => s.start(now()))
+            tickInterval = setInterval(() => update(s => s.tick(now())), TICK_INTERVAL_MS)
+        }
+    }
+
+    function formatTime(seconds) {
+        return new Date(seconds * 1000).toISOString().substr(14, 5)
+    }
+
+    function now() {
+        return Date.now()
+    }
+
+    function stringifyConfig(config) {
+        return ` work: ${config.workDuration}\nshort: ${config.shortBreakDuration}\n long: ${config.longBreakDuration}\ncount: ${config.workCountUntilLongBreak}`
+    }
+
+    function parseConfig(config) {
+        const parsed = Object.fromEntries(
+            config
+                .trim()
+                .split('\n')
+                .map(line =>
+                    line
+                        .split(':')
+                        .map(it => it.trim()))
+                .map(([k, v]) => [k, Number(v)])
+        )
+        return {
+            workDuration: parsed.work,
+            shortBreakDuration: parsed.short,
+            longBreakDuration: parsed.long,
+            workCountUntilLongBreak: parsed.count,
+        }
+    }
+</script>
+
+</html>

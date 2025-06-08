@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>todos</title>
+    <style>
+        body {
+            padding: 0.5rem;
+        }
+
+        span,
+        input,
+        select,
+        button {
+            margin: 0.25rem 0;
+        }
+
+        span:not(:first-child),
+        input:not(:first-child),
+        select:not(:first-child),
+        button:not(:first-child) {
+            margin-left: 0.5rem;
+        }
+
+        li {
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+    import van from '/third-party/van.js'
+    import { loadTodos, saveTodos } from './storage.js'
+    import { TODO_ITEM_STATES, todoList, todoItem } from './todos.js'
+
+    const { a, button, div, h1, input, label, li, option, p, select, span, ul } = van.tags
+
+    van.add(document.body, app())
+
+    function app() {
+        const todoListState = van.state(todoList.normalize(loadTodos()))
+
+        const newTodoInput = input({ placeholder: 'New todo' })
+
+        const stateFilterState = van.state(TODO_ITEM_STATES.all)
+        const filteredList = van.derive(() => todoListState.val.filter(stateFilterState.val))
+
+        const activeItemsCount = van.derive(() => todoListState.val.filter(TODO_ITEM_STATES.active).length)
+
+        return div(
+            newTodoInput,
+            button({
+                class: 'ml-2',
+                onclick: () => {
+                    const title = newTodoInput.value.trim()
+                    if (title.length > 0) {
+                        updateTodos(todoListState.val.add(title))
+                        newTodoInput.value = ''
+                    }
+                }
+            }, 'Add'),
+            div(
+                select({
+                    value: stateFilterState,
+                    onchange: (e) => stateFilterState.val = e.target.value
+                }, Object.entries(TODO_ITEM_STATES).map(([name, value]) =>
+                    option({ value }, name)
+                )),
+                span(activeItemsCount, ' active'),
+            ),
+            () => ul(filteredList.val.map(todo =>
+                Todo({
+                    ...todo,
+                    ontoggle: () => updateTodos(todoListState.val.toggle(todo.id)),
+                    ondelete: () => updateTodos(todoListState.val.delete(todo.id)),
+                })
+            )),
+        )
+
+        function updateTodos(newTodos) {
+            saveTodos(newTodos)
+            todoListState.val = newTodos
+        }
+    }
+
+    function Todo({ title, done, ontoggle, ondelete }) {
+        return li(
+            input({ type: 'checkbox', checked: done, onchange: ontoggle }),
+            span({ class: 'ml-2' }, title),
+            button({ onclick: ondelete, class: 'ml-2' }, 'Delete'),
+        )
+    }
+</script>
+
+</html>
