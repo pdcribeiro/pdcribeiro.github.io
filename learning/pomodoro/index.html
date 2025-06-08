@@ -5,6 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>pomodoro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
         *,
         *::before,
@@ -49,7 +50,7 @@
         button {
             padding: 0 1rem;
             margin: 0 0.5rem;
-            font-size: 3rem;
+            font-size: 2.5rem;
             color: inherit;
             background: none;
             border: none;
@@ -57,8 +58,9 @@
 
         .config-toggle {
             position: absolute;
-            top: 1vw;
-            right: 1vw;
+            top: min(10vw, 10vh);
+            right: min(10vw, 10vh);
+            padding: 0;
             margin: 0;
             font-family: monospace;
             color: var(--color-neutral);
@@ -120,16 +122,26 @@
             ),
             () => span(`${iteration.val} / 4`),
             fieldset({ disabled: () => configVisible.val },
-                button({ onclick: () => clearIntervalAndUpdate(s => timerRunning.val ? s.stop() : s.prevPhase()) }, '⏮'),
+                button({ onclick: () => clearIntervalAndUpdate(s => timerRunning.val ? s.stop() : s.prevPhase()) },
+                    i({ class: 'fa-solid fa-backward-step' }),
+                ),
                 () => timerRunning.val
-                    ? button({ onclick: () => clearIntervalAndUpdate(s => s.pause()) }, '⏸')
-                    : button({ onclick: start }, '⏵'),
-                button({ onclick: () => clearIntervalAndUpdate(s => s.nextPhase()) }, '⏭'),
+                    ? button({ onclick: () => clearIntervalAndUpdate(s => s.pause()) },
+                        i({ class: 'fa-solid fa-pause' }),
+                    )
+                    : button({ onclick: start },
+                        i({ class: 'fa-solid fa-play' }),
+                    ),
+                button({ onclick: () => clearIntervalAndUpdate(s => s.nextPhase()) },
+                    i({ class: 'fa-solid fa-forward-step' }),
+                ),
             ),
             button({
                 class: () => cls('config-toggle', configVisible.val && 'lighten'),
                 onclick: () => configVisible.val = !configVisible.val
-            }, '⚙'),
+            },
+                i({ class: 'fa-solid fa-gear' })
+            ),
             () => configVisible.val ? configTextarea : div(),
         )
 
