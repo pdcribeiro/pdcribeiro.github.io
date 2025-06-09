@@ -5,7 +5,7 @@
 // TODO: add support for nesting tests (nest name, add setup/teardown?)
 // TODO?: add support for async tests
 
-import { COLOR_CODES, logColored } from './infra/logging.js'
+import { COLOR_CODES, logColored } from '../infra/logging.js'
 
 export function test(tests) {
     for (const testName in tests) {

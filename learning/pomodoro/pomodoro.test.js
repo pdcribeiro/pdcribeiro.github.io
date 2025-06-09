@@ -1,6 +1,6 @@
 // Tests for the pomodoro app
 
-import { test, eq } from '../test.js'
+import { test, eq } from '../test/test.js'
 import { PHASES, pomodoro } from './pomodoro.js'
 
 const config = {

@@ -2,7 +2,7 @@
 
 // TODO: add browser tests
 
-import { test, eq } from '../test.js'
+import { test, eq } from '../test/test.js'
 import { TODO_ITEM_STATES, todoItem, todoList } from './todos.js'
 
 const title = 'Buy bread'
