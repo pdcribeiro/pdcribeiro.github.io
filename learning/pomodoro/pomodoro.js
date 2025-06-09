@@ -1,6 +1,11 @@
 // A pomodoro timer app
 
-import { DEFAULT_CONFIG } from './config.js'
+export const DEFAULT_CONFIG = {
+    workDuration: 25,
+    shortBreakDuration: 5,
+    longBreakDuration: 15,
+    workCountUntilLongBreak: 4,
+}
 
 export const PHASES = {
     work: 'work',
@@ -105,4 +110,12 @@ export const pomodoro = {
             },
         }
     },
+}
+
+export function sanitizeConfig(config) {
+    return Object.fromEntries(
+        Object.keys(DEFAULT_CONFIG)
+            .map(k => [k, config[k]])
+            .map(([k, v]) => [k, Number.isInteger(v) && v > 0 ? v : DEFAULT_CONFIG[k]])
+    )
 }

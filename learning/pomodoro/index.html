@@ -93,8 +93,8 @@
     import { beep } from '/lib/audio.js'
     import { cls } from '/lib/ui/utils.js'
     import van, { injectTagsIntoWindow, render } from '/lib/ui/van-wrapper.js'
-    import { loadConfig, sanitizeConfig, saveConfig } from './config.js'
-    import { PHASES, pomodoro } from './pomodoro.js'
+    import { loadConfig, saveConfig } from './config.js'
+    import { PHASES, pomodoro, sanitizeConfig } from './pomodoro.js'
 
     const TICK_INTERVAL_MS = 1000
 
@@ -207,7 +207,6 @@
     function parseConfig(config) {
         const parsed = Object.fromEntries(
             config
-                .trim()
                 .split('\n')
                 .map(line =>
                     line
