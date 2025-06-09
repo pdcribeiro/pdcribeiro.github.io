@@ -2,20 +2,29 @@
 
 // TODO: add support for browser tests (idea: if app running on localhost, run tests on load)
 // TODO: add support to replay browser tests step by step (CLI in console)
-// TODO: add support for nesting tests (nest name, add setup/teardown?)
-// TODO?: add support for async tests
+// TODO?: add support for nesting tests (nest name, add setup/teardown?)
 
-import { COLOR_CODES, logColored } from '../infra/logging.js'
+import { runningOn } from '../infra/environment.js'
+import { COLORS, logColored } from '../infra/logging.js'
 
-export function test(tests) {
+export function userTest(tests) {
+    if (runningOn.browser() && runningOn.localhost() && !runningOn.iframe()) {
+        return test(tests)
+    }
+}
+
+export async function test(tests) {
+    if (runningOn.browser() && runningOn.iframe()) {
+        return // prevents infinite loop
+    }
     for (const testName in tests) {
         const testCallback = tests[testName]
         try {
-            testCallback()
-            logColored(`✓ ${testName}`, COLOR_CODES.green)
+            await testCallback()
+            logColored(`✓ ${testName}`, COLORS.green)
         } catch (e) {
-            logColored(`✗ ${testName}`, COLOR_CODES.red)
-            console.log(e.stack)
+            logColored(`✗ ${testName}`, COLORS.red)
+            console.log(e)
         }
     }
 }

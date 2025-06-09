@@ -20,6 +20,7 @@
         }
 
         body {
+            padding-top: 1px;
             font-family: monospace;
             background-color: var(--color-dark);
             color: var(--color-light);
@@ -92,14 +93,14 @@
 <script type="module">
     import { beep } from '/lib/audio.js'
     import { cls } from '/lib/ui/utils.js'
-    import van, { injectTagsIntoWindow, render } from '/lib/ui/van-wrapper.js'
+    import van, { injectTagsIntoWindow, renderAfterLoad } from '/lib/ui/van-wrapper.js'
     import { loadConfig, saveConfig } from './config.js'
     import { PHASES, pomodoro, sanitizeConfig } from './pomodoro.js'
 
     const TICK_INTERVAL_MS = 1000
 
     injectTagsIntoWindow()
-    render(app)
+    renderAfterLoad(app)
 
     function app() {
         let currentConfig = loadConfig()
@@ -222,5 +223,6 @@
         }
     }
 </script>
+<script type="module" src="./pomodoro.user.test.js"></script>
 
 </html>

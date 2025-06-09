@@ -1,5 +1,9 @@
 // A pomodoro timer app
 
+// TODO: reintroduce timer state enum with stopped state
+// TODO: move prevPhase logic here
+// TODO: sync between devices
+
 export const DEFAULT_CONFIG = {
     workDuration: 25,
     shortBreakDuration: 5,

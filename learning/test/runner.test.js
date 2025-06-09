@@ -1,6 +1,6 @@
 // Tests for the test framework
 
-import { ass, assert, assertEquals, eq, test } from './test.js'
+import { ass, assert, assertEquals, eq, test } from './runner.js'
 
 (() => {
     let ran = false

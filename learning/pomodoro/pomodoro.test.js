@@ -1,6 +1,6 @@
 // Tests for the pomodoro app
 
-import { test, eq } from '../test/test.js'
+import { eq, test } from '../test/runner.js'
 import { PHASES, pomodoro } from './pomodoro.js'
 
 const config = {
@@ -137,6 +137,16 @@ test({
         eq(state.timeRemaining, config.workDuration * 60)
     },
     // prevPhase()
+    'if on first work session, prevPhase() does nothing': () => {
+        const state = pomodoro.init(config)
+            .start(startTimestamp)
+            .tick(oneSecondTimestamp)
+            .prevPhase()
+        eq(state.phase, PHASES.work)
+        eq(state.timerRunning, true)
+        eq(state.timeRemaining, config.workDuration * 60 - 1)
+        eq(state.workCount, 0)
+    },
     'if on break, prevPhase() updates state correctly': () => {
         const state = pomodoro.init(config)
             .start(startTimestamp) // work
