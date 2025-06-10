@@ -1,5 +1,7 @@
+import { assert } from './runner.js'
 
 const IFRAME_ID = 'test-frame'
+const GLOBAL_SELECTOR = '*'
 const MAX_Z_INDEX = 2147483647
 
 const helpers = {
@@ -11,16 +13,39 @@ const helpers = {
             iframe.src = url
         })
     },
-    async find(parent, text, selector = "*") {
-        const elements = parent.querySelectorAll(selector)
-        for (const el of elements) {
-            if (el.textContent.trim() === text) {
-                console.debug('find()', el, { args: { parent, text, selector } })
-                return el
+    async find(parent, text, selector = GLOBAL_SELECTOR) {
+        return waitFor(() => {
+            const elements = parent.querySelectorAll(selector)
+            for (const el of elements) {
+                if (el.textContent.trim() === text) {
+                    console.debug('find()', el, { args: { parent, text, selector } })
+                    return el
+                }
             }
-        }
-        throw new Error('Element not found')
+            return null
+        })
     },
+    // Assertions
+    async has(parent, text) {
+        const element = await helpers.find(parent, text)
+        assert(element !== null)
+    },
+}
+
+async function waitFor(callback, timeout = 5000) {
+    const startTime = Date.now()
+    while (Date.now() - startTime < timeout) {
+        const result = await callback()
+        if (result) {
+            return result
+        }
+        await wait(100)
+    }
+    return null
+}
+
+function wait(duration) {
+    return new Promise(resolve => setTimeout(resolve, duration))
 }
 
 export function visit(url) {
