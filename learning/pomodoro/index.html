@@ -93,6 +93,7 @@
 <script type="module">
     import { beep } from '/lib/audio.js'
     import { cls } from '/lib/ui/utils.js'
+    import { registerServiceWorker } from '/lib/service-worker/register.js'
     import van, { injectTagsIntoWindow, renderAfterLoad } from '/lib/ui/van-wrapper.js'
     import { loadConfig, saveConfig } from './config.js'
     import { PHASES, pomodoro, sanitizeConfig } from './pomodoro.js'
@@ -101,6 +102,7 @@
 
     injectTagsIntoWindow()
     renderAfterLoad(app)
+    registerServiceWorker()
 
     function app() {
         let currentConfig = loadConfig()
