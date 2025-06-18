@@ -96,7 +96,7 @@
     import { registerServiceWorker } from '/lib/service-worker/register.js'
     import van, { injectTagsIntoWindow, renderAfterLoad } from '/lib/ui/van-wrapper.js'
     import { loadConfig, saveConfig } from './config.js'
-    import { PHASES, pomodoro, sanitizeConfig } from './pomodoro.js'
+    import { PHASES, TIMER_STATES, pomodoro, sanitizeConfig } from './pomodoro.js'
 
     const TICK_INTERVAL_MS = 1000
 
@@ -112,7 +112,6 @@
         const phase = van.derive(() => pomodoroState.val.phase)
         const working = van.derive(() => phase.val === PHASES.work)
         const iteration = van.derive(() => (working.val ? pomodoroState.val.workCount : pomodoroState.val.workCount - 1) % 4 + 1)
-        const timerRunning = van.derive(() => pomodoroState.val.timerRunning)
         van.derive(handlePhaseChange)
 
         const configVisible = van.state(false)
@@ -125,10 +124,10 @@
             ),
             () => span(`${iteration.val} / 4`),
             fieldset({ disabled: () => configVisible.val },
-                button({ onclick: () => clearIntervalAndUpdate(s => timerRunning.val ? s.stop() : s.prevPhase()) },
+                button({ onclick: () => clearIntervalAndUpdate(s => s.prevPhase()) },
                     i({ class: 'fa-solid fa-backward-step' }),
                 ),
-                () => timerRunning.val
+                () => pomodoroState.val.timerState === TIMER_STATES.running
                     ? button({ onclick: () => clearIntervalAndUpdate(s => s.pause()) },
                         i({ class: 'fa-solid fa-pause' }),
                     )

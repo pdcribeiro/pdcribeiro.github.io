@@ -1,7 +1,7 @@
 // Tests for the pomodoro app
 
 import { eq, test } from '../test/runner.js'
-import { PHASES, pomodoro } from './pomodoro.js'
+import { PHASES, TIMER_STATES, pomodoro } from './pomodoro.js'
 
 const config = {
     workDuration: 25,
@@ -13,173 +13,208 @@ const startTimestamp = 1234567890123
 const oneSecondTimestamp = startTimestamp + 1000
 
 test({
-    // init()
-    'init() sets state correctly': () => {
+    // initializing
+    'initializes timer': () => {
         const state = pomodoro.init(config)
         eq(state.phase, PHASES.work)
-        eq(state.timerRunning, false)
+        eq(state.timerState, TIMER_STATES.stopped)
         eq(state.timeRemaining, config.workDuration * 60)
         eq(state.workCount, 0)
     },
-    // start() and pause()
-    'if timer is stopped, start() starts it': () => {
+    // starting
+    'starts timer': () => {
         const state = pomodoro.init(config)
             .start(startTimestamp)
-        eq(state.timerRunning, true)
+        eq(state.timerState, TIMER_STATES.running)
     },
-    'if timer is running, pause() pauses it': () => {
-        const state = pomodoro.init(config)
-            .start(startTimestamp)
-            .pause()
-        eq(state.timerRunning, false)
-    },
-    'if timer is paused, start() starts it': () => {
-        const state = pomodoro.init(config)
-            .start(startTimestamp)
-            .pause()
-            .start(startTimestamp)
-        eq(state.timerRunning, true)
-    },
-    // tick()
-    'if timer is stopped, tick() does not change time remaining': () => {
-        const state = pomodoro.init(config)
-            .tick(oneSecondTimestamp)
-        eq(state.timeRemaining, config.workDuration * 60)
-    },
-    'if timer is running, tick() decrements time remaining': () => {
+    // ticking
+    'decrements time remaining': () => {
         const state = pomodoro.init(config)
             .start(startTimestamp)
             .tick(oneSecondTimestamp)
         eq(state.timeRemaining, config.workDuration * 60 - 1)
     },
-    'if timer is paused, tick() does not change time remaining': () => {
+    'does not decrement time when not running': () => {
         const state = pomodoro.init(config)
-            .start(startTimestamp)
-            .pause()
             .tick(oneSecondTimestamp)
         eq(state.timeRemaining, config.workDuration * 60)
     },
-    'if time remaining is zero, tick() moves to next phase': () => {
+    'moves to next phase when time ends': () => {
         const state = pomodoro.init({ ...config, workDuration: 1 / 60 })
             .start(startTimestamp)
             .tick(startTimestamp + 1000)
         eq(state.phase, PHASES.break)
-        eq(state.timerRunning, false)
+        eq(state.timerState, TIMER_STATES.stopped)
         eq(state.timeRemaining, config.shortBreakDuration * 60)
         eq(state.workCount, 1)
     },
-    // nextPhase()
-    'if working, nextPhase() updates state correctly': () => {
+    // pausing
+    'pauses running timer': () => {
         const state = pomodoro.init(config)
             .start(startTimestamp)
-            .tick(oneSecondTimestamp)
-            .nextPhase()
-        eq(state.phase, PHASES.break)
-        eq(state.timerRunning, false)
-        eq(state.timeRemaining, config.shortBreakDuration * 60)
-        eq(state.workCount, 1)
+            .pause()
+        eq(state.timerState, TIMER_STATES.paused)
     },
-    'if on break, nextPhase() updates state correctly': () => {
+    'starts paused timer': () => {
         const state = pomodoro.init(config)
             .start(startTimestamp)
-            .nextPhase()
-            .tick(oneSecondTimestamp)
-            .nextPhase()
-        eq(state.phase, PHASES.work)
-        eq(state.timerRunning, false)
-        eq(state.timeRemaining, config.workDuration * 60)
-        eq(state.workCount, 1)
-    },
-    'if next is long break, nextPhase() updates state correctly': () => {
-        const state = pomodoro.init({ ...config, workCountUntilLongBreak: 1 })
+            .pause()
             .start(startTimestamp)
-            .tick(oneSecondTimestamp)
-            .nextPhase()
-        eq(state.phase, PHASES.break)
-        eq(state.timerRunning, false)
-        eq(state.timeRemaining, config.longBreakDuration * 60)
-        eq(state.workCount, 1)
+        eq(state.timerState, TIMER_STATES.running)
     },
-    // stop()
-    'if timer is running, stop() stops it and resets time': () => {
+    'does not decrement time when paused': () => {
         const state = pomodoro.init(config)
             .start(startTimestamp)
+            .pause()
             .tick(oneSecondTimestamp)
-            .stop()
-        eq(state.timerRunning, false)
         eq(state.timeRemaining, config.workDuration * 60)
     },
-    'if on break, stop() resets time correctly': () => {
-        const state = pomodoro.init(config)
-            .start(startTimestamp)
-            .nextPhase()
-            .tick(oneSecondTimestamp)
-            .stop()
-        eq(state.timerRunning, false)
-        eq(state.timeRemaining, config.shortBreakDuration * 60)
-    },
-    'if on long break, stop() resets time correctly': () => {
-        const state = pomodoro.init({ ...config, workCountUntilLongBreak: 1 })
-            .start(startTimestamp)
-            .nextPhase()
-            .tick(oneSecondTimestamp)
-            .stop()
-        eq(state.timerRunning, false)
-        eq(state.timeRemaining, config.longBreakDuration * 60)
-    },
-    'if timer is paused, stop() resets time': () => {
+    'does not reset time on pause': () => {
         const state = pomodoro.init(config)
             .start(startTimestamp)
             .tick(oneSecondTimestamp)
             .pause()
-            .stop()
-        eq(state.timerRunning, false)
-        eq(state.timeRemaining, config.workDuration * 60)
+        eq(state.timeRemaining, config.workDuration * 60 - 1)
     },
-    // prevPhase()
-    'if on first work session, prevPhase() does nothing': () => {
+    // stopping
+    'stops running timer': () => {
+        const state = pomodoro.init(config)
+            .start(startTimestamp)
+            .stop()
+        eq(state.timerState, TIMER_STATES.stopped)
+    },
+    'starts stopped timer': () => {
+        const state = pomodoro.init(config)
+            .start(startTimestamp)
+            .stop()
+            .start(startTimestamp)
+        eq(state.timerState, TIMER_STATES.running)
+    },
+    'stops paused timer': () => {
+        const state = pomodoro.init(config)
+            .start(startTimestamp)
+            .pause()
+            .stop()
+        eq(state.timerState, TIMER_STATES.stopped)
+    },
+    'resets work time on stop': () => {
         const state = pomodoro.init(config)
             .start(startTimestamp)
             .tick(oneSecondTimestamp)
-            .prevPhase()
-        eq(state.phase, PHASES.work)
-        eq(state.timerRunning, true)
-        eq(state.timeRemaining, config.workDuration * 60 - 1)
-        eq(state.workCount, 0)
-    },
-    'if on break, prevPhase() updates state correctly': () => {
-        const state = pomodoro.init(config)
-            .start(startTimestamp) // work
-            .nextPhase() // break
-            .tick(oneSecondTimestamp)
-            .prevPhase() // work
-        eq(state.phase, PHASES.work)
-        eq(state.timerRunning, false)
+            .stop()
         eq(state.timeRemaining, config.workDuration * 60)
-        eq(state.workCount, 0)
     },
-    'if working, prevPhase() updates state correctly': () => {
+    'resets short break time on stop': () => {
         const state = pomodoro.init(config)
-            .start(startTimestamp) // work
-            .nextPhase() // break
-            .nextPhase() // work
+            .start(startTimestamp)
+            .nextPhase()
             .tick(oneSecondTimestamp)
-            .prevPhase() // break
+            .stop()
+        eq(state.timeRemaining, config.shortBreakDuration * 60)
+    },
+    'resets long break time on stop': () => {
+        const state = pomodoro.init({ ...config, workCountUntilLongBreak: 1 })
+            .start(startTimestamp)
+            .nextPhase()
+            .tick(oneSecondTimestamp)
+            .stop()
+        eq(state.timeRemaining, config.longBreakDuration * 60)
+    },
+    'does not decrement time when stopped': () => {
+        const state = pomodoro.init(config)
+            .start(startTimestamp)
+            .stop()
+            .tick(oneSecondTimestamp)
+        eq(state.timeRemaining, config.workDuration * 60)
+    },
+    // moving to next phase
+    'moves to short break': () => {
+        const state = pomodoro.init(config)
+            .start(startTimestamp)
+            .tick(oneSecondTimestamp)
+            .nextPhase()
         eq(state.phase, PHASES.break)
-        eq(state.timerRunning, false)
+        eq(state.timerState, TIMER_STATES.stopped)
         eq(state.timeRemaining, config.shortBreakDuration * 60)
         eq(state.workCount, 1)
     },
-    'if previous is long break, prevPhase() updates state correctly': () => {
-        const state = pomodoro.init({ ...config, workCountUntilLongBreak: 1 })
-            .start(startTimestamp) // work
-            .nextPhase() // break
-            .nextPhase() // work
+    'moves to work': () => {
+        const state = pomodoro.init(config)
+            .start(startTimestamp)
+            .nextPhase()
             .tick(oneSecondTimestamp)
-            .prevPhase() // break
+            .nextPhase()
+        eq(state.phase, PHASES.work)
+        eq(state.timerState, TIMER_STATES.stopped)
+        eq(state.timeRemaining, config.workDuration * 60)
+        eq(state.workCount, 1)
+    },
+    'moves to long break': () => {
+        const state = pomodoro.init({ ...config, workCountUntilLongBreak: 1 })
+            .start(startTimestamp)
+            .tick(oneSecondTimestamp)
+            .nextPhase()
         eq(state.phase, PHASES.break)
-        eq(state.timerRunning, false)
+        eq(state.timerState, TIMER_STATES.stopped)
         eq(state.timeRemaining, config.longBreakDuration * 60)
+        eq(state.workCount, 1)
+    },
+    // moving to previous phase
+    'does not move back when on first phase': () => {
+        const state = pomodoro.init(config)
+            .prevPhase()
+        eq(state.phase, PHASES.work)
+    },
+    'moves back to work': () => {
+        const state = pomodoro.init(config)
+            .nextPhase()
+            .prevPhase()
+        eq(state.phase, PHASES.work)
+        eq(state.timerState, TIMER_STATES.stopped)
+        eq(state.timeRemaining, config.workDuration * 60)
+        eq(state.workCount, 0)
+    },
+    'moves back to short break': () => {
+        const state = pomodoro.init(config)
+            .nextPhase()
+            .nextPhase()
+            .prevPhase()
+        eq(state.phase, PHASES.break)
+        eq(state.timerState, TIMER_STATES.stopped)
+        eq(state.timeRemaining, config.shortBreakDuration * 60)
+        eq(state.workCount, 1)
+    },
+    'moves back to long break': () => {
+        const state = pomodoro.init({ ...config, workCountUntilLongBreak: 1 })
+            .nextPhase()
+            .nextPhase()
+            .prevPhase()
+        eq(state.phase, PHASES.break)
+        eq(state.timerState, TIMER_STATES.stopped)
+        eq(state.timeRemaining, config.longBreakDuration * 60)
+        eq(state.workCount, 1)
+    },
+    'stops running timer instead of moving back': () => {
+        const state = pomodoro.init(config)
+            .nextPhase()
+            .start(startTimestamp)
+            .tick(oneSecondTimestamp)
+            .prevPhase()
+        eq(state.phase, PHASES.break)
+        eq(state.timerState, TIMER_STATES.stopped)
+        eq(state.timeRemaining, config.shortBreakDuration * 60)
+        eq(state.workCount, 1)
+    },
+    'stops paused timer instead of moving back': () => {
+        const state = pomodoro.init(config)
+            .nextPhase()
+            .start(startTimestamp)
+            .tick(oneSecondTimestamp)
+            .pause()
+            .prevPhase()
+        eq(state.phase, PHASES.break)
+        eq(state.timerState, TIMER_STATES.stopped)
+        eq(state.timeRemaining, config.shortBreakDuration * 60)
         eq(state.workCount, 1)
     },
 })

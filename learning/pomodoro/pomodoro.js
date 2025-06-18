@@ -1,7 +1,5 @@
 // A pomodoro timer app
 
-// TODO: reintroduce timer state enum with stopped state
-// TODO: move prevPhase logic here
 // TODO: sync between devices
 
 export const DEFAULT_CONFIG = {
@@ -16,6 +14,12 @@ export const PHASES = {
     break: 'break',
 }
 
+export const TIMER_STATES = {
+    running: 'running',
+    paused: 'paused',
+    stopped: 'stopped',
+}
+
 export const pomodoro = {
     init(config) {
         const {
@@ -27,7 +31,7 @@ export const pomodoro = {
 
         const initialState = {
             phase: PHASES.work,
-            timerRunning: false,
+            timerState: TIMER_STATES.stopped,
             timeRemaining: workDuration * 60,
             workCount: 0,
         }
@@ -36,15 +40,12 @@ export const pomodoro = {
             start(timestamp) {
                 return {
                     ...this,
-                    timerRunning: true,
+                    timerState: TIMER_STATES.running,
                     lastTimestamp: timestamp,
                 }
             },
-            pause() {
-                return { ...this, timerRunning: false }
-            },
             tick(timestamp) {
-                if (!this.timerRunning) {
+                if (this.timerState !== TIMER_STATES.running) {
                     return this
                 }
                 const elapsedSeconds = Math.floor((timestamp - this.lastTimestamp) / 1000)
@@ -58,13 +59,16 @@ export const pomodoro = {
                     lastTimestamp: timestamp,
                 }
             },
+            pause() {
+                return { ...this, timerState: TIMER_STATES.paused }
+            },
             stop() {
                 const isWork = this.phase === PHASES.work
                 const isLongBreak = this.workCount % workCountUntilLongBreak === 0
                 const minutesRemaining = isWork ? workDuration : isLongBreak ? longBreakDuration : shortBreakDuration
                 return {
                     ...this,
-                    timerRunning: false,
+                    timerState: TIMER_STATES.stopped,
                     timeRemaining: minutesRemaining * 60,
                 }
             },
@@ -76,7 +80,7 @@ export const pomodoro = {
                     return {
                         ...this,
                         phase: PHASES.break,
-                        timerRunning: false,
+                        timerState: TIMER_STATES.stopped,
                         timeRemaining: minutesRemaining * 60,
                         workCount,
                     }
@@ -84,12 +88,15 @@ export const pomodoro = {
                     return {
                         ...this,
                         phase: PHASES.work,
-                        timerRunning: false,
+                        timerState: TIMER_STATES.stopped,
                         timeRemaining: workDuration * 60,
                     }
                 }
             },
             prevPhase() {
+                if (this.timerState !== TIMER_STATES.stopped) {
+                    return this.stop()
+                }
                 if (this.phase === PHASES.work) {
                     if (this.workCount === 0) {
                         return this
@@ -99,14 +106,14 @@ export const pomodoro = {
                     return {
                         ...this,
                         phase: PHASES.break,
-                        timerRunning: false,
+                        timerState: TIMER_STATES.stopped,
                         timeRemaining: minutesRemaining * 60,
                     }
                 } else {
                     return {
                         ...this,
                         phase: PHASES.work,
-                        timerRunning: false,
+                        timerState: TIMER_STATES.stopped,
                         timeRemaining: workDuration * 60,
                         workCount: this.workCount - 1,
                     }
