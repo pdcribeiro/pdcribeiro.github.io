@@ -1,11 +1,10 @@
 // A test framework
 
-// TODO: add support for browser tests (idea: if app running on localhost, run tests on load)
 // TODO: add support to replay browser tests step by step (CLI in console)
 // TODO?: add support for nesting tests (nest name, add setup/teardown?)
 
-import { runningOn } from '../infra/environment.js'
-import { COLORS, logColored } from '../infra/logging.js'
+import { runningOn } from '/lib/infra/environment.js'
+import { COLORS, logColored } from '/lib/infra/logging.js'
 
 export function browserTest(tests) {
     if (runningOn.browser() && runningOn.localhost() && !runningOn.iframe()) {

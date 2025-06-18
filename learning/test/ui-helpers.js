@@ -2,6 +2,7 @@ import { assert } from './runner.js'
 
 const IFRAME_ID = 'test-frame'
 const GLOBAL_SELECTOR = '*'
+const IGNORED_TAGS = ['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE']
 const MAX_Z_INDEX = 2147483647
 
 const helpers = {
@@ -15,9 +16,12 @@ const helpers = {
     },
     async find(parent, text, selector = GLOBAL_SELECTOR) {
         return waitFor(() => {
-            const elements = parent.querySelectorAll(selector)
+            const elements = Array.from(parent.querySelectorAll(selector))
+                .filter(el => !IGNORED_TAGS.includes(el.tagName))
+                .reverse()
+            const lowercasedText = text.toLowerCase()
             for (const el of elements) {
-                if (el.textContent.trim() === text) {
+                if (elementContainsText(el, lowercasedText)) {
                     console.debug('find()', el, { args: { parent, text, selector } })
                     return el
                 }
@@ -25,10 +29,16 @@ const helpers = {
             return null
         })
     },
+    async click(parent, text) {
+        const element = await helpers.find(parent, text)
+        element.click()
+        return parent
+    },
     // Assertions
     async has(parent, text) {
         const element = await helpers.find(parent, text)
         assert(element !== null)
+        return parent
     },
 }
 
@@ -46,6 +56,11 @@ async function waitFor(callback, timeout = 5000) {
 
 function wait(duration) {
     return new Promise(resolve => setTimeout(resolve, duration))
+}
+
+function elementContainsText(element, text) {
+    return element.textContent.toLowerCase().includes(text)
+        || element.getAttribute('aria-label')?.toLowerCase().includes(text)
 }
 
 export function visit(url) {

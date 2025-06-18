@@ -124,21 +124,22 @@
             ),
             () => span(`${iteration.val} / 4`),
             fieldset({ disabled: () => configVisible.val },
-                button({ onclick: () => clearIntervalAndUpdate(s => s.prevPhase()) },
+                button({ ariaLabel: 'Previous', onclick: () => clearIntervalAndUpdate(s => s.prevPhase()) },
                     i({ class: 'fa-solid fa-backward-step' }),
                 ),
                 () => pomodoroState.val.timerState === TIMER_STATES.running
-                    ? button({ onclick: () => clearIntervalAndUpdate(s => s.pause()) },
+                    ? button({ ariaLabel: 'Pause', onclick: () => clearIntervalAndUpdate(s => s.pause()) },
                         i({ class: 'fa-solid fa-pause' }),
                     )
-                    : button({ onclick: start },
+                    : button({ ariaLabel: 'Start', onclick: start },
                         i({ class: 'fa-solid fa-play' }),
                     ),
-                button({ onclick: () => clearIntervalAndUpdate(s => s.nextPhase()) },
+                button({ ariaLabel: 'Next', onclick: () => clearIntervalAndUpdate(s => s.nextPhase()) },
                     i({ class: 'fa-solid fa-forward-step' }),
                 ),
             ),
             button({
+                ariaLabel: 'Settings',
                 class: () => cls('config-toggle', configVisible.val && 'lighten'),
                 onclick: () => configVisible.val = !configVisible.val
             },
