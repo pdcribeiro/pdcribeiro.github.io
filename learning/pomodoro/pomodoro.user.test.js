@@ -7,7 +7,8 @@ const URL = '/learning/pomodoro'
 
 browserTest({
     'shows time': () =>
-        visit(URL).has('25:00'),
+        visit(URL)
+            .has('25:00'),
     'starts timer': () =>
         visit(URL)
             .click('start')

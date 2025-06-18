@@ -1,13 +1,13 @@
 import { assert } from './runner.js'
 
-const IFRAME_ID = 'test-frame'
+const IFRAME_ID = 'test-iframe'
 const GLOBAL_SELECTOR = '*'
 const IGNORED_TAGS = ['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE']
 const MAX_Z_INDEX = 2147483647
 
 const helpers = {
     visit(parent_, url) {
-        const iframe = document.querySelector(`#${IFRAME_ID}`) ?? createIframe()
+        const iframe = document.getElementById(IFRAME_ID) ?? createIframe()
         return new Promise((resolve, reject) => {
             iframe.onload = () => resolve(iframe.contentDocument)
             iframe.onerror = () => reject(new Error(`Failed to load ${url}`))
