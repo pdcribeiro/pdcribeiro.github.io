@@ -7,7 +7,7 @@
 import { runningOn } from '../infra/environment.js'
 import { COLORS, logColored } from '../infra/logging.js'
 
-export function userTest(tests) {
+export function browserTest(tests) {
     if (runningOn.browser() && runningOn.localhost() && !runningOn.iframe()) {
         return test(tests)
     }
