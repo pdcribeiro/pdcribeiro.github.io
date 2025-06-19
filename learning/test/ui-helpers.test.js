@@ -83,7 +83,7 @@ test({
         ])
 
         return visit(SOME_URL)
-            .click(SOME_TEXT)
+            .click(SOME_TEXT, FIND_OPTIONS)
             .then(() => {
                 eq(clickMock.calls.length, 1)
             })
