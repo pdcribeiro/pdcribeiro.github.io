@@ -47,16 +47,21 @@ export function assertEquals(value, expected) {
     }
 }
 
-export async function assertFails(callback, message = '') {
-    let error
+export function assertFails(callback, message = '') {
     try {
-        await callback()
+        const result = callback()
+        if (result instanceof Promise) {
+            return result.then(
+                () => {
+                    throw new Error('assertFails() failed' + formatMessage(message))
+                },
+                () => { },
+            )
+        }
     } catch {
-        error = true
+        return
     }
-    if (!error) {
-        throw new Error('assertFails() failed' + formatMessage(message))
-    }
+    throw new Error('assertFails() failed' + formatMessage(message))
 }
 
 export {

@@ -39,22 +39,36 @@ test({
             throw new Error('assertEquals() should not throw error when values are equal')
         }
     },
-    'assertFails() throws error when callback does not throw error': async () => {
-        let error
+    'assertFails() throws error when callback does not throw error': () => {
         try {
-            await assertFails(() => { })
+            assertFails(() => { })
         } catch {
-            error = true
+            return
         }
-        if (!error) {
-            throw new Error('assertFails() should throw error when callback does not throw error')
-        }
+        throw new Error('assertFails() should throw error when callback does not throw error')
     },
-    'assertFails() does not throw error when callback throws error': async () => {
+    'assertFails() throws error when async callback does not throw error': async () => {
         try {
-            await assertFails(() => { throw new Error() })
+            await assertFails(() => new Promise((r) => setTimeout(r, 0)))
+        } catch {
+            return
+        }
+        throw new Error('assertFails() should throw error when async callback does not throw error')
+    },
+    'assertFails() does not throw error when callback throws error': () => {
+        try {
+            assertFails(() => {
+                throw new Error()
+            })
         } catch {
             throw new Error('assertFails() should not throw error when callback throws error')
+        }
+    },
+    'assertFails() does not throw error when async callback throws error': async () => {
+        try {
+            await assertFails(() => new Promise((_, r) => setTimeout(r, 0)))
+        } catch {
+            throw new Error('assertFails() should not throw error when async callback throws error')
         }
     },
     'ass() is alias of assert()': () => {
