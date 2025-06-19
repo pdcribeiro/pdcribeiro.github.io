@@ -6,20 +6,25 @@
 import { runningOn } from '../../lib/infra/environment.js'
 import { COLORS, logColored } from '../../lib/infra/logging.js'
 
-export function browserTest(tests) {
+export function browserTest(tests, options = {}) {
     if (runningOn.browser() && runningOn.localhost() && !runningOn.iframe()) {
-        return test(tests)
+        return test(tests, options)
     }
 }
 
-export async function test(tests) {
+export async function test(tests, options = {}) {
+    const {
+        only = [],
+    } = options
+
     if (runningOn.browser() && runningOn.iframe()) {
         return // prevents infinite loop
     }
     if (runningOn.node()) {
         console.debug = () => { }
     }
-    for (const testName in tests) {
+    const testsToRun = only.length ? only : Object.keys(tests)
+    for (const testName of testsToRun) {
         const testCallback = tests[testName]
         try {
             await testCallback()

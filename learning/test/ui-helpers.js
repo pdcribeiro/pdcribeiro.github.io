@@ -28,6 +28,10 @@ const helpers = {
         element.click()
         return parent
     },
+    async wait(parent, duration) {
+        await wait(duration)
+        return parent
+    },
     // Assertions
     async has(parent, text, options = {}) {
         const element = await helpers.find(parent, text, options)
