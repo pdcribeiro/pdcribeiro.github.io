@@ -84,24 +84,15 @@ export function visit(url) {
 }
 
 function createChain(initialFn, methods) {
-    let statePromise = initialFn()
-
-    const makeAPI = () => {
-        const api = {}
-
+    const wrap = (promise) => {
+        const base = Promise.resolve(promise)
         for (const [name, fn] of Object.entries(methods)) {
-            api[name] = (...args) => {
-                statePromise = statePromise.then(state => fn(state, ...args))
-                return makeAPI() // chainable
-            }
+            base[name] = (...args) =>
+                wrap(base.then(state => fn(state, ...args)))
         }
-
-        api.then = statePromise.then.bind(statePromise) // make awaitable
-
-        return api
+        return base
     }
-
-    return makeAPI()
+    return wrap(initialFn())
 }
 
 const iframeStyle = {
