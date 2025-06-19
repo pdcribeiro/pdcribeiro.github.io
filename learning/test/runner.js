@@ -16,6 +16,9 @@ export async function test(tests) {
     if (runningOn.browser() && runningOn.iframe()) {
         return // prevents infinite loop
     }
+    if (runningOn.node()) {
+        console.debug = () => { }
+    }
     for (const testName in tests) {
         const testCallback = tests[testName]
         try {
@@ -35,7 +38,7 @@ export function assert(condition, message = '') {
 }
 
 function formatMessage(message) {
-    return message ? ` (${message})` : ''
+    return message ? `: ${message}` : ''
 }
 
 export function assertEquals(value, expected) {
@@ -44,7 +47,20 @@ export function assertEquals(value, expected) {
     }
 }
 
+export async function assertFails(callback, message = '') {
+    let error
+    try {
+        await callback()
+    } catch {
+        error = true
+    }
+    if (!error) {
+        throw new Error('assertFails() failed' + formatMessage(message))
+    }
+}
+
 export {
     assert as ass,
     assertEquals as eq,
+    assertFails as fail,
 }

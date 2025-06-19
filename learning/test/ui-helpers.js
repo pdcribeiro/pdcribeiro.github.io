@@ -14,29 +14,23 @@ const helpers = {
             iframe.src = url
         })
     },
-    async find(parent, text, selector = GLOBAL_SELECTOR) {
-        return waitFor(() => {
-            const elements = Array.from(parent.querySelectorAll(selector))
-                .filter(el => !IGNORED_TAGS.includes(el.tagName))
-                .reverse()
-            const lowercasedText = text.toLowerCase()
-            for (const el of elements) {
-                if (elementContainsText(el, lowercasedText)) {
-                    console.debug('find()', el, { args: { parent, text, selector } })
-                    return el
-                }
-            }
-            return null
-        })
+    async find(parent, text, options = {}) {
+        const {
+            wait = true,
+        } = options
+
+        const findFunction = () => findElementByText(parent, text, options)
+
+        return wait ? waitFor(findFunction) : findFunction()
     },
-    async click(parent, text) {
-        const element = await helpers.find(parent, text)
+    async click(parent, text, options = {}) {
+        const element = await helpers.find(parent, text, options)
         element.click()
         return parent
     },
     // Assertions
-    async has(parent, text) {
-        const element = await helpers.find(parent, text)
+    async has(parent, text, options = {}) {
+        const element = await helpers.find(parent, text, options)
         assert(element !== null)
         return parent
     },
@@ -56,6 +50,24 @@ async function waitFor(callback, timeout = 5000) {
 
 function wait(duration) {
     return new Promise(resolve => setTimeout(resolve, duration))
+}
+
+function findElementByText(parent, text, options = {}) {
+    const {
+        selector = GLOBAL_SELECTOR,
+    } = options
+
+    const elements = Array.from(parent.querySelectorAll(selector))
+        .filter(el => !IGNORED_TAGS.includes(el.tagName))
+        .reverse()
+    const lowercasedText = text.toLowerCase()
+    for (const el of elements) {
+        if (elementContainsText(el, lowercasedText)) {
+            console.debug('find()', el, { args: { parent, text, selector } })
+            return el
+        }
+    }
+    return null
 }
 
 function elementContainsText(element, text) {
