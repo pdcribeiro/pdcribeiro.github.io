@@ -14,4 +14,40 @@ browserTest({
             .click('start')
             .has('24:59')
             .has('24:58'),
+    'pauses timer': () =>
+        visit(URL)
+            .click('start')
+            .has('24:59')
+            .click('pause')
+            .wait(1000)
+            .has('24:59'),
+    'stops timer': () =>
+        visit(URL)
+            .click('start')
+            .has('24:59')
+            .click('previous')
+            .has('25:00'),
+    'moves to next phase': () =>
+        visit(URL)
+            .click('next')
+            .has('05:00'),
+    'moves to previous phase': () =>
+        visit(URL)
+            .click('next')
+            .has('05:00')
+            .click('previous')
+            .has('25:00'),
+    'opens settings': () =>
+        visit(URL)
+            .click('settings')
+            .has('work')
+            .has('short')
+            .has('long')
+            .has('count'),
+    'closes settings': () =>
+        visit(URL)
+            .click('settings')
+            .has('work')
+            .click('settings')
+            .hasNot('work'),
 })

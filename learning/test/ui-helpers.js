@@ -2,7 +2,7 @@ import { assert } from './runner.js'
 
 const IFRAME_ID = 'test-iframe'
 const GLOBAL_SELECTOR = '*'
-const IGNORED_TAGS = ['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE']
+const IGNORED_TAGS = ['HTML', 'BODY', 'STYLE', 'SCRIPT', 'NOSCRIPT', 'TEMPLATE']
 const MAX_Z_INDEX = 2147483647
 
 const helpers = {
@@ -15,12 +15,8 @@ const helpers = {
         })
     },
     async find(parent, text, options = {}) {
-        const {
-            wait = true,
-        } = options
-
+        const { wait = true } = options
         const findFunction = () => findElementByText(parent, text, options)
-
         return wait ? waitFor(findFunction) : findFunction()
     },
     async click(parent, text, options = {}) {
@@ -36,6 +32,12 @@ const helpers = {
     async has(parent, text, options = {}) {
         const element = await helpers.find(parent, text, options)
         assert(element !== null)
+        return parent
+    },
+    async hasNot(parent, text, options = {}) {
+        const { wait = true } = options
+        const findFunction = () => !findElementByText(parent, text, options)
+        await (wait ? waitFor(findFunction) : findFunction())
         return parent
     },
 }
@@ -57,10 +59,7 @@ function wait(duration) {
 }
 
 function findElementByText(parent, text, options = {}) {
-    const {
-        selector = GLOBAL_SELECTOR,
-    } = options
-
+    const { selector = GLOBAL_SELECTOR } = options
     const elements = Array.from(parent.querySelectorAll(selector))
         .filter(el => !IGNORED_TAGS.includes(el.tagName))
         .reverse()
@@ -76,6 +75,7 @@ function findElementByText(parent, text, options = {}) {
 
 function elementContainsText(element, text) {
     return element.textContent.toLowerCase().includes(text)
+        || element.value?.toLowerCase().includes(text)
         || element.getAttribute('aria-label')?.toLowerCase().includes(text)
 }
 
