@@ -60,7 +60,6 @@ test({
         mockIframe([
             mockEl({ textContent: SOME_TEXT }),
         ])
-
         return visit(SOME_URL)
             .has(SOME_TEXT, FIND_OPTIONS)
     },
@@ -68,11 +67,27 @@ test({
         mockIframe([
             mockEl({ textContent: SOME_TEXT }),
         ])
-
         return fail(() =>
             visit(SOME_URL)
                 .has(OTHER_TEXT, FIND_OPTIONS)
         )
+    },
+    // hasNot()
+    'passes when page does not contain text': () => {
+        mockIframe([
+            mockEl({ textContent: SOME_TEXT }),
+        ])
+        return fail(() =>
+            visit(SOME_URL)
+                .has(OTHER_TEXT, FIND_OPTIONS)
+        )
+    },
+    'fails when page contains text': () => {
+        mockIframe([
+            mockEl({ textContent: SOME_TEXT }),
+        ])
+        return visit(SOME_URL)
+            .has(SOME_TEXT, FIND_OPTIONS)
     },
     // click()
     'finds and clicks button': () => {
