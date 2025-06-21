@@ -52,9 +52,17 @@ export function assertEquals(value, expected) {
     }
 }
 
-export function assertFails(callback, message = '') {
+// fail(message?: string)
+// fail(operation: promise | function, message?: string)
+export function assertFails(...args) {
+    if (args.length === 0) {
+        throw new Error('assertFails() failed')
+    } else if (typeof args[0] === 'string') {
+        throw new Error('assertFails() failed' + formatMessage(args[0]))
+    }
+    const [operation, message] = args
     try {
-        const result = callback instanceof Function ? callback() : callback
+        const result = operation instanceof Function ? operation() : operation
         if (result instanceof Promise) {
             return result.then(
                 () => {
