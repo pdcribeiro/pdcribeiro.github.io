@@ -47,6 +47,14 @@ test({
         }
         throw new Error('assertFails() should throw error when callback does not throw error')
     },
+    'assertFails() throws error when promise does not reject': async () => {
+        try {
+            await assertFails(new Promise((r) => setTimeout(r, 0)))
+        } catch {
+            return
+        }
+        throw new Error('assertFails() should throw error when promise rejects')
+    },
     'assertFails() throws error when async callback does not throw error': async () => {
         try {
             await assertFails(() => new Promise((r) => setTimeout(r, 0)))
@@ -62,6 +70,13 @@ test({
             })
         } catch {
             throw new Error('assertFails() should not throw error when callback throws error')
+        }
+    },
+    'assertFails() does not throw error when promise rejects': async () => {
+        try {
+            await assertFails(new Promise((_, r) => setTimeout(r, 0)))
+        } catch {
+            throw new Error('assertFails() should not throw error when promise rejects')
         }
     },
     'assertFails() does not throw error when async callback throws error': async () => {

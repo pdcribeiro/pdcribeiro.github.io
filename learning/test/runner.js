@@ -54,7 +54,7 @@ export function assertEquals(value, expected) {
 
 export function assertFails(callback, message = '') {
     try {
-        const result = callback()
+        const result = callback instanceof Function ? callback() : callback
         if (result instanceof Promise) {
             return result.then(
                 () => {
