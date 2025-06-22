@@ -15,6 +15,8 @@ export function browserTest(tests, options = {}) {
 export async function test(tests, options = {}) {
     const {
         only = [],
+        before = () => { },
+        after = () => { },
     } = options
 
     if (runningOn.browser() && runningOn.iframe()) {
@@ -27,7 +29,9 @@ export async function test(tests, options = {}) {
     for (const testName of testsToRun) {
         const testCallback = tests[testName]
         try {
+            await before()
             await testCallback()
+            await after()
             logColored(`✓ ${testName}`, COLORS.green)
         } catch (e) {
             logColored(`✗ ${testName}`, COLORS.red)
