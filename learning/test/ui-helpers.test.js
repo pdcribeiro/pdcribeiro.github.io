@@ -6,6 +6,7 @@ import { visit } from './ui-helpers.js'
 const SOME_URL = 'https://example.com'
 const SOME_TEXT = 'some text'
 const OTHER_TEXT = 'other text'
+const SOME_PLACEHOLDER = 'some placeholder'
 const FIND_OPTIONS = {
     wait: false,
 }
@@ -41,19 +42,15 @@ test({
         eq(createElementMock.calls.length, 0)
     },
     'sets iframe src': () => {
-        const setSrcMock = mockFn()
+        const iframeMock = mockEl()
 
         global.document = {
-            getElementById: () => mockEl({
-                set src(value) {
-                    setSrcMock.fn(value)
-                },
-            })
+            getElementById: () => iframeMock,
         }
 
         visit(SOME_URL)
 
-        eq(setSrcMock.calls[0][0], SOME_URL)
+        eq(iframeMock.src, SOME_URL)
     },
     // has()
     'passes when page contains text': () => {
@@ -103,17 +100,60 @@ test({
                 eq(clickMock.calls.length, 1)
             })
     },
+    // type()
+    'appends text to empty input': () => {
+        const inputMock = mockControl({
+            placeholder: SOME_PLACEHOLDER,
+            value: '',
+        })
+
+        mockIframe([inputMock])
+
+        return visit(SOME_URL)
+            .find(SOME_PLACEHOLDER)
+            .type(SOME_TEXT)
+            .root()
+            .has(SOME_TEXT)
+    },
+    'appends text to non-empty input': () => {
+        const inputMock = mockControl({
+            placeholder: SOME_PLACEHOLDER,
+            value: SOME_TEXT,
+        })
+
+        mockIframe([inputMock])
+
+        return visit(SOME_URL)
+            .find(SOME_PLACEHOLDER)
+            .type(OTHER_TEXT)
+            .root()
+            .has(SOME_TEXT + OTHER_TEXT)
+    },
+    'replaces text in non-empty input': () => {
+        const inputMock = mockControl({
+            placeholder: SOME_PLACEHOLDER,
+            value: SOME_TEXT,
+        })
+
+        mockIframe([inputMock])
+
+        return visit(SOME_URL)
+            .find(SOME_PLACEHOLDER)
+            .type(() => OTHER_TEXT)
+            .root()
+            .has(OTHER_TEXT)
+    },
 })
 
 function mockIframe(elements = []) {
-    const iframeMock = mockEl({
+    const iframeMock = {
         contentDocument: {
             querySelectorAll: () => elements,
         },
         set src(value_) {
             this.onload()
         },
-    })
+    }
     global.document = {
         getElementById: () => iframeMock,
     }
@@ -121,15 +161,20 @@ function mockIframe(elements = []) {
 }
 
 function mockEl(props = {}) {
-    const baseProps = {
+    return {
         style: {},
         addEventListener: () => { },
         getAttribute: () => null,
+        ...props,
     }
-    return Object.defineProperties(
-        baseProps,
-        Object.getOwnPropertyDescriptors(props),
-    )
+}
+
+function mockControl(props = {}) {
+    return mockEl({
+        focus: () => { },
+        dispatchEvent: () => { },
+        ...props,
+    })
 }
 
 function mockFn(callback = () => { }) {
