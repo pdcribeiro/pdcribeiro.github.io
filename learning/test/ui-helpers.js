@@ -94,8 +94,9 @@ function findElementByText(parent, text, options = {}) {
 }
 
 function elementContainsText(element, text) {
-    return element.textContent.toLowerCase().includes(text)
+    return element.textContent?.toLowerCase().includes(text)
         || element.value?.toLowerCase().includes(text)
+        || element.placeholder?.toLowerCase().includes(text)
         || element.getAttribute('aria-label')?.toLowerCase().includes(text)
 }
 
