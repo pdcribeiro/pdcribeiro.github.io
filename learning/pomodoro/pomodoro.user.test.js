@@ -50,4 +50,22 @@ browserTest({
             .has('work')
             .click('settings')
             .hasNot('work'),
+    'updates timer on settings change': () =>
+        changeSettings((settings) => settings.replace('work: 25', 'work: 24'))
+            .has('24:00'),
+    'settings persist after reload': () =>
+        changeSettings((settings) => settings.replace('work: 25', 'work: 24'))
+            .reload()
+            .has('24:00'),
+}, {
+    before: () => localStorage.clear(),
 })
+
+function changeSettings(update) {
+    return visit(URL)
+        .click('settings')
+        .find('work')
+        .type(update)
+        .root()
+        .click('settings')
+}
