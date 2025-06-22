@@ -5,13 +5,25 @@ const GLOBAL_SELECTOR = '*'
 const IGNORED_TAGS = ['HTML', 'BODY', 'STYLE', 'SCRIPT', 'NOSCRIPT', 'TEMPLATE']
 const MAX_Z_INDEX = 2147483647
 
+let iframe
+
 const helpers = {
     visit(parent_, url) {
-        const iframe = document.getElementById(IFRAME_ID) ?? createIframe()
+        iframe = document.getElementById(IFRAME_ID) ?? createIframe()
         return new Promise((resolve, reject) => {
-            iframe.onload = () => resolve(iframe.contentDocument)
+            iframe.onload = () => resolve(helpers.root())
             iframe.onerror = () => reject(new Error(`Failed to load ${url}`))
             iframe.src = url
+        })
+    },
+    root(parent_) {
+        return iframe.contentDocument
+    },
+    reload(parent_) {
+        return new Promise((resolve, reject) => {
+            iframe.onload = () => resolve(helpers.root())
+            iframe.onerror = () => reject(new Error(`Failed to reload.`))
+            iframe.contentWindow.location.reload()
         })
     },
     async find(parent, text, options = {}) {
@@ -22,6 +34,14 @@ const helpers = {
     async click(parent, text, options = {}) {
         const element = await helpers.find(parent, text, options)
         element.click()
+        return parent
+    },
+    async type(parent, update) {
+        parent.focus()
+        parent.value = update instanceof Function
+            ? await update(parent.value)
+            : parent.value + update
+        parent.dispatchEvent(new Event('input', { bubbles: true }))
         return parent
     },
     async wait(parent, duration) {
