@@ -54,6 +54,34 @@ test({
 
         eq(document, documentMock)
     },
+    // reload()
+    'reloads iframe': async () => {
+        const iframeMock = mockIframe()
+        const reloadMock = mockFn(() => iframeMock.onload())
+        iframeMock.contentWindow = {
+            location: {
+                reload: reloadMock.fn,
+            }
+        }
+
+        await visit(SOME_URL).reload()
+
+        eq(reloadMock.calls.length, 1)
+    },
+    'and returns iframe document': async () => {
+        const iframeMock = mockIframe()
+        const documentMock = mockEl()
+        iframeMock.contentDocument = documentMock
+        iframeMock.contentWindow = {
+            location: {
+                reload: () => iframeMock.onload()
+            }
+        }
+
+        const document = await visit(SOME_URL).reload()
+
+        eq(document, documentMock)
+    },
     // has()
     'passes when page contains text': () => {
         mockIframe([
