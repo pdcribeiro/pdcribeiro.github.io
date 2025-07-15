@@ -5,6 +5,7 @@
 
 import { runningOn } from '../../lib/infra/environment.js'
 import { COLORS, logColored } from '../../lib/infra/logging.js'
+import { removeTestElements } from './ui-helpers.js'
 
 export function browserTest(tests, options = {}) {
     if (runningOn.browser() && runningOn.localhost() && !runningOn.iframe()) {
@@ -37,6 +38,9 @@ export async function test(tests, options = {}) {
             logColored(`✗ ${testName}`, COLORS.red)
             console.log(e)
         }
+    }
+    if (runningOn.browser()) {
+        removeTestElements()
     }
 }
 

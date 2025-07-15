@@ -1,6 +1,7 @@
 import { assert } from './runner.js'
 
 const IFRAME_ID = 'test-iframe'
+const TOGGLE_ID = 'test-toggle-button'
 const GLOBAL_SELECTOR = '*'
 const IGNORED_TAGS = ['HTML', 'BODY', 'STYLE', 'SCRIPT', 'NOSCRIPT', 'TEMPLATE']
 const MAX_Z_INDEX = 2147483647
@@ -104,6 +105,12 @@ export function visit(url) {
     return createChain(() => helpers.visit(null, url), helpers)
 }
 
+export function removeTestElements() {
+    document.getElementById(IFRAME_ID)?.remove()
+    document.getElementById(TOGGLE_ID)?.remove()
+    iframe = null
+}
+
 function createChain(initialFn, methods) {
     const wrap = (promise) => {
         const base = Promise.resolve(promise)
@@ -146,6 +153,7 @@ function createIframe() {
     document.body.appendChild(iframe)
 
     const toggleButton = document.createElement('button')
+    toggleButton.id = TOGGLE_ID
     toggleButton.textContent = 'toggle test'
     setStyle(toggleButton, toggleButtonStyle)
     toggleButton.addEventListener('click', () =>
