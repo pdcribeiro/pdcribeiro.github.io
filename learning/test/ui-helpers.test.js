@@ -50,7 +50,8 @@ test({
         const documentMock = mockEl()
         iframeMock.contentDocument = documentMock
 
-        const document = await visit(SOME_URL).root()
+        const document = await visit(SOME_URL)
+            .root()
 
         eq(document, documentMock)
     },
@@ -64,7 +65,8 @@ test({
             }
         }
 
-        await visit(SOME_URL).reload()
+        await visit(SOME_URL)
+            .reload()
 
         eq(reloadMock.calls.length, 1)
     },
@@ -78,7 +80,8 @@ test({
             }
         }
 
-        const document = await visit(SOME_URL).reload()
+        const document = await visit(SOME_URL)
+            .reload()
 
         eq(document, documentMock)
     },
