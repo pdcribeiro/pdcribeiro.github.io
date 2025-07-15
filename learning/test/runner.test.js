@@ -2,9 +2,9 @@
 
 import { ass, assert, assertEquals, assertFails, eq, fail, test } from './runner.js'
 
-(() => {
+(async () => {
     let ran = false
-    test({
+    await test({
         'toggles run state': () => {
             ran = true
         }
