@@ -168,18 +168,16 @@ test({
             .has(SOME_TEXT, FIND_OPTIONS)
     },
     // click()
-    'finds and clicks button': () => {
+    'finds and clicks button': async () => {
         const clickMock = mockFn()
-
         mockIframe([
             mockEl({ textContent: SOME_TEXT, click: clickMock.fn }),
         ])
 
-        return visit(SOME_URL)
+        await visit(SOME_URL)
             .click(SOME_TEXT, FIND_OPTIONS)
-            .then(() => {
-                eq(clickMock.calls.length, 1)
-            })
+
+        eq(clickMock.calls.length, 1)
     },
     // type()
     'appends text to empty input': () => {
@@ -187,7 +185,6 @@ test({
             placeholder: SOME_PLACEHOLDER,
             value: '',
         })
-
         mockIframe([inputMock])
 
         return visit(SOME_URL)
@@ -201,7 +198,6 @@ test({
             placeholder: SOME_PLACEHOLDER,
             value: SOME_TEXT,
         })
-
         mockIframe([inputMock])
 
         return visit(SOME_URL)
@@ -215,7 +211,6 @@ test({
             placeholder: SOME_PLACEHOLDER,
             value: SOME_TEXT,
         })
-
         mockIframe([inputMock])
 
         return visit(SOME_URL)
