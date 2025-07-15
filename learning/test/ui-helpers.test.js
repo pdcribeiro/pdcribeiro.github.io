@@ -82,6 +82,54 @@ test({
 
         eq(document, documentMock)
     },
+    // find()
+    'finds element by textContent': async () => {
+        const elementMock = mockEl({ textContent: SOME_TEXT })
+        mockIframe([elementMock])
+
+        const element = await visit(SOME_URL)
+            .find(SOME_TEXT, FIND_OPTIONS)
+
+        eq(element, elementMock)
+    },
+    'finds element by value': async () => {
+        const elementMock = mockEl({ value: SOME_TEXT })
+        mockIframe([elementMock])
+
+        const element = await visit(SOME_URL)
+            .find(SOME_TEXT, FIND_OPTIONS)
+
+        eq(element, elementMock)
+    },
+    'finds element by placeholder': async () => {
+        const elementMock = mockEl({ placeholder: SOME_TEXT })
+        mockIframe([elementMock])
+
+        const element = await visit(SOME_URL)
+            .find(SOME_TEXT, FIND_OPTIONS)
+
+        eq(element, elementMock)
+    },
+    'finds element by aria-label attribute': async () => {
+        const elementMock = mockEl({
+            getAttribute: (name) => name === 'aria-label' ? SOME_TEXT : null
+        })
+        mockIframe([elementMock])
+
+        const element = await visit(SOME_URL)
+            .find(SOME_TEXT, FIND_OPTIONS)
+
+        eq(element, elementMock)
+    },
+    'returns null when not found': async () => {
+        const elementMock = mockEl({ textContent: SOME_TEXT })
+        mockIframe([elementMock])
+
+        const element = await visit(SOME_URL)
+            .find(OTHER_TEXT, FIND_OPTIONS)
+
+        eq(element, null)
+    },
     // has()
     'passes when page contains text': () => {
         mockIframe([
