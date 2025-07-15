@@ -13,10 +13,9 @@ const FIND_OPTIONS = {
 
 test({
     // visit()
-    'creates iframe': () => {
-        const iframeMock = mockEl()
+    'creates iframe': async () => {
+        const iframeMock = mockIframe()
         const appendChildMock = mockFn()
-
         global.document = {
             getElementById: () => null,
             createElement: (tag) => tag === 'iframe' ? iframeMock : mockEl(),
@@ -25,31 +24,24 @@ test({
             },
         }
 
-        visit(SOME_URL)
+        await visit(SOME_URL)
 
         ass(appendChildMock.calls.find(([el]) => el === iframeMock))
     },
-    'reuses iframe': () => {
+    'reuses iframe': async () => {
         const createElementMock = mockFn()
-
         global.document = {
-            getElementById: () => mockEl(),
+            getElementById: () => mockIframe(),
             createElement: createElementMock.fn,
         }
 
-        visit(SOME_URL)
+        await visit(SOME_URL)
 
         eq(createElementMock.calls.length, 0)
     },
-    'sets iframe src': () => {
-        const iframeMock = mockEl()
-
-        global.document = {
-            getElementById: () => iframeMock,
-        }
-
-        visit(SOME_URL)
-
+    'sets iframe src': async () => {
+        const iframeMock = mockIframe()
+        await visit(SOME_URL)
         eq(iframeMock.src, SOME_URL)
     },
     // has()
@@ -150,7 +142,12 @@ function mockIframe(elements = []) {
         contentDocument: {
             querySelectorAll: () => elements,
         },
-        set src(value_) {
+        style: {},
+        get src() {
+            return this._src
+        },
+        set src(value) {
+            this._src = value
             this.onload()
         },
     }
