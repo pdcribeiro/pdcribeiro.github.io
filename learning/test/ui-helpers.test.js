@@ -15,6 +15,7 @@ test({
     // visit()
     'creates iframe': async () => {
         const iframeMock = mockIframe()
+        iframeMock.style = {}
         const appendChildMock = mockFn()
         global.document = {
             getElementById: () => null,
@@ -226,7 +227,6 @@ function mockIframe(elements = []) {
         contentDocument: {
             querySelectorAll: () => elements,
         },
-        style: {},
         get src() {
             return this._src
         },
