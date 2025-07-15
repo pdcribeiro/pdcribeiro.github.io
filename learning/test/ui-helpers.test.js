@@ -44,6 +44,16 @@ test({
         await visit(SOME_URL)
         eq(iframeMock.src, SOME_URL)
     },
+    // root()
+    'returns iframe document': async () => {
+        const iframeMock = mockIframe()
+        const documentMock = mockEl()
+        iframeMock.contentDocument = documentMock
+
+        const document = await visit(SOME_URL).root()
+
+        eq(document, documentMock)
+    },
     // has()
     'passes when page contains text': () => {
         mockIframe([
