@@ -42,7 +42,18 @@ test({
     },
     'sets iframe src': async () => {
         const iframeMock = mockIframe()
+        Object.defineProperty(iframeMock, 'src', {
+            get() {
+                return this._src
+            },
+            set(value) {
+                this._src = value
+                this.onload()
+            },
+        })
+
         await visit(SOME_URL)
+
         eq(iframeMock.src, SOME_URL)
     },
     // root()
@@ -227,11 +238,7 @@ function mockIframe(elements = []) {
         contentDocument: {
             querySelectorAll: () => elements,
         },
-        get src() {
-            return this._src
-        },
-        set src(value) {
-            this._src = value
+        set src(value_) {
             this.onload()
         },
     }
