@@ -56,8 +56,17 @@ test({
 
         eq(iframeMock.src, SOME_URL)
     },
+    'visit() returns iframe document': async () => {
+        const iframeMock = mockIframe()
+        const documentMock = mockEl()
+        iframeMock.contentDocument = documentMock
+
+        const document = await visit(SOME_URL)
+
+        eq(document, documentMock)
+    },
     // root()
-    'returns iframe document': async () => {
+    'root() returns iframe document': async () => {
         const iframeMock = mockIframe()
         const documentMock = mockEl()
         iframeMock.contentDocument = documentMock
@@ -82,7 +91,7 @@ test({
 
         eq(reloadMock.calls.length, 1)
     },
-    'and returns iframe document': async () => {
+    'reload() returns iframe document': async () => {
         const iframeMock = mockIframe()
         const documentMock = mockEl()
         iframeMock.contentDocument = documentMock
