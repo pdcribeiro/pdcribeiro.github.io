@@ -1,6 +1,6 @@
 // Tests for the pomodoro app
 
-import { eq, test } from '../test/runner.js'
+import { eq, test } from '../../test/runner.js'
 import { PHASES, TIMER_STATES, pomodoro } from './pomodoro.js'
 
 const config = {

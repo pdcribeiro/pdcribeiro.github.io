@@ -1,10 +1,12 @@
 // A test framework
 
+// NOTE: node.js code must use relative imports
+
 // TODO: add support to replay browser tests step by step (CLI in console)
 // TODO?: add support for nesting tests (nest name, add setup/teardown?)
 
-import { runningOn } from '../../lib/infra/environment.js'
-import { COLORS, logColored } from '../../lib/infra/logging.js'
+import { runningOn } from '../lib/infra/environment.js'
+import { COLORS, logColored } from '../lib/infra/logging.js'
 import { removeTestElements } from './ui-helpers.js'
 
 export function browserTest(tests, options = {}) {
