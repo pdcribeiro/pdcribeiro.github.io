@@ -80,25 +80,28 @@ function wait(duration) {
 }
 
 function findElementByText(parent, text, options = {}) {
-    const { selector = GLOBAL_SELECTOR } = options
-    const elements = Array.from(parent.querySelectorAll(selector))
-        .filter(el => !IGNORED_TAGS.includes(el.tagName))
-        .reverse()
-    const lowercasedText = text.toLowerCase()
-    for (const el of elements) {
-        if (elementContainsText(el, lowercasedText)) {
-            console.debug('find()', el, { args: { parent, text, selector } })
+    for (const el of findAllBySelector(parent, options.selector)) {
+        if (elementMatches(el, text.toLowerCase())) {
+            console.debug('find()', el, { args: { parent, text, options } })
             return el
         }
     }
     return null
 }
 
-function elementContainsText(element, text) {
-    return element.textContent?.toLowerCase().includes(text)
-        || element.value?.toLowerCase().includes(text)
-        || element.placeholder?.toLowerCase().includes(text)
-        || element.getAttribute('aria-label')?.toLowerCase().includes(text)
+function findAllBySelector(parent, selector = GLOBAL_SELECTOR) {
+    return Array.from(parent.querySelectorAll(selector))
+        .filter(el => !IGNORED_TAGS.includes(el.tagName))
+        .reverse()
+}
+
+function elementMatches(element, text) {
+    return [
+        element.getAttribute('aria-label'),
+        element.placeholder,
+        element.textContent,
+        element.value,
+    ].some(candidate => candidate && candidate.toLowerCase().includes(text))
 }
 
 export function visit(url) {
