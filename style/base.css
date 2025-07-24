@@ -1,0 +1,47 @@
+:root {
+    --color-dark: black;
+    --color-neutral: gray;
+    --color-light: white;
+
+    --color: var(--color-dark);
+    --bg-color: var(--color-light);
+
+    /* font-size: calc(15px + 0.3vw); */
+    color: var(--color);
+    /* background-color: var(--bg-color); */
+}
+
+a {
+    color: inherit;
+    /* text-decoration: none; */
+}
+
+button,
+.button {
+    padding: 0.5rem 1rem;
+    /* margin: 0 0.5rem; */
+    color: inherit;
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+button.small,
+.button.small {
+    /* padding: 0.25rem 0.5rem; */
+    /* margin: 0.5rem 0; */
+}
+
+.border {
+    border: 1px solid var(--color);
+    /* border-radius: 0.5rem; */
+}
+
+.fade {
+    color: var(--color-neutral);
+}
+
+.fade.border {
+    /* border-color: var(--color-neutral); */
+}
