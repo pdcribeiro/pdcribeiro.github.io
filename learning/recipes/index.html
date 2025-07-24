@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>recipes</title>
+    <!-- <script src="/third-party/tailwind-4.1.8.min.js"></script> -->
+    <link rel="stylesheet" href="/third-party/modern-normalize.min.css" />
+    <link rel="stylesheet" href="/style/base.css" />
+    <link rel="stylesheet" href="/style/layout-mobile.css" />
+    <style>
+        textarea {
+            max-width: 40rem;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+    import { getFileSystemRouter } from '/lib/routing.js'
+    import { injectTagsIntoWindow, renderAfterLoad } from '/lib/ui/van-wrapper.js'
+
+    injectTagsIntoWindow()
+    renderAfterLoad(getFileSystemRouter())
+
+    // TODO: call db.connect()
+</script>
+
+</html>
