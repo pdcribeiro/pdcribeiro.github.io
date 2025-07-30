@@ -1,0 +1,706 @@
+[
+    {
+        "id": "148",
+        "name": "abacate",
+        "type": "fruit",
+        "months": "1,2,3,4,11-2,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/abacate.jpg?mw=960"
+    },
+    {
+        "id": "149",
+        "name": "alfarroba",
+        "type": "fruit",
+        "months": "8,9",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/alfarroba.jpg?mw=960"
+    },
+    {
+        "id": "0",
+        "name": "alperce",
+        "type": "fruit",
+        "months": "5-2,6,7-1",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/alperce.jpg?mw=960"
+    },
+    {
+        "id": "1",
+        "name": "ameixa",
+        "type": "fruit",
+        "months": "6,7,8,9,10-1",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/ameixa.jpg?mw=960"
+    },
+    {
+        "id": "2",
+        "name": "amendoa",
+        "type": "fruit",
+        "months": "1,2,9-2,10,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/amendoa.jpg?mw=960"
+    },
+    {
+        "id": "3",
+        "name": "amora",
+        "type": "fruit",
+        "months": "6,7,8",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/amora.jpg?mw=960"
+    },
+    {
+        "id": "4",
+        "name": "ananas",
+        "type": "fruit",
+        "months": "1,2,3,4,5,6,7,8,9,10,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/ananas.jpg?mw=960"
+    },
+    {
+        "id": "150",
+        "name": "anona",
+        "type": "fruit",
+        "months": "1,2,3,4,8-2,9,10,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/anona.jpg?mw=960"
+    },
+    {
+        "id": "5",
+        "name": "avela",
+        "type": "fruit",
+        "months": "10-2,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/avela.jpg?mw=960"
+    },
+    {
+        "id": "6",
+        "name": "banana",
+        "type": "fruit",
+        "months": "1,2,3,4,5,6,7,8,9,10,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/banana.jpg?mw=960"
+    },
+    {
+        "id": "7",
+        "name": "castanha",
+        "type": "fruit",
+        "months": "10-2,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/castanha.jpg?mw=960"
+    },
+    {
+        "id": "8",
+        "name": "cereja",
+        "type": "fruit",
+        "months": "5-2,6,7",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/cereja.jpg?mw=960"
+    },
+    {
+        "id": "9",
+        "name": "diospiro",
+        "type": "fruit",
+        "months": "10,11,12-1",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/diospiro.jpg?mw=960"
+    },
+    {
+        "id": "10",
+        "name": "figo",
+        "type": "fruit",
+        "months": "6,7,8,9",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/figo.jpg?mw=960"
+    },
+    {
+        "id": "157",
+        "name": "fisalis",
+        "type": "fruit",
+        "months": "8-2,9,10,11-1",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/fisalis.jpg?mw=960"
+    },
+    {
+        "id": "11",
+        "name": "framboesa",
+        "type": "fruit",
+        "months": "6,7,8,9-1",
+        "monthsOutSeason": "1,2,3,4,5,9-2,10,11,12",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/framboesa.jpg?mw=960"
+    },
+    {
+        "id": "151",
+        "name": "ginja",
+        "type": "fruit",
+        "months": "6,7",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/ginja.jpg?mw=960"
+    },
+    {
+        "id": "152",
+        "name": "groselha",
+        "type": "fruit",
+        "months": "4,5,6",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/groselha.jpg?mw=960"
+    },
+    {
+        "id": "12",
+        "name": "laranja",
+        "type": "fruit",
+        "months": "1,2,3,4,5,10-2,11,12",
+        "monthsOutSeason": "6,7",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/laranja.jpg?mw=960"
+    },
+    {
+        "id": "13",
+        "name": "limao",
+        "type": "fruit",
+        "months": "1,2,3,4,5,6,7,8,9,10,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/limao.jpg?mw=960"
+    },
+    {
+        "id": "14",
+        "name": "maca",
+        "type": "fruit",
+        "months": "1,2,3,4,7-2,8,9,10,11,12",
+        "monthsOutSeason": "5,6",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/maca.jpg?mw=960"
+    },
+    {
+        "id": "153",
+        "name": "maracuja",
+        "type": "fruit",
+        "months": "6-2,7,8,9",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/maracuja.jpg?mw=960"
+    },
+    {
+        "id": "154",
+        "name": "marmelo",
+        "type": "fruit",
+        "months": "8,9",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/marmelo.jpg?mw=960"
+    },
+    {
+        "id": "15",
+        "name": "melancia",
+        "type": "fruit",
+        "months": "7,8,9",
+        "monthsOutSeason": "4-2,5,6,10-1",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/melancia.jpg?mw=960"
+    },
+    {
+        "id": "16",
+        "name": "melao",
+        "type": "fruit",
+        "months": "6,7,8,9",
+        "monthsOutSeason": "3-2,4,5,10,11-1",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/melao.jpg?mw=960"
+    },
+    {
+        "id": "155",
+        "name": "meloa",
+        "type": "fruit",
+        "months": "5,6,7,8,9",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/meloa.jpg?mw=960"
+    },
+    {
+        "id": "17",
+        "name": "mirtilo",
+        "type": "fruit",
+        "months": "5-2,6,7",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/mirtilo.jpg?mw=960"
+    },
+    {
+        "id": "18",
+        "name": "morango",
+        "type": "fruit",
+        "months": "4,5,6,7,8",
+        "monthsOutSeason": "1,2,3,9,10,11,12",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/morango.jpg?mw=960"
+    },
+    {
+        "id": "156",
+        "name": "nectarina",
+        "type": "fruit",
+        "months": "5,6,7,8,9",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/nectarina.jpg?mw=960"
+    },
+    {
+        "id": "19",
+        "name": "nespera",
+        "type": "fruit",
+        "months": "4,5",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/nespera.jpg?mw=960"
+    },
+    {
+        "id": "20",
+        "name": "noz",
+        "type": "fruit",
+        "months": "1-1,9-2,10,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/noz.jpg?mw=960"
+    },
+    {
+        "id": "21",
+        "name": "pera",
+        "type": "fruit",
+        "months": "1,2,3,6-2,7,8,9,10,11,12",
+        "monthsOutSeason": "4,5",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/pera.jpg?mw=960"
+    },
+    {
+        "id": "22",
+        "name": "pessego",
+        "type": "fruit",
+        "months": "6-2,7,8,9,10-1",
+        "monthsOutSeason": "5-2,6-1",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/pessego.jpg?mw=960"
+    },
+    {
+        "id": "23",
+        "name": "pinhao",
+        "type": "fruit",
+        "months": "1,2,3,12-2",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/pinhao.jpg?mw=960"
+    },
+    {
+        "id": "24",
+        "name": "quivi",
+        "type": "fruit",
+        "months": "1,2,3,11-2,12",
+        "monthsOutSeason": "4,5",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/quivi.jpg?mw=960"
+    },
+    {
+        "id": "25",
+        "name": "roma",
+        "type": "fruit",
+        "months": "9-2,10,11,12-1",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/roma.jpg?mw=960"
+    },
+    {
+        "id": "26",
+        "name": "tangerina",
+        "type": "fruit",
+        "months": "1,2,3,4,10-2,11,12",
+        "monthsOutSeason": "5,6,7,9-2,10-1",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/tangerina.jpg?mw=960"
+    },
+    {
+        "id": "27",
+        "name": "uva",
+        "type": "fruit",
+        "months": "6-2,7,8,9,10-1",
+        "monthsOutSeason": "10-2,11,12",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/uva.jpg?mw=960"
+    },
+    {
+        "id": "100",
+        "name": "abobora",
+        "type": "veggie",
+        "months": "1,2,3,4,5,9,10,11,12",
+        "monthsOutSeason": "6,7,8",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/abobora.jpg?mw=960"
+    },
+    {
+        "id": "101",
+        "name": "acelga",
+        "type": "veggie",
+        "months": "1,2,3,4,5,6,10,11,12",
+        "monthsOutSeason": "7,8,9",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/acelga.jpg?mw=960"
+    },
+    {
+        "id": "102",
+        "name": "agriao",
+        "type": "veggie",
+        "months": "1,2,3,4,10,11,12",
+        "monthsOutSeason": "5,6,7,8,9",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/agriao.jpg?mw=960"
+    },
+    {
+        "id": "103",
+        "name": "aipo-de-cabeca",
+        "type": "veggie",
+        "months": "1,2,3,4,5,6,10,11,12",
+        "monthsOutSeason": "7,8,9",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/aipo-de-cabeca.jpg?mw=960"
+    },
+    {
+        "id": "104",
+        "name": "aipo-de-talo",
+        "type": "veggie",
+        "months": "1,2,3,4,5,6,10,11,12",
+        "monthsOutSeason": "7,8,9",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/aipo-de-talo.jpg?mw=960"
+    },
+    {
+        "id": "105",
+        "name": "alcachofra",
+        "type": "veggie",
+        "months": "4,5,6",
+        "monthsOutSeason": "3,7",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/alcachofra.jpg?mw=960"
+    },
+    {
+        "id": "106",
+        "name": "alface",
+        "type": "veggie",
+        "months": "1,2,3,4,5,6,10,11,12",
+        "monthsOutSeason": "7,8,9",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/alface.jpg?mw=960"
+    },
+    {
+        "id": "107",
+        "name": "alface-cordeiro",
+        "type": "veggie",
+        "months": "1,2,3,4,5,6,10,11,12",
+        "monthsOutSeason": "7,8,9",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/alface-cordeiro.jpg?mw=960"
+    },
+    {
+        "id": "158",
+        "name": "alho",
+        "type": "veggie",
+        "months": "6,7,8,9,10",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/alho.jpg?mw=960"
+    },
+    {
+        "id": "108",
+        "name": "alho-porro",
+        "type": "veggie",
+        "months": "1,5,6,7,8,9,10,11,12",
+        "monthsOutSeason": "2,3,4",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/alho-porro.jpg?mw=960"
+    },
+    {
+        "id": "109",
+        "name": "batata",
+        "type": "veggie",
+        "months": "4,5,6,7,8,9,10,11,12",
+        "monthsOutSeason": "1,2,3",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/batata.jpg?mw=960"
+    },
+    {
+        "id": "159",
+        "name": "batata_doce",
+        "type": "veggie",
+        "months": "9,10,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/batata_doce.jpg?mw=960"
+    },
+    {
+        "id": "110",
+        "name": "beldroegas",
+        "type": "veggie",
+        "months": "4,5,6,7,8,9,10,11,12",
+        "monthsOutSeason": "1,2,3",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/beldroegas.jpg?mw=960"
+    },
+    {
+        "id": "111",
+        "name": "beringela",
+        "type": "veggie",
+        "months": "6,7,8,9,10",
+        "monthsOutSeason": "1,2,3,4,5,11,12",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/beringela.jpg?mw=960"
+    },
+    {
+        "id": "112",
+        "name": "beterraba",
+        "type": "veggie",
+        "months": "1,2,3,4,5,6,10,11,12",
+        "monthsOutSeason": "7,8,9",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/beterraba.jpg?mw=960"
+    },
+    {
+        "id": "145",
+        "name": "bimi",
+        "type": "veggie",
+        "months": "1,2,3,4,5,6,9,10,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/bimi.jpg?mw=960"
+    },
+    {
+        "id": "113",
+        "name": "broculos",
+        "type": "veggie",
+        "months": "1,2,3,4,5,6,9,10,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/broculos.jpg?mw=960"
+    },
+    {
+        "id": "114",
+        "name": "cebola",
+        "type": "veggie",
+        "months": "1,2,3,4,5,6,7,8,9,10,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/cebola.jpg?mw=960"
+    },
+    {
+        "id": "115",
+        "name": "cebola-nova",
+        "type": "veggie",
+        "months": "4,5,6",
+        "monthsOutSeason": "3,7",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/cebola-nova.jpg?mw=960"
+    },
+    {
+        "id": "116",
+        "name": "cenoura",
+        "type": "veggie",
+        "months": "1,2,3,4,5,6,7,8,9,10,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/cenoura.jpg?mw=960"
+    },
+    {
+        "id": "117",
+        "name": "chicoria-de-folhas",
+        "type": "veggie",
+        "months": "1,2,3,4,5,6,10,11,12",
+        "monthsOutSeason": "7,8,9",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/chicoria-de-folhas.jpg?mw=960"
+    },
+    {
+        "id": "118",
+        "name": "chuchu",
+        "type": "veggie",
+        "months": "6,7,8,9,10",
+        "monthsOutSeason": "4,5,11,12",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/chuchu.jpg?mw=960"
+    },
+    {
+        "id": "119",
+        "name": "courgette",
+        "type": "veggie",
+        "months": "5,6,7,8,9,10",
+        "monthsOutSeason": "1,2,3,4,11,12",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/courgette.jpg?mw=960"
+    },
+    {
+        "id": "143",
+        "name": "flor",
+        "type": "veggie",
+        "months": "1,2,3,9,10,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/flor.jpg?mw=960"
+    },
+    {
+        "id": "120",
+        "name": "couve-bruxelas",
+        "type": "veggie",
+        "months": "1,2,3,9,10,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/couve-bruxelas.jpg?mw=960"
+    },
+    {
+        "id": "147",
+        "name": "chinesa",
+        "type": "veggie",
+        "months": "1,2,3,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/chinesa.jpg?mw=960"
+    },
+    {
+        "id": "146",
+        "name": "galega",
+        "type": "veggie",
+        "months": "1,2,3,4,5,6,9,10,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/galega.jpg?mw=960"
+    },
+    {
+        "id": "121",
+        "name": "couve-lombarda",
+        "type": "veggie",
+        "months": "1,2,3,4,6,7,8,9,10,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/couve-lombarda.jpg?mw=960"
+    },
+    {
+        "id": "122",
+        "name": "couve-portuguesa",
+        "type": "veggie",
+        "months": "1,2,3,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/couve-portuguesa.jpg?mw=960"
+    },
+    {
+        "id": "144",
+        "name": "romanesca",
+        "type": "veggie",
+        "months": "1,2,3,4,5,6,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/romanesca.jpg?mw=960"
+    },
+    {
+        "id": "123",
+        "name": "endivia",
+        "type": "veggie",
+        "months": "1,2,3,11,12",
+        "monthsOutSeason": "4,10",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/endivia.jpg?mw=960"
+    },
+    {
+        "id": "124",
+        "name": "ervilha",
+        "type": "veggie",
+        "months": "3,4,5",
+        "monthsOutSeason": "2,6",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/ervilha.jpg?mw=960"
+    },
+    {
+        "id": "125",
+        "name": "espargos",
+        "type": "veggie",
+        "months": "2,3,4",
+        "monthsOutSeason": "1,5",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/espargos.jpg?mw=960"
+    },
+    {
+        "id": "126",
+        "name": "espinafres",
+        "type": "veggie",
+        "months": "1,2,3,4,5,10,11,12",
+        "monthsOutSeason": "6,7,8,9",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/espinafres.jpg?mw=960"
+    },
+    {
+        "id": "127",
+        "name": "fava",
+        "type": "veggie",
+        "months": "4,5",
+        "monthsOutSeason": "3,6,7",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/fava.jpg?mw=960"
+    },
+    {
+        "id": "128",
+        "name": "feijao-verde",
+        "type": "veggie",
+        "months": "6,7,8,9",
+        "monthsOutSeason": "3,4,5,10,11",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/feijao-verde.jpg?mw=960"
+    },
+    {
+        "id": "129",
+        "name": "funcho",
+        "type": "veggie",
+        "months": "1,2,3,4,5,10,11,12",
+        "monthsOutSeason": "6,7,8,9",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/funcho.jpg?mw=960"
+    },
+    {
+        "id": "130",
+        "name": "grelos",
+        "type": "veggie",
+        "months": "1,2,3,4,6,7,8,9,10,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/grelos.jpg?mw=960"
+    },
+    {
+        "id": "131",
+        "name": "milho-doce",
+        "type": "veggie",
+        "months": "6,7,8,9",
+        "monthsOutSeason": "5,10",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/milho-doce.jpg?mw=960"
+    },
+    {
+        "id": "132",
+        "name": "nabicas",
+        "type": "veggie",
+        "months": "1,2,3,4,5,10,11,12",
+        "monthsOutSeason": "6,7,8,9",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/nabicas.jpg?mw=960"
+    },
+    {
+        "id": "133",
+        "name": "nabo",
+        "type": "veggie",
+        "months": "1,2,3,4,5,10,11,12",
+        "monthsOutSeason": "6,7,8,9",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/nabo.jpg?mw=960"
+    },
+    {
+        "id": "134",
+        "name": "pepino",
+        "type": "veggie",
+        "months": "5,6,7,8,9,10,11",
+        "monthsOutSeason": "1,2,3,4,12",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/pepino.jpg?mw=960"
+    },
+    {
+        "id": "135",
+        "name": "pimento",
+        "type": "veggie",
+        "months": "6,7,8,9,10",
+        "monthsOutSeason": "1,2,3,4,5,11,12",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/pimento.jpg?mw=960"
+    },
+    {
+        "id": "136",
+        "name": "rabanete",
+        "type": "veggie",
+        "months": "1,2,3,4,5,6,10,11,12",
+        "monthsOutSeason": "7,8,9",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/rabanete.jpg?mw=960"
+    },
+    {
+        "id": "137",
+        "name": "rabano",
+        "type": "veggie",
+        "months": "1,2,3,4,11,12",
+        "monthsOutSeason": "5,6,7,8,9,10",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/rabano.jpg?mw=960"
+    },
+    {
+        "id": "138",
+        "name": "repolho",
+        "type": "veggie",
+        "months": "1,2,3,4,5,10,11,12",
+        "monthsOutSeason": null,
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/repolho.jpg?mw=960"
+    },
+    {
+        "id": "139",
+        "name": "rucula",
+        "type": "veggie",
+        "months": "1,2,3,4,5,6,10,11,12",
+        "monthsOutSeason": "7,8,9",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/rucula.jpg?mw=960"
+    },
+    {
+        "id": "140",
+        "name": "rutabaga",
+        "type": "veggie",
+        "months": "1,2,3,11,12",
+        "monthsOutSeason": "4,9,10",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/rutabaga.jpg?mw=960"
+    },
+    {
+        "id": "141",
+        "name": "salsifri",
+        "type": "veggie",
+        "months": "1,2,3,11,12",
+        "monthsOutSeason": "4,10",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/salsifri.jpg?mw=960"
+    },
+    {
+        "id": "142",
+        "name": "tomate",
+        "type": "veggie",
+        "months": "6,7,8,9,10",
+        "monthsOutSeason": "1,2,3,4,5,11,12",
+        "pictureUrl": "https://www.deco.proteste.pt/-/media/edideco/Images/Home/Alimentacao/Produtos-alimentares/news/2018/fruta_legumes/imgs-send/tomate.jpg?mw=960"
+    }
+]

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>greens</title>
+    <style>
+        button {
+            background: none;
+            border: none;
+        }
+
+        .selected {
+            background-color: #ddd;
+        }
+
+        .border {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+
+<body class="bg-theme">
+</body>
+
+<script type="module">
+    import { registerServiceWorker } from '/lib/service-worker.js'
+    import { cls } from '/lib/ui/utils.js'
+    import van, { injectTagsIntoWindow, renderAfterLoad } from '/lib/ui/van-wrapper.js'
+    import greens from './greens.json' with { type: "json" }
+
+    const FRUIT = 'fruit'
+    const VEGGIES = 'veggie'
+
+    injectTagsIntoWindow()
+    renderAfterLoad(app)
+    registerServiceWorker()
+
+    const months = [...Array(12).keys()].map(n => new Date(0, n, 1).toLocaleDateString('default', { month: 'long' }).toLowerCase())
+    const currentMonth = new Date().getMonth()
+
+    function app() {
+        const type = van.state(FRUIT)
+        const month = van.state(currentMonth)
+        const picture = van.state(null)
+
+        const inSeason = van.derive(() => greens.filter(g => g.type === type.val && g.months.split(',').find(m => Number(m.split('-')[0]) - 1 === month.val)))
+
+        return main(
+            div(
+                button({ onclick: () => type.val = FRUIT, class: () => cls(type.val === FRUIT && 'selected') }, 'fruit'),
+                button({ onclick: () => type.val = VEGGIES, class: () => cls(type.val === VEGGIES && 'selected') }, 'veggies'),
+            ),
+            div(
+                months.map((m, i) => button({ onclick: () => month.val = i, class: () => cls(month.val === i && 'selected') }, m)),
+            ),
+            () => ul(
+                inSeason.val.map((g) => li({ onclick: () => picture.val = g, style: 'position: relative' },
+                    g.name,
+                    img({ src: g.pictureUrl, style: () => `display: ${picture.val === g ? 'inline' : 'none'}; position: absolute` }),
+                )),
+            ),
+        )
+    }
+</script>
+
+</html>
