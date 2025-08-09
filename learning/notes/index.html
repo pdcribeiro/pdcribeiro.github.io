@@ -10,8 +10,9 @@
             padding: 0.5rem;
         }
 
-        button {
-            margin: 0.5rem 1rem;
+        p {
+            margin: 0;
+            padding: 0.5rem 0;
         }
     </style>
 </head>
@@ -28,66 +29,51 @@
     renderAfterLoad(app)
     registerServiceWorker()
 
-    const items = [...Array(5).keys()].map(i => 'item ' + i)
-
+    // FIX: click to edit selects element. log triggered events. check if firefox shows events somewhere
     function app() {
-        const newItemInput = input({ style: 'margin-bottom: 1rem' })
-
-        let itemsData = items
+        let itemsData = [...Array(5).keys()].map(i => 'item ' + i)
 
         const itemsList = new DragAndDropList({
             items: itemsData.map(itemText => Item({ id: itemText }, itemText)),
-            onSelect(index) {
+            onSelect(index, selected) {
                 itemsList.getElement(index).style.backgroundColor = 'gray'
-                // if (itemSelection.selected.size === 1) {
-                //     setEditableForAll(element, false)
-                // }
+                if (selected.length === 1) setEditable(false)
             },
-            onDeselect(index) {
+            onDeselect(index, selected) {
                 itemsList.getElement(index).style.background = 'none'
-                // if (itemSelection.selected.size === 0) {
-                //     setEditableForAll(element, true)
-                // }
+                if (selected.length === 0) setEditable(true)
             },
             onDrop: (selectedIndexes, droppedIndex) => {
                 itemsData = DragAndDropList.applyDrop(itemsData, selectedIndexes, droppedIndex)
             },
         })
 
-        return main(
-            newItemInput,
-            button({ onclick: () => addItem() }, 'add'),
-            itemsList.element,
-        )
+        return main(itemsList.element)
 
         function Item({ id }, text) {
             return [
-                span({ contenteditable: true }, text),
-                button({ onclick: () => removeItem(id) }, 'remove'),
+                p({ contenteditable: true }, text),
             ]
         }
 
-        function addItem() {
-            const itemText = newItemInput.value
+        function addItem(itemText) {
             if (itemText.length === 0) return
             itemsList.addItem(
                 Item({ id: itemText }, itemText)
             )
             itemsData.push(itemText)
-            newItemInput.value = ''
         }
 
         function removeItem(id) {
             itemsList.removeItem(itemsData.indexOf(id))
             itemsData = itemsData.filter(it => it !== id)
         }
-    }
 
-    // function setEditableForAll(element, value) {
-    //     Array.from(
-    //         element.parentElement.querySelectorAll('li')
-    //     ).forEach(el => el.setAttribute('contenteditable', value))
-    // }
+        function setEditable(value) {
+            Array.from(itemsList.element.querySelectorAll('p'))
+                .forEach(el => el.setAttribute('contenteditable', value))
+        }
+    }
 </script>
 <!-- <script type="module" src="./notes.user.test.js"></script> -->
 
