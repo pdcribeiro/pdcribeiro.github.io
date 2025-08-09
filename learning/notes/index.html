@@ -6,9 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>notes</title>
     <style>
-        ul {
-            padding: 0;
-        }
     </style>
 </head>
 
@@ -16,7 +13,7 @@
 </body>
 
 <script type="module">
-    import { cls, stl } from '/lib/ui/utils.js'
+    import { DragAndDropList } from '/lib/ui/components/DragAndDropList.js'
     import { registerServiceWorker } from '/lib/service-worker.js'
     import van, { injectTagsIntoWindow, renderAfterLoad } from '/lib/ui/van-wrapper.js'
 
@@ -24,167 +21,25 @@
     renderAfterLoad(app)
     registerServiceWorker()
 
-    const items = [...Array(20).keys()]
+    const items = [...Array(20).keys()].map(i => 'Item ' + i)
 
-    const preventDefault = (e) => e.preventDefault()
-
-    // Use cases:
-    // clicks and holds item > drags item > drops item > item is moved
-    // clicks and holds item > releases item > item is selected > clicks item > item is deselected
-    // clicks and holds item > releases item > item is selected > clicks other item > other item is selected > clicks and holds either item > drags item > drop item > both items are moved
-    // clicks and holds item > releases item > item is selected > clicks and holds other item > other item is selected > drags item > drop item > both items are moved
-    //
-    // FIX: sometimes mouseup event is not received so items are never dropped
     function app() {
-        const itemSelection = new ItemSelectionManager({
-            onSelect: (el) => el.style.backgroundColor = 'gray',
-            onDeselect: (el) => {
-                el.style.background = 'none'
-                if (itemSelection.selected.size === 0) {
-                    setEditableForAll(el, true)
-                }
-            },
+        const newItemInput = input()
+
+        const itemsList = new DragAndDropList({
+            onMove: (selected, dropped) => console.log({ selected, dropped }),
         })
-
-        const dragAndDrop = new DragAndDropManager({
-            placeholder: hr(),
-        })
-
-        let ignoreClick = false
-
-        const clickAndHold = new ClickAndHoldManager({
-            onHold(event) {
-                const element = getItemElement(event)
-
-                if (itemSelection.selected.size === 0) {
-                    itemSelection.start(element)
-                    setEditableForAll(element, false)
-                } else if (!itemSelection.selected.has(element)) {
-                    itemSelection.toggle(element)
-                }
-
-                document.addEventListener('mousemove', onPointerMove)
-                document.addEventListener('touchmove', onPointerMove, { passive: false })
-            },
-            onHoldRelease(event) {
-                ignoreClick = true // ignore click triggered in mouse devices, which would deselect item
-                setTimeout(() => ignoreClick = false, 50)
-
-                dragAndDrop.drop(...itemSelection.selected)
-
-                document.removeEventListener('mousemove', onPointerMove)
-                document.removeEventListener('touchmove', onPointerMove)
-            },
-        })
-
-        function onPointerMove(event) {
-            event.preventDefault() // prevent scroll when holding on touch devices
-            dragAndDrop.drag(getPointerY(event))
-        }
 
         return main(
-            ul({
-                onpointermove: clickAndHold.abort, // allow scrolling on touch devices
-                ondragstart: preventDefault, // disable drag and drop API which doesn't support touch devices
-                oncontextmenu: preventDefault, // disable context menu on touch devices, which is triggered on click and hold
-            },
-                items.map(i =>
-                    li({
-                        contenteditable: true,
-                        onmousedown: clickAndHold.click,
-                        onmouseup: clickAndHold.release,
-                        ontouchstart: clickAndHold.click,
-                        ontouchend: clickAndHold.release,
-                        onclick: (e) => ignoreClick || itemSelection.toggle(getItemElement(e)),
-                        onpointerdown: (e) => getItemElement(e).releasePointerCapture(e.pointerId), // allows receiving onpointerenter on touch devices
-                        onpointerenter: (e) => dragAndDrop.hover(getItemElement(e)),
-                        style: stl({
-                            height: '50px',
-                            touchAction: 'manipulation',
-                        }),
-                    }, 'item ', i)
-                )
-            ),
+            newItemInput,
+            button({ onclick: () => itemsList.addItem(newItemInput.value) }, 'add'),
+            itemsList.render(...items.map((item, i) =>
+                div({ style: 'height: 50px' },
+                    span(item, ' '),
+                    button({ onclick: () => itemsList.removeItem(i) }, 'remove')
+                ),
+            ))
         )
-    }
-
-    function setEditableForAll(element, value) {
-        Array.from(
-            element.parentElement.querySelectorAll('li')
-        ).forEach(el => el.setAttribute('contenteditable', value))
-    }
-
-    function getItemElement(event) {
-        return event.target.closest('li')
-    }
-
-    function getPointerY(event) {
-        return event.clientY ?? event.touches[0].clientY
-    }
-
-    // Utils
-
-    const CLICK_AND_HOLD_TIME = 500
-
-    function ClickAndHoldManager({ onHold, onHoldRelease }) {
-        let timeout
-
-        return {
-            click(event) {
-                timeout = setTimeout(() => {
-                    onHold(event)
-                    timeout = null
-                }, CLICK_AND_HOLD_TIME)
-            },
-            release(event) {
-                if (timeout) clearTimeout(timeout)
-                else onHoldRelease(event)
-            },
-            abort() {
-                clearTimeout(timeout)
-            },
-        }
-    }
-
-    function ItemSelectionManager({ onSelect, onDeselect }) {
-        const selected = new Set()
-
-        return {
-            selected,
-            start: (item) => selected.size === 0 && toggleItem(item),
-            toggle: (item) => selected.size > 0 && toggleItem(item),
-        }
-
-        function toggleItem(item) {
-            if (selected.has(item)) {
-                selected.delete(item)
-                onDeselect(item)
-            } else {
-                selected.add(item)
-                onSelect(item)
-            }
-        }
-    }
-
-    function DragAndDropManager({ placeholder }) {
-        let hoveredElement
-
-        return {
-            hover: (el) => hoveredElement = el,
-            drag: movePlaceholder,
-            drop: (...els) => placeholder.replaceWith(...els),
-        }
-
-        function movePlaceholder(pointerY) {
-            const rect = hoveredElement.getBoundingClientRect()
-            const centerY = rect.top + rect.height / 2 + window.scrollY
-
-            if (pointerY < centerY && placeholder.nextSibling !== hoveredElement) {
-                hoveredElement.insertAdjacentElement('beforebegin', placeholder)
-            } else if (pointerY >= centerY && hoveredElement.nextSibling !== placeholder) {
-                hoveredElement.insertAdjacentElement('afterend', placeholder)
-            }
-        }
     }
 </script>
 <!-- <script type="module" src="./notes.user.test.js"></script> -->
