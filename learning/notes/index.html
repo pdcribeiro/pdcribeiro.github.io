@@ -38,7 +38,12 @@
     function app() {
         const itemSelection = new ItemSelectionManager({
             onSelect: (el) => el.style.backgroundColor = 'gray',
-            onDeselect: (el) => el.style.background = 'none',
+            onDeselect: (el) => {
+                el.style.background = 'none'
+                if (itemSelection.selected.size === 0) {
+                    setEditableForAll(el, true)
+                }
+            },
         })
 
         const dragAndDrop = new DragAndDropManager({
@@ -53,6 +58,7 @@
 
                 if (itemSelection.selected.size === 0) {
                     itemSelection.start(element)
+                    setEditableForAll(element, false)
                 } else if (!itemSelection.selected.has(element)) {
                     itemSelection.toggle(element)
                 }
@@ -102,6 +108,12 @@
         )
     }
 
+    function setEditableForAll(element, value) {
+        Array.from(
+            element.parentElement.querySelectorAll('li')
+        ).forEach(el => el.setAttribute('contenteditable', value))
+    }
+
     function getItemElement(event) {
         return event.target.closest('li')
     }
@@ -145,11 +157,11 @@
 
         function toggleItem(item) {
             if (selected.has(item)) {
-                onDeselect(item)
                 selected.delete(item)
+                onDeselect(item)
             } else {
-                onSelect(item)
                 selected.add(item)
+                onSelect(item)
             }
         }
     }
