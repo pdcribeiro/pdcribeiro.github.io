@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>notes</title>
+    <title>DragAndDropList component example</title>
     <style>
         body {
             padding: 0.5rem;
@@ -21,12 +21,10 @@
 
 <script type="module">
     import { DragAndDropList } from '/lib/ui/components/DragAndDropList.js'
-    import { registerServiceWorker } from '/lib/service-worker.js'
     import van, { injectTagsIntoWindow, renderAfterLoad } from '/lib/ui/van-wrapper.js'
 
     injectTagsIntoWindow()
     renderAfterLoad(app)
-    registerServiceWorker()
 
     const items = [...Array(5).keys()].map(i => 'item ' + i)
 
@@ -39,15 +37,9 @@
             items: itemsData.map(itemText => Item({ id: itemText }, itemText)),
             onSelect(index) {
                 itemsList.getElement(index).style.backgroundColor = 'gray'
-                // if (itemSelection.selected.size === 1) {
-                //     setEditableForAll(element, false)
-                // }
             },
             onDeselect(index) {
                 itemsList.getElement(index).style.background = 'none'
-                // if (itemSelection.selected.size === 0) {
-                //     setEditableForAll(element, true)
-                // }
             },
             onDrop: (selectedIndexes, droppedIndex) => {
                 itemsData = DragAndDropList.applyDrop(itemsData, selectedIndexes, droppedIndex)
@@ -62,7 +54,7 @@
 
         function Item({ id }, text) {
             return [
-                span({ contenteditable: true }, text),
+                span(text),
                 button({ onclick: () => removeItem(id) }, 'remove'),
             ]
         }
@@ -82,13 +74,7 @@
             itemsData = itemsData.filter(it => it !== id)
         }
     }
-
-    // function setEditableForAll(element, value) {
-    //     Array.from(
-    //         element.parentElement.querySelectorAll('li')
-    //     ).forEach(el => el.setAttribute('contenteditable', value))
-    // }
 </script>
-<!-- <script type="module" src="./notes.user.test.js"></script> -->
+<!-- <script type="module" src="/lib/ui/components/DragAndDropList.user.test.js"></script> -->
 
 </html>
