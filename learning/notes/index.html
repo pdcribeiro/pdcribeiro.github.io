@@ -16,7 +16,7 @@
 </body>
 
 <script type="module">
-    import { cls } from '/lib/ui/utils.js'
+    import { cls, stl } from '/lib/ui/utils.js'
     import { registerServiceWorker } from '/lib/service-worker.js'
     import van, { injectTagsIntoWindow, renderAfterLoad } from '/lib/ui/van-wrapper.js'
 
@@ -92,7 +92,10 @@
                         onclick: (e) => ignoreClick || itemSelection.toggle(getItemElement(e)),
                         onpointerdown: (e) => getItemElement(e).releasePointerCapture(e.pointerId), // allows receiving onpointerenter on touch devices
                         onpointerenter: (e) => dragAndDrop.hover(getItemElement(e)),
-                        style: `height: 50px; touch-action: manipulation`,
+                        style: stl({
+                            height: '50px',
+                            touchAction: 'manipulation',
+                        }),
                     }, 'item ', i)
                 )
             ),
