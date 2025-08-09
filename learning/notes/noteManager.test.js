@@ -1,5 +1,5 @@
 import { InMemoryRepo } from '../../lib/persistence/InMemoryRepo.js'
-import { eq, test } from '../../test/runner.js'
+import { eq, test } from '../../lib/test/runner.js'
 import { NoteManager } from './noteManager.js'
 
 const item = 'item'

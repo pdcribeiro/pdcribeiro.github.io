@@ -1,7 +1,7 @@
 // Browser tests for the pomodoro app
 
-import { browserTest } from '/test/runner.js'
-import { visit } from '/test/ui-helpers.js'
+import { browserTest } from '/lib/test/runner.js'
+import { visit } from '/lib/test/ui-helpers.js'
 
 const URL = '/learning/pomodoro'
 

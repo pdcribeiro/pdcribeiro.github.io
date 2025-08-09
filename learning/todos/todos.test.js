@@ -2,7 +2,7 @@
 
 // TODO: add browser tests
 
-import { eq, test } from '../../test/runner.js'
+import { eq, test } from '../../lib/test/runner.js'
 import { TODO_ITEM_STATES, todoItem, todoList } from './todos.js'
 
 const title = 'Buy bread'

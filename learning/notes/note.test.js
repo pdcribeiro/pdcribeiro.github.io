@@ -1,4 +1,4 @@
-import { ass, eq, test } from '../../test/runner.js'
+import { ass, eq, test } from '../../lib/test/runner.js'
 import { Note } from './note.js'
 
 const item = 'item'
