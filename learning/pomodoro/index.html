@@ -154,7 +154,7 @@
             if (phase.val === phase.oldVal) {
                 return
             }
-            clearTickInterval()
+            clearInterval(tickInterval)
             if (pomodoroState.oldVal.timeRemaining <= 1) {
                 beep(2)
                 notifyInterval = setInterval(() => beep(2), NOTIFY_INTERVAL_S * 1000)
@@ -178,13 +178,8 @@
             }
         }
 
-        function clearTickInterval() {
-            clearInterval(tickInterval)
-            tickInterval = null
-        }
-
         function clearIntervalAndUpdate(callback) {
-            clearTickInterval()
+            clearInterval(tickInterval)
             update(callback)
         }
 
