@@ -99,6 +99,7 @@
     import { PHASES, TIMER_STATES, pomodoro, sanitizeConfig } from './pomodoro.js'
 
     const TICK_INTERVAL_MS = 1000
+    const NOTIFY_INTERVAL_S = 60
 
     injectTagsIntoWindow()
     renderAfterLoad(app)
@@ -107,6 +108,7 @@
     function app() {
         let currentConfig = loadConfig()
         let tickInterval
+        let notifyInterval
 
         const pomodoroState = van.state(pomodoro.init(currentConfig))
         const phase = van.derive(() => pomodoroState.val.phase)
@@ -154,7 +156,8 @@
             }
             clearTickInterval()
             if (pomodoroState.oldVal.timeRemaining <= 1) {
-                beep()
+                beep(2)
+                notifyInterval = setInterval(() => beep(2), NOTIFY_INTERVAL_S * 1000)
             }
         }
 
@@ -192,6 +195,7 @@
         function start() {
             update(s => s.start(now()))
             tickInterval = setInterval(() => update(s => s.tick(now())), TICK_INTERVAL_MS)
+            clearInterval(notifyInterval)
         }
     }
 
