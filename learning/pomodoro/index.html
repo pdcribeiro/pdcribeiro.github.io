@@ -101,6 +101,8 @@
     const TICK_INTERVAL_MS = 1000
     const NOTIFY_INTERVAL_S = 60
 
+    const primaryButtonStyle = { style: 'font-size: 2.5rem' }
+
     injectTagsIntoWindow()
     renderAfterLoad(app)
     registerServiceWorker()
@@ -130,10 +132,10 @@
                     i({ class: 'fa-solid fa-backward-step' }),
                 ),
                 () => pomodoroState.val.timerState === TIMER_STATES.running
-                    ? button({ ariaLabel: 'Pause', onclick: () => clearIntervalAndUpdate(s => s.pause()) },
+                    ? button({ ariaLabel: 'Pause', onclick: () => clearIntervalAndUpdate(s => s.pause()), ...primaryButtonStyle },
                         i({ class: 'fa-solid fa-pause' }),
                     )
-                    : button({ ariaLabel: 'Start', onclick: start, style: 'font-size: 2.5rem' },
+                    : button({ ariaLabel: 'Start', onclick: start, ...primaryButtonStyle },
                         i({ class: 'fa-solid fa-play' }),
                     ),
                 button({ ariaLabel: 'Next', onclick: () => clearIntervalAndUpdate(s => s.nextPhase()) },
