@@ -1,6 +1,6 @@
-import { InMemoryRepo } from '../../lib/persistence/InMemoryRepo.js'
+import InMemoryRepo from '../../lib/persistence/in-memory-repo.js'
 import { eq, test } from '../../lib/test/runner.js'
-import { NoteManager } from './noteManager.js'
+import NotesManager from './notes-manager.js'
 
 const item = 'item'
 const otherItem = 'other item'
@@ -58,7 +58,7 @@ test({
 })
 
 function TestManager() {
-    return new NoteManager({
+    return new NotesManager({
         repo: new InMemoryRepo(),
         now: Date.now,
     })

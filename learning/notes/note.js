@@ -1,4 +1,4 @@
-export function Note({ id = null, items = [], changes = [], timeCreated }, { now }) {
+export default function Note({ id = null, items = [], changes = [], timeCreated }, { now }) {
     return {
         id,
         items,

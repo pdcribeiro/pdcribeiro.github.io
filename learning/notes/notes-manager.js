@@ -1,6 +1,6 @@
-import { Note } from './note.js'
+import Note from './note.js'
 
-export function NoteManager({ repo, now }) {
+export default function NotesManager({ repo, now }) {
     return {
         listNotes: async () => await repo.find(),
         createNote: async () => {
