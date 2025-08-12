@@ -50,8 +50,8 @@
 
         button {
             padding: 0 1rem;
-            margin: 0 0.5rem;
-            font-size: 2.5rem;
+            margin: 0 0.75rem;
+            font-size: 2rem;
             color: inherit;
             background: none;
             border: none;
@@ -133,7 +133,7 @@
                     ? button({ ariaLabel: 'Pause', onclick: () => clearIntervalAndUpdate(s => s.pause()) },
                         i({ class: 'fa-solid fa-pause' }),
                     )
-                    : button({ ariaLabel: 'Start', onclick: start },
+                    : button({ ariaLabel: 'Start', onclick: start, style: 'font-size: 2.5rem' },
                         i({ class: 'fa-solid fa-play' }),
                     ),
                 button({ ariaLabel: 'Next', onclick: () => clearIntervalAndUpdate(s => s.nextPhase()) },
