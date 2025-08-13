@@ -3,49 +3,47 @@
 import { browserTest } from '/lib/test/runner.js'
 import { visit } from '/lib/test/ui-helpers.js'
 
-const URL = '/pomodoro'
-
 browserTest({
     'shows time': () =>
-        visit(URL)
+        visit()
             .has('25:00'),
     'starts timer': () =>
-        visit(URL)
+        visit()
             .click('start')
             .has('24:59')
             .has('24:58'),
     'pauses timer': () =>
-        visit(URL)
+        visit()
             .click('start')
             .has('24:59')
             .click('pause')
             .wait(1000)
             .has('24:59'),
     'stops timer': () =>
-        visit(URL)
+        visit()
             .click('start')
             .has('24:59')
             .click('previous')
             .has('25:00'),
     'moves to next phase': () =>
-        visit(URL)
+        visit()
             .click('next')
             .has('05:00'),
     'moves to previous phase': () =>
-        visit(URL)
+        visit()
             .click('next')
             .has('05:00')
             .click('previous')
             .has('25:00'),
     'opens settings': () =>
-        visit(URL)
+        visit()
             .click('settings')
             .has('work')
             .has('short')
             .has('long')
             .has('count'),
     'closes settings': () =>
-        visit(URL)
+        visit()
             .click('settings')
             .has('work')
             .click('settings')
@@ -62,7 +60,7 @@ browserTest({
 })
 
 function changeSettings(update) {
-    return visit(URL)
+    return visit()
         .click('settings')
         .find('work')
         .type(update)
