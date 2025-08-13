@@ -4,6 +4,9 @@ export default function Note({ id = null, items = [], changes = [], timeCreated 
         items,
         changes,
         timeCreated: timeCreated ?? now(),
+        get title() {
+            return items[0]?.trim()
+        },
         get timeUpdated() {
             return this.changes.at(-1)?.timestamp
         },

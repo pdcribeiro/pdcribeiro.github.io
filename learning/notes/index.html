@@ -5,75 +5,32 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>notes</title>
-    <style>
-        body {
-            padding: 0.5rem;
-        }
-
-        p {
-            margin: 0;
-            padding: 0.5rem 0;
-        }
-    </style>
+    <link rel="stylesheet" href="/third-party/modern-normalize.min.css" />
+    <link rel="stylesheet" href="/style/base.css" />
+    <link rel="stylesheet" href="/style/layout-mobile.css" />
 </head>
 
-<body class="">
+<body>
 </body>
 
 <script type="module">
-    import { DragAndDropList } from '/lib/ui/components/DragAndDropList.js'
+    import LocalStorageRepo from '/lib/persistence/local-storage-repo.js'
+    import { FileSystemRouter } from '/lib/routing.js'
     import { registerServiceWorker } from '/lib/service-worker.js'
-    import van, { injectTagsIntoWindow, renderAfterLoad } from '/lib/ui/van-wrapper.js'
+    import { injectTagsIntoWindow, renderAfterLoad, waitPromise } from '/lib/ui/van-wrapper.js'
+    import NotesManager from './notes-manager.js'
+
+    const repo = new LocalStorageRepo('notes')
+    const notesManager = new NotesManager({ repo, now: Date.now })
 
     injectTagsIntoWindow()
-    renderAfterLoad(app)
+
+    const App = () => waitPromise(repo.init(),
+        () => FileSystemRouter({ notesManager })
+    )
+
+    renderAfterLoad(App)
     registerServiceWorker()
-
-    // FIX: click to edit selects element. log triggered events. check if firefox shows events somewhere
-    function app() {
-        let itemsData = [...Array(5).keys()].map(i => 'item ' + i)
-
-        const itemsList = new DragAndDropList({
-            items: itemsData.map(itemText => Item({ id: itemText }, itemText)),
-            onSelect(index, selected) {
-                itemsList.getElement(index).style.backgroundColor = 'gray'
-                if (selected.length === 1) setEditable(false)
-            },
-            onDeselect(index, selected) {
-                itemsList.getElement(index).style.background = 'none'
-                if (selected.length === 0) setEditable(true)
-            },
-            onDrop: (selectedIndexes, droppedIndex) => {
-                itemsData = DragAndDropList.applyDrop(itemsData, selectedIndexes, droppedIndex)
-            },
-        })
-
-        return main(itemsList.element)
-
-        function Item({ id }, text) {
-            return [
-                p({ contenteditable: true }, text),
-            ]
-        }
-
-        function addItem(itemText) {
-            if (itemText.length === 0) return
-            itemsList.addItem(
-                Item({ id: itemText }, itemText)
-            )
-            itemsData.push(itemText)
-        }
-
-        function removeItem(id) {
-            itemsList.removeItem(itemsData.indexOf(id))
-            itemsData = itemsData.filter(it => it !== id)
-        }
-
-        function setEditable(value) {
-            Array.from(itemsList.element.querySelectorAll('p'))
-                .forEach(el => el.setAttribute('contenteditable', value))
-        }
-    }
 </script>
 <!-- <script type="module" src="./notes.user.test.js"></script> -->
 
