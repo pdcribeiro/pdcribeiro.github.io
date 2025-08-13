@@ -82,9 +82,9 @@
                         onUpdate: (data) => updateCounter(c.id, data),
                         onRemove: () => removeCounter(c.id),
                     })
-                ),
-                NewCounterInput({ onAdd: addCounter }),
-            )
+                )
+            ),
+            NewCounterInput({ onAdd: addCounter }),
         )
 
         async function updateCounter(id, data) {
