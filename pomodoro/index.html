@@ -117,6 +117,7 @@
         const working = van.derive(() => phase.val === PHASES.work)
         const iteration = van.derive(() => (working.val ? pomodoroState.val.workCount : pomodoroState.val.workCount - 1) % 4 + 1)
         van.derive(handlePhaseChange)
+        van.derive(startTimerOnSpacePress)
 
         const configVisible = van.state(false)
         const configTextarea = textarea({ rows: 4, cols: 10 })
@@ -161,6 +162,16 @@
                 beep(2)
                 notifyInterval = setInterval(() => beep(2), NOTIFY_INTERVAL_S * 1000)
             }
+        }
+
+        function startTimerOnSpacePress() {
+            document.addEventListener('mouseup', () => document.activeElement.blur()) // prevent clicking last clicked button on space press
+            document.addEventListener('keydown', (e) =>
+                e.target.tagName !== 'BUTTON' // ignore tab navigation space clicks
+                && e.key === ' '
+                && pomodoroState.val !== TIMER_STATES.running
+                && start()
+            )
         }
 
         function handleConfigToggle() {
@@ -226,6 +237,6 @@
         }
     }
 </script>
-<script type="module" src="./pomodoro.user.test.js"></script>
+<!-- <script type="module" src="./pomodoro.user.test.js"></script> -->
 
 </html>
