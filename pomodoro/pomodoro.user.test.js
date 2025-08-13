@@ -3,7 +3,7 @@
 import { browserTest } from '/lib/test/runner.js'
 import { visit } from '/lib/test/ui-helpers.js'
 
-const URL = '/learning/pomodoro'
+const URL = '/pomodoro'
 
 browserTest({
     'shows time': () =>
