@@ -21,14 +21,13 @@
 </body>
 
 <script type="module">
-    import { getFileSystemRouter } from '/lib/routing.js'
+    import { FileSystemRouter } from '/lib/routing.js'
     import { injectTagsIntoWindow, renderAfterLoad, waitPromise } from '/lib/ui/van-wrapper.js'
     import db from './database.js'
 
     injectTagsIntoWindow()
 
-    const Router = getFileSystemRouter()
-    const App = () => waitPromise(db.connect(), Router)
+    const App = () => waitPromise(db.connect(), FileSystemRouter)
 
     renderAfterLoad(App)
 </script>
