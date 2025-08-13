@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>toolbox</title>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+    import { injectTagsIntoWindow, renderAfterLoad } from '/lib/ui/van-wrapper.js'
+
+    const PAGES = [
+        'greens',
+        'pomodoro',
+        'root-timer',
+    ]
+
+    injectTagsIntoWindow()
+
+    renderAfterLoad(() => main(
+        h1('tools'),
+        ul(PAGES.map(p =>
+            li(
+                a({ href: '/' + p }, p.replaceAll('-', ' ')),
+            )
+        )),
+    ))
+</script>
+
+</html>
