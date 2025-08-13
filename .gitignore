@@ -1,4 +1,8 @@
+# Ignore all
+
 *
+
+# Add common
 
 !components/
 !components/**
@@ -12,12 +16,6 @@
 !lib/
 !lib/**
 
-!notes/
-!notes/**
-
-!root-timer/
-!root-timer/**
-
 !style/
 !style/**
 
@@ -28,5 +26,15 @@
 !utils/**
 
 !.gitignore
+
+# Add apps
+
+!notes/
+!notes/**
+
+!root-timer/
+!root-timer/**
+
+# Ignore
 
 README.md
