@@ -75,6 +75,8 @@
     renderAfterLoad(App)
     registerServiceWorker()
 
+    // TODO: keep history
+    // TODO: reset each day
     function App() {
         return waitPromise(repo.find(), (countersData) => {
             const counters = van.state(countersData)
