@@ -29,6 +29,9 @@
 
 # Add apps
 
+!counters/
+!counters/**
+
 !notes/
 !notes/**
 

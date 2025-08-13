@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>counters</title>
+    <link rel="stylesheet" href="/third-party/modern-normalize.min.css" />
+    <link rel="stylesheet" href="/style/base.css" />
+    <style>
+        body {
+            padding: 1rem;
+        }
+
+        main {
+            margin: auto;
+            max-width: 512px;
+        }
+
+        input {
+            flex: 1;
+            margin: 1.5rem 0;
+            border: none;
+        }
+
+        button {
+            padding: 0;
+            margin: 0.5rem;
+            width: 2.5rem;
+            height: 2rem;
+            font-size: 0.75rem;
+            border: 1px solid #0001;
+        }
+    </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+    import LocalStorageRepo from '/lib/persistence/local-storage-repo.js'
+    import van, { bindInput, injectTagsIntoWindow, renderAfterLoad, waitPromise } from '/lib/ui/van-wrapper.js'
+    import { stl } from '/lib/ui/utils.js'
+    import { debounce, transformValues } from '/lib/utils.js'
+
+    const INCREMENTS = [10, 5, 1]
+    const DEBOUNCE_TIME = 300
+
+    const BACKSPACE_KEY = 'Backspace'
+    const ENTER_KEY = 'Enter'
+
+    injectTagsIntoWindow()
+
+    const repo = new LocalStorageRepo('counters')
+    const styles = transformValues({
+        counterContainer: stl({
+            display: 'flex',
+            alignItems: 'center',
+        }),
+        counterName: stl({
+            width: 0,
+        }),
+        counterValue: stl({
+            margin: '0.75rem',
+            width: '3rem',
+            fontSize: '1.5rem',
+            textAlign: 'center',
+        }),
+        buttonsContainer: stl({
+            display: 'flex',
+        }),
+    }, (style) => ({ style }))
+
+    renderAfterLoad(() => waitPromise(repo.find(), (countersData) => {
+        const counters = van.state(countersData)
+
+        return main(
+            () => div(
+                counters.val.map(c =>
+                    Counter({
+                        ...c,
+                        onUpdate: (data) => updateCounter(c.id, data),
+                        onRemove: () => removeCounter(c.id),
+                    })
+                ),
+                NewCounterInput({ onAdd: addCounter }),
+            )
+        )
+
+        async function updateCounter(id, data) {
+            await repo.patch(id, data)
+            // state update is handled by Counter component
+        }
+
+        async function removeCounter(id) {
+            await repo.del(id)
+            counters.set(s => s.filter(c => c.id !== id))
+        }
+
+        async function addCounter(name) {
+            const data = await repo.add({ name, value: 0 })
+            counters.set(s => [...s, data])
+        }
+    }))
+
+    function Counter({ onUpdate, onRemove, ...rest }) {
+        const nameState = van.state(rest.name)
+        const valueState = van.state(rest.value)
+
+        const updateName = debounce((name) => onUpdate({ name }), DEBOUNCE_TIME)
+        van.derive(updateNameOnChange)
+
+        return div(styles.counterContainer,
+            input({
+                ...bindInput(nameState),
+                onkeydown: removeWhenEmpty,
+                ...styles.counterName,
+            }),
+            span({
+                onclick: resetValue,
+                ...styles.counterValue
+            },
+                valueState
+            ),
+            div(styles.buttonsContainer,
+                INCREMENTS.map(n =>
+                    button({ onclick: () => increment(n) }, `+${n}`)
+                )
+            ),
+        )
+
+        function updateNameOnChange(update) {
+            if (nameState.val !== nameState.oldVal) {
+                updateName(nameState.val)
+            }
+        }
+
+        async function removeWhenEmpty(event) {
+            if ([ENTER_KEY, BACKSPACE_KEY].includes(event.key) && !nameState.val.length) {
+                await onRemove()
+            }
+        }
+
+        async function resetValue() {
+            await setValue(0)
+        }
+
+        async function setValue(value) {
+            await onUpdate({ value })
+            valueState.val = value
+        }
+
+        async function increment(count) {
+            await setValue(valueState.val + count)
+        }
+    }
+
+    function NewCounterInput({ onAdd }) {
+        const newCounterName = van.state('')
+
+        return input({
+            ...bindInput(newCounterName),
+            placeholder: 'new counter',
+            onkeydown: addCounterOnEnterPress,
+        })
+
+        async function addCounterOnEnterPress(event) {
+            const name = newCounterName.val.trim()
+            if (event.key === ENTER_KEY) {
+                if (name.length) await onAdd(name)
+                newCounterName.val = ''
+            }
+        }
+    }
+</script>
+
+</html>
