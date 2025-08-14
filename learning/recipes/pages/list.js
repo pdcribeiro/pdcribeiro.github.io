@@ -1,9 +1,9 @@
-import { waitPromise } from '/lib/ui/van-wrapper.js'
+import { Fragment, waitPromise } from '/lib/ui/van-wrapper.js'
 import db from '../database.js'
 import { getTitle } from '../recipes.js'
 
 export default function RecipeListPage() {
-    return waitPromise(db.findRecipes(), (recipes) => div(
+    return waitPromise(db.findRecipes(), (recipes) => Fragment(
         header(
             h1('recipes'),
         ),

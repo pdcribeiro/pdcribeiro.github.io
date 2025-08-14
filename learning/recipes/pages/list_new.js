@@ -1,3 +1,4 @@
+import { Fragment } from '/lib/ui/van-wrapper.js'
 import db from '../database.js'
 import { getTitle } from '../recipes.js'
 
@@ -26,7 +27,7 @@ export default async function load() {
 // UI logic (view)
 // - display data and add event listeners
 function RecipeListPage({ recipes, onRecipeClick, onAddClick }) {
-    return div(
+    return Fragment(
         header(
             h1('recipes'),
         ),

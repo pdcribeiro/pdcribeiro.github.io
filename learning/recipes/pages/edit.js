@@ -1,5 +1,5 @@
 import { getUrlParams, visit } from '/lib/routing.js'
-import { stateAsync, waitState } from '/lib/ui/van-wrapper.js'
+import { Fragment, stateAsync, waitState } from '/lib/ui/van-wrapper.js'
 import db from '../database.js'
 import { getTitle, isValidText } from '../recipes.js'
 
@@ -10,7 +10,7 @@ export default function EditRecipePage() {
     return waitState(recipeState, () => {
         const textInput = textarea({ value: recipeState.val.text })
 
-        return div(
+        return Fragment(
             header(
                 h1(getTitle(recipeState.val)),
             ),

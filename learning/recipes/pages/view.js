@@ -1,5 +1,5 @@
 import { getUrlParams } from '/lib/routing.js'
-import { stateAsync, waitState } from '/lib/ui/van-wrapper.js'
+import { Fragment, stateAsync, waitState } from '/lib/ui/van-wrapper.js'
 import db from '../database.js'
 import { getTitle } from '../recipes.js'
 
@@ -7,7 +7,7 @@ export default function ViewRecipePage() {
     const { id } = getUrlParams()
     const recipeState = stateAsync(db.getRecipe(id))
 
-    return waitState(recipeState, () => div(
+    return waitState(recipeState, () => Fragment(
         header(
             h1(getTitle(recipeState.val)),
         ),

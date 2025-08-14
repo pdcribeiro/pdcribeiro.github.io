@@ -1,11 +1,12 @@
 import { visit } from '/lib/routing.js'
+import { Fragment } from '/lib/ui/van-wrapper.js'
 import db from '../database.js'
 import { isValidText } from '../recipes.js'
 
 export default function AddRecipePage() {
     const textInput = textarea()
 
-    return div(
+    return Fragment(
         header(
             h1('new recipe'),
         ),
