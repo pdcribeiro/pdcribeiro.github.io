@@ -4,23 +4,26 @@ import van, { waitPromise } from '/lib/ui/van-wrapper.js'
 const BACKSPACE_KEY = 'Backspace'
 const ENTER_KEY = 'Enter'
 
-// TODO: handle mouse select across multiple items. maybe remove replace ul > li > p with div > p. maybe document fragment would be nice now
 // TODO: ignore click and hold when editing (eg. to select text on touch devices)
+// TODO: clarify contracts. cleanup
 export default function NoteViewPage({ params, notesManager }) {
     const noteId = params.id
 
     return waitPromise(notesManager.listItems(noteId), (loadedItems) => {
+        const editable = van.state(true)
+
         let items = loadedItems
 
         const itemsList = new DragAndDropListManager({
+            listProps: { contenteditable: editable },
             items: items.map(text => Item({ text })),
             onSelect(index, selected) {
                 itemsList.item(index).style.backgroundColor = 'gray'
-                if (selected.length === 1) setEditable(false)
+                if (selected.length === 1) editable.val = false
             },
             onDeselect(index, selected) {
                 itemsList.item(index).style.background = 'none'
-                if (selected.length === 0) setEditable(true)
+                if (selected.length === 0) editable.val = true
             },
             onDrop: (selectedIndexes, droppedIndex) => {
                 items = DragAndDropListManager.applyDrop(items, selectedIndexes, droppedIndex)
@@ -33,11 +36,10 @@ export default function NoteViewPage({ params, notesManager }) {
 
         function Item({ text }) {
             return p({
-                contenteditable: true,
                 onkeydown: handleKeyDown,
                 style: 'outline: none',
             },
-                text,
+                text.length ? text : br(),
             )
         }
 
@@ -119,11 +121,6 @@ export default function NoteViewPage({ params, notesManager }) {
                 selection.removeAllRanges()
                 selection.addRange(newSelectionRange)
             }
-        }
-
-        function setEditable(value) {
-            Array.from(itemsList.element.querySelectorAll('p'))
-                .forEach(el => el.setAttribute('contenteditable', value))
         }
     })
 }
