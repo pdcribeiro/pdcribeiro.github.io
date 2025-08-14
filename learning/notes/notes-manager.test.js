@@ -24,18 +24,19 @@ test({
         const notes = await manager.listNotes()
         eq(notes.length, 0)
     },
-    'created note has no items': async () => {
+    'created note has one empty item': async () => {
         const manager = new TestManager()
         const note = await manager.createNote()
         const items = await manager.listItems(note.id)
-        eq(items.length, 0)
+        eq(items.length, 1)
+        eq(items[0], '')
     },
     'adds item': async () => {
         const manager = new TestManager()
         const note = await manager.createNote()
         await manager.addItem(note.id, 0, item)
         const items = await manager.listItems(note.id)
-        eq(items.length, 1)
+        eq(items.length, 2)
         eq(items[0], item)
     },
     'updates item': async () => {
@@ -44,7 +45,7 @@ test({
         await manager.addItem(note.id, 0, item)
         await manager.updateItem(note.id, 0, otherItem)
         const items = await manager.listItems(note.id)
-        eq(items.length, 1)
+        eq(items.length, 2)
         eq(items[0], otherItem)
     },
     'removes item': async () => {
@@ -53,7 +54,7 @@ test({
         await manager.addItem(note.id, 0, item)
         await manager.removeItem(note.id, 0)
         const items = await manager.listItems(note.id)
-        eq(items.length, 0)
+        eq(items.length, 1)
     },
 })
 
