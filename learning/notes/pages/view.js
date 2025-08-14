@@ -1,4 +1,4 @@
-import { DragAndDropList } from '/lib/ui/components/DragAndDropList.js'
+import DragAndDropListManager from '/lib/ui/DragAndDropListManager.js'
 import van, { waitPromise } from '/lib/ui/van-wrapper.js'
 
 const BACKSPACE_KEY = 'Backspace'
@@ -12,7 +12,7 @@ export default function ViewNotePage({ params, notesManager }) {
     return waitPromise(notesManager.listItems(noteId), (loadedItems) => {
         let items = loadedItems
 
-        const itemsList = new DragAndDropList({
+        const itemsList = new DragAndDropListManager({
             items: items.map(text => Item({ text })),
             onSelect(index, selected) {
                 itemsList.item(index).style.backgroundColor = 'gray'
@@ -23,7 +23,7 @@ export default function ViewNotePage({ params, notesManager }) {
                 if (selected.length === 0) setEditable(true)
             },
             onDrop: (selectedIndexes, droppedIndex) => {
-                items = DragAndDropList.applyDrop(items, selectedIndexes, droppedIndex)
+                items = DragAndDropListManager.applyDrop(items, selectedIndexes, droppedIndex)
             },
         })
 
