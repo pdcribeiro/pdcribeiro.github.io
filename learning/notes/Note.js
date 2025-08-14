@@ -1,43 +1,45 @@
-export default function Note({ id = null, items = [], changes = [], timeCreated }, { now }) {
-    return {
-        id,
-        items,
-        changes,
-        timeCreated: timeCreated ?? now(),
-        get title() {
-            return items[0]?.trim()
-        },
-        get timeUpdated() {
-            return this.changes.at(-1)?.timestamp
-        },
-        addItem(index, value) {
-            const updated = this.update([{
-                index,
-                before: null,
-                after: value,
-                timestamp: now(),
-            }])
-            return updated
-        },
-        updateItem(index, value) {
-            return this.update([{
-                index,
-                before: this.items[index],
-                after: value,
-                timestamp: now(),
-            }])
-        },
-        removeItem(index) {
-            return this.update([{
-                index,
-                before: this.items[index],
-                after: null,
-                timestamp: now(),
-            }])
-        },
-        update(changes) {
-            return updateNote(this, changes, { now })
-        },
+export default class Note {
+    constructor({ id = null, items = [], changes = [], timeCreated }, { now }) {
+        this.now = now
+
+        this.id = id
+        this.items = items
+        this.changes = changes
+        this.timeCreated = timeCreated ?? this.now()
+    }
+    get title() {
+        return items[0]?.trim()
+    }
+    get timeUpdated() {
+        return this.changes.at(-1)?.timestamp
+    }
+    addItem(index, value) {
+        const updated = this.update([{
+            index,
+            before: null,
+            after: value,
+            timestamp: this.now(),
+        }])
+        return updated
+    }
+    updateItem(index, value) {
+        return this.update([{
+            index,
+            before: this.items[index],
+            after: value,
+            timestamp: this.now(),
+        }])
+    }
+    removeItem(index) {
+        return this.update([{
+            index,
+            before: this.items[index],
+            after: null,
+            timestamp: this.now(),
+        }])
+    }
+    update(changes) {
+        return updateNote(this, changes, { now: this.now })
     }
 }
 
