@@ -25,9 +25,8 @@
 
     injectTagsIntoWindow()
 
-    const App = () => waitPromise(repo.init(),
-        () => FileSystemRouter({ notesManager })
-    )
+    const Router = new FileSystemRouter({ notesManager })
+    const App = waitPromise(repo.init(), Router)
 
     renderAfterLoad(App)
     registerServiceWorker()

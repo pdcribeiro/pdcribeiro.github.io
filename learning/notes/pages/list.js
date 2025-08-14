@@ -2,19 +2,19 @@ import { visit } from '/lib/routing.js'
 import { Fragment, waitPromise } from '/lib/ui/van-wrapper.js'
 
 export default function NoteListPage({ notesManager }) {
-    return waitPromise(notesManager.listNotes(), (notes) => {
-        return Fragment(
-            header(
-                h1('notes'),
+    return Fragment(
+        header(
+            h1('notes'),
+        ),
+        main(
+            waitPromise(notesManager.listNotes(), (notes) =>
+                ul(notes.map(NoteListItem))
             ),
-            main(
-                ul(notes.map(NoteListItem)),
-            ),
-            footer(
-                CreateNoteButton({ notesManager }),
-            ),
-        )
-    })
+        ),
+        footer(
+            CreateNoteButton({ notesManager }),
+        ),
+    )
 }
 
 function NoteListItem(note) {
