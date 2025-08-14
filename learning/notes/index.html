@@ -14,11 +14,11 @@
 </body>
 
 <script type="module">
-    import LocalStorageRepo from '/lib/persistence/local-storage-repo.js'
+    import LocalStorageRepo from '/lib/persistence/LocalStorageRepo.js'
     import { FileSystemRouter } from '/lib/routing.js'
     import { registerServiceWorker } from '/lib/service-worker.js'
     import { injectTagsIntoWindow, renderAfterLoad, waitPromise } from '/lib/ui/van-wrapper.js'
-    import NotesManager from './notes-manager.js'
+    import NotesManager from './NotesManager.js'
 
     const repo = new LocalStorageRepo('notes')
     const notesManager = new NotesManager({ repo, now: Date.now })

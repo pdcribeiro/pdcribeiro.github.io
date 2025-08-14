@@ -1,6 +1,6 @@
-import InMemoryRepo from '../../lib/persistence/in-memory-repo.js'
+import InMemoryRepo from '../../lib/persistence/InMemoryRepo.js'
 import { eq, test } from '../../lib/test/runner.js'
-import NotesManager from './notes-manager.js'
+import NotesManager from './NotesManager.js'
 
 const item = 'item'
 const otherItem = 'other item'

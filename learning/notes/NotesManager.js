@@ -1,4 +1,4 @@
-import Note from './note.js'
+import Note from './Note.js'
 
 export default function NotesManager({ repo, now }) {
     return {
