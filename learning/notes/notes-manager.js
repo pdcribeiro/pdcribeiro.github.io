@@ -4,7 +4,7 @@ export default function NotesManager({ repo, now }) {
     return {
         listNotes: async () => await repo.find(),
         createNote: async () => {
-            const note = new Note({}, { now })
+            const note = new Note({ items: [''] }, { now })
             return await repo.add(note)
         },
         deleteNote: async (id) => await repo.del(id),

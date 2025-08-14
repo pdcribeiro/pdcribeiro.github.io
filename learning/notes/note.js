@@ -57,13 +57,13 @@ function updateNote(note, changes, { now }) {
 
 function updateNoteItems(items, changes) {
     return changes.reduce((updated, { index, before, after }) => {
-        if (!before && !after) {
+        if (before === null && after === null) {
             throw new Error()
         }
-        if (!before) {
+        if (before === null) {
             return [...updated.slice(0, index), after, ...updated.slice(index)]
         }
-        if (!after) {
+        if (after === null) {
             return [...updated.slice(0, index), ...updated.slice(index + 1)]
         }
         return [...updated.slice(0, index), after, ...updated.slice(index + 1)]
