@@ -16,6 +16,7 @@ export default function NoteViewPage({ params, notesManager }) {
 
         const itemsList = new DragAndDropListManager({
             listProps: { contenteditable: editable },
+            listStyle: { outline: 'none' },
             items: items.map(text => Item({ text })),
             onSelect(index, selected) {
                 itemsList.item(index).style.backgroundColor = 'gray'
@@ -37,7 +38,6 @@ export default function NoteViewPage({ params, notesManager }) {
         function Item({ text }) {
             return p({
                 onkeydown: handleKeyDown,
-                style: 'outline: none',
             },
                 text.length ? text : br(),
             )
