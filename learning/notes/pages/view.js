@@ -6,7 +6,7 @@ const ENTER_KEY = 'Enter'
 
 // TODO: handle mouse select across multiple items. maybe remove replace ul > li > p with div > p. maybe document fragment would be nice now
 // TODO: ignore click and hold when editing (eg. to select text on touch devices)
-export default function ViewNotePage({ params, notesManager }) {
+export default function NoteViewPage({ params, notesManager }) {
     const noteId = params.id
 
     return waitPromise(notesManager.listItems(noteId), (loadedItems) => {
