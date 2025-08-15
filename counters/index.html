@@ -72,43 +72,45 @@
         }),
     }, (style) => ({ style }))
 
+    const App = waitPromise(repo.find(), (countersData) =>
+        Counters({ countersData })
+    )
+
     renderAfterLoad(App)
     registerServiceWorker()
 
     // TODO: keep history
     // TODO: reset each day
-    function App() {
-        return waitPromise(repo.find(), (countersData) => {
-            const counters = van.state(countersData)
+    function Counters({ countersData }) {
+        const counters = van.state(countersData)
 
-            return main(
-                () => div(
-                    counters.val.map(c =>
-                        Counter({
-                            ...c,
-                            onUpdate: (data) => updateCounter(c.id, data),
-                            onRemove: () => removeCounter(c.id),
-                        })
-                    )
-                ),
-                NewCounterInput({ onAdd: addCounter }),
-            )
+        return main(
+            () => div(
+                counters.val.map(c =>
+                    Counter({
+                        ...c,
+                        onUpdate: (data) => updateCounter(c.id, data),
+                        onRemove: () => removeCounter(c.id),
+                    })
+                )
+            ),
+            NewCounterInput({ onAdd: addCounter }),
+        )
 
-            async function updateCounter(id, data) {
-                await repo.patch(id, data)
-                // state update is handled by Counter component
-            }
+        async function updateCounter(id, data) {
+            await repo.patch(id, data)
+            // state update is handled by Counter component
+        }
 
-            async function removeCounter(id) {
-                await repo.del(id)
-                counters.set(s => s.filter(c => c.id !== id))
-            }
+        async function removeCounter(id) {
+            await repo.del(id)
+            counters.set(s => s.filter(c => c.id !== id))
+        }
 
-            async function addCounter(name) {
-                const data = await repo.add({ name, value: 0 })
-                counters.set(s => [...s, data])
-            }
-        })
+        async function addCounter(name) {
+            const data = await repo.add({ name, value: 0 })
+            counters.set(s => [...s, data])
+        }
     }
 
     function Counter({ onUpdate, onRemove, ...rest }) {
