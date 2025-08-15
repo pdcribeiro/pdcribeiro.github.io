@@ -1,22 +1,37 @@
-import { ass, eq, test } from '../../lib/test/runner.js'
+import { ass, eq, fail, test } from '../../lib/test/runner.js'
 import Note from './Note.js'
 
-const item = 'item'
-const otherItem = 'other item'
-
-const now = () => {
-    let time = 1
-    return () => time++
+const firstItem = 'firstItem'
+const secondItem = 'secondItem'
+const timestamp = 1234567890123
+const addTwoItemsUpdate = {
+    changes: [
+        { value: [firstItem, secondItem] },
+    ],
+    timestamp,
 }
+const removeSecondItemUpdate = {
+    changes: [
+        { value: [firstItem] },
+        { value: [secondItem], removed: true }
+    ],
+    timestamp: timestamp + 1,
+}
+const oldUpdate = {
+    ...removeSecondItemUpdate,
+    timestamp: timestamp - 1,
+}
+
+const now = () => Date.now()
 
 test({
     'created note has empty items': () => {
         const note = new Note({}, { now })
         eq(note.items.length, 0)
     },
-    'created note has empty changes': () => {
+    'created note has empty update history': () => {
         const note = new Note({}, { now })
-        eq(note.changes.length, 0)
+        eq(note.updateHistory.length, 0)
     },
     'created note has timeCreated': () => {
         const note = new Note({}, { now })
@@ -26,39 +41,33 @@ test({
         const note = new Note({}, { now })
         ass(!note.timeUpdated)
     },
-    'updated note keeps original timeCreated': () => {
-        const original = new Note({}, { now })
-        const updated = original.addItem(0, item)
-        eq(updated.timeCreated, original.timeCreated)
-    },
-    'updated note has timeUpdated': () => {
+    'adds items': () => {
         const note = new Note({}, { now })
-            .addItem(0, item)
-        ass(note.timeUpdated)
-    },
-    'updated note has timeUpdated of last change': () => {
-        const note = new Note({}, { now })
-            .addItem(0, item)
-        const lastChange = note.changes.at(-1)
-        eq(note.timeUpdated, lastChange.timestamp)
-    },
-    'adds item': () => {
-        const note = new Note({}, { now })
-            .addItem(0, item)
-        eq(note.items.length, 1)
-        eq(note.items[0], item)
-    },
-    'updates item': () => {
-        const note = new Note({}, { now })
-            .addItem(0, item)
-            .updateItem(0, otherItem)
-        eq(note.items.length, 1)
-        eq(note.items[0], otherItem)
+            .update(addTwoItemsUpdate)
+        eq(note.items.length, 2)
+        eq(note.items[0], firstItem)
+        eq(note.items[1], secondItem)
     },
     'removes item': () => {
         const note = new Note({}, { now })
-            .addItem(0, item)
-            .removeItem(0)
-        eq(note.items.length, 0)
+            .update(removeSecondItemUpdate)
+        eq(note.items.length, 1)
+        eq(note.items[0], firstItem)
+    },
+    'updated note keeps original timeCreated': () => {
+        const original = new Note({}, { now })
+        const updated = original.update(addTwoItemsUpdate)
+        eq(updated.timeCreated, original.timeCreated)
+    },
+    'updated note has timeUpdated of last update': () => {
+        const note = new Note({}, { now })
+            .update(addTwoItemsUpdate)
+            .update(removeSecondItemUpdate)
+        eq(note.timeUpdated, removeSecondItemUpdate.timestamp)
+    },
+    'throws error when update is older': () => {
+        const note = new Note({}, { now })
+            .update(addTwoItemsUpdate)
+        fail(() => note.update(oldUpdate))
     },
 })

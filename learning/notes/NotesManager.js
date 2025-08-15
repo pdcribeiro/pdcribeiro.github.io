@@ -1,37 +1,32 @@
 import Note from './Note.js'
 
-export default function NotesManager({ repo, now }) {
-    return {
-        listNotes: async () => await repo.find(),
-        createNote: async () => {
-            const note = new Note({ items: [''] }, { now })
-            return await repo.add(note)
-        },
-        deleteNote: async (id) => await repo.del(id),
-        listItems: async (noteId) => {
-            const noteData = await repo.get(noteId)
-            return noteData.items
-        },
-        addItem: async (noteId, index, value) => {
-            const noteData = await repo.get(noteId)
-            const updated = new Note(noteData, { now })
-                .addItem(index, value)
-            await repo.set(noteId, updated)
-            return updated
-        },
-        updateItem: async (noteId, index, value) => {
-            const noteData = await repo.get(noteId)
-            const updated = new Note(noteData, { now })
-                .updateItem(index, value)
-            await repo.set(noteId, updated)
-            return updated
-        },
-        removeItem: async (noteId, index) => {
-            const noteData = await repo.get(noteId)
-            const updated = new Note(noteData, { now })
-                .removeItem(index)
-            await repo.set(noteId, updated)
-            return updated
-        },
+// TODO: select only necessary data (updateHistory can become large)
+export default class NotesManager {
+    constructor({ repo, now }) {
+        this.repo = repo
+        this.now = now
+    }
+    async listNotes() {
+        return await this.repo.find()
+    }
+    async createNote() {
+        const note = new Note({ items: [''] }, { now: this.now })
+        return await this.repo.add(note)
+    }
+    async viewNote(id) {
+        const noteData = await this.repo.get(id)
+        return new Note(noteData, { now: this.now })
+    }
+    async updateNote(id, update) {
+        console.debug('[NotesManager] updating note...', update)
+        const noteData = await this.repo.get(id)
+        const updated = new Note(noteData, { now: this.now })
+            .update(update)
+        await this.repo.set(id, updated)
+        console.log('updated items', updated.items)
+        return updated
+    }
+    async deleteNote(id) {
+        return await this.repo.del(id)
     }
 }

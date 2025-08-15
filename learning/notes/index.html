@@ -19,9 +19,10 @@
     import { registerServiceWorker } from '/lib/service-worker.js'
     import { injectTagsIntoWindow, renderAfterLoad, waitPromise } from '/lib/ui/van-wrapper.js'
     import NotesManager from './NotesManager.js'
+    import { now } from './utils.js'
 
     const repo = new LocalStorageRepo('notes')
-    const notesManager = new NotesManager({ repo, now: Date.now })
+    const notesManager = new NotesManager({ repo, now })
 
     injectTagsIntoWindow()
 

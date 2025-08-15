@@ -2,8 +2,14 @@ import InMemoryRepo from '../../lib/persistence/InMemoryRepo.js'
 import { eq, test } from '../../lib/test/runner.js'
 import NotesManager from './NotesManager.js'
 
-const item = 'item'
-const otherItem = 'other item'
+const firstItem = 'firstItem'
+const secondItem = 'secondItem'
+const addTwoItemsUpdate = {
+    changes: [
+        { value: [firstItem, secondItem] },
+    ],
+    timestamp: 1234567890123,
+}
 
 test({
     'has no notes ': async () => {
@@ -17,44 +23,28 @@ test({
         const notes = await manager.listNotes()
         eq(notes.length, 1)
     },
-    'deletes note': async () => {
-        const manager = new TestManager()
-        const note = await manager.createNote()
-        await manager.deleteNote(note.id)
-        const notes = await manager.listNotes()
-        eq(notes.length, 0)
-    },
     'created note has one empty item': async () => {
         const manager = new TestManager()
-        const note = await manager.createNote()
-        const items = await manager.listItems(note.id)
+        const { id } = await manager.createNote()
+        const { items } = await manager.viewNote(id)
         eq(items.length, 1)
         eq(items[0], '')
     },
-    'adds item': async () => {
+    'deletes note': async () => {
         const manager = new TestManager()
-        const note = await manager.createNote()
-        await manager.addItem(note.id, 0, item)
-        const items = await manager.listItems(note.id)
-        eq(items.length, 2)
-        eq(items[0], item)
+        const { id } = await manager.createNote()
+        await manager.deleteNote(id)
+        const notes = await manager.listNotes()
+        eq(notes.length, 0)
     },
-    'updates item': async () => {
+    'updates note': async () => {
         const manager = new TestManager()
-        const note = await manager.createNote()
-        await manager.addItem(note.id, 0, item)
-        await manager.updateItem(note.id, 0, otherItem)
-        const items = await manager.listItems(note.id)
+        const { id } = await manager.createNote()
+        await manager.updateNote(id, addTwoItemsUpdate)
+        const { items } = await manager.viewNote(id)
         eq(items.length, 2)
-        eq(items[0], otherItem)
-    },
-    'removes item': async () => {
-        const manager = new TestManager()
-        const note = await manager.createNote()
-        await manager.addItem(note.id, 0, item)
-        await manager.removeItem(note.id, 0)
-        const items = await manager.listItems(note.id)
-        eq(items.length, 1)
+        eq(items[0], firstItem)
+        eq(items[1], secondItem)
     },
 })
 
