@@ -21,7 +21,10 @@ export default function NoteViewPage({ params, notesManager }) {
                     contenteditable: editable,
                     // onkeydown: handleKeyDown,
                 },
-                listStyle: { outline: 'none' },
+                listStyle: {
+                    flexGrow: 1, // allow clicking anywhere to edit even if note is smaller than screen
+                    outline: 'none',
+                },
                 items: items.map(text => Item({ text })),
                 onSelect(index, selected) {
                     itemsList.item(index).style.backgroundColor = 'gray'
