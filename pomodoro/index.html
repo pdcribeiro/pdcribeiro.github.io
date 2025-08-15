@@ -165,12 +165,16 @@
         }
 
         function startTimerOnSpacePress() {
-            document.addEventListener('mouseup', () => document.activeElement.blur()) // prevent clicking last clicked button on space press
             document.addEventListener('keydown', (e) =>
                 e.target.tagName !== 'BUTTON' // ignore tab navigation space clicks
                 && e.key === ' '
+                && !configVisible.val
                 && pomodoroState.val !== TIMER_STATES.running
                 && start()
+            )
+            document.addEventListener('click', () =>
+                document.activeElement.tagName === 'BUTTON'
+                && document.activeElement.blur() // prevent clicking last clicked button on space press
             )
         }
 
