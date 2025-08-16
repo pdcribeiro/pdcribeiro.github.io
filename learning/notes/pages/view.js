@@ -15,6 +15,8 @@ export default function NoteViewPage({ params, notesManager }) {
     )
 }
 
+// TODO: figure out how to integrate the contenteditable parent element approach with the DragAndDropListManager API (addItem, etc.). should we re-render the list on input? should we use reactive state
+// FIX: created li items don't get onpointerenter listener, so dragging over them fails
 // FIX: paste/drag with beggining/ending new line introduces an extra new line. it's because contenteditable ul has children li elements. see chatgpt history
 // FIX: delete empty line with another empty line before doesn't work
 // TODO: test drag and drop on desktop and mobile
@@ -39,7 +41,7 @@ function Editor({ note, notesManager }) {
             flexGrow: 1, // allow clicking anywhere to edit even if note is smaller than screen
             outline: 'none',
         },
-        items: note.items.map(text => Item({ text })),
+        items: note.items.map(t => div(t.replace(/\n$/, '').length ? t : br())),
         onSelect(index, selected) {
             itemsList.item(index).style.backgroundColor = 'gray'
             if (selected.length === 1) editable.val = false
@@ -56,7 +58,7 @@ function Editor({ note, notesManager }) {
         getDiff: diffArrays,
     })
 
-    van.derive(focusEditorWhenEmpty)
+    // van.derive(focusEditorWhenEmpty) // FIX
 
     return itemsList.element
 
@@ -72,10 +74,6 @@ function Editor({ note, notesManager }) {
             itemsList.item(0).focus()
         }
     }
-}
-
-function Item({ text }) {
-    return text.trim().length ? text : br()
 }
 
 function createDiffFunction({ getLines, getDiff }) {
