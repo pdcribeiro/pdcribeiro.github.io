@@ -1,7 +1,7 @@
 import { diffArrays, DiffChecker } from '/lib/diff.js'
 import { debounce } from '/lib/functions.js'
 import { AsyncQueue } from '/lib/queue.js'
-import DragAndDropListManager from '/lib/ui/DragAndDropListManager.js'
+import DragAndDropList, { DragAndDropListManager } from '/lib/ui/components/DragAndDropList.js'
 import van, { waitPromise } from '/lib/ui/van-wrapper.js'
 import { now } from '../utils.js'
 
@@ -19,7 +19,7 @@ export default function NoteViewPage({ params, notesManager }) {
 // TODO: handle save errors
 function Editor({ note, notesManager }) {
     const diff = new DiffChecker({
-        read: () => itemsList.children.map(c => c.innerText),
+        read: () => listManager.children.map(c => c.innerText),
         diff: diffArrays,
     })
     const saveQueue = new AsyncQueue({
@@ -32,7 +32,7 @@ function Editor({ note, notesManager }) {
 
     const editing = van.state(false)
 
-    const itemsList = new DragAndDropListManager({
+    const listElement = new DragAndDropList({
         listProps: {
             enabled: () => editing.val ? '' : true,
             contenteditable: true,
@@ -45,27 +45,22 @@ function Editor({ note, notesManager }) {
             outline: 'none',
         },
         items: note.items.map(t => div(t.replace(/\n$/, '').length ? t : br())),
-        onSelect(index, selected) {
-            itemsList.item(index).style.backgroundColor = 'gray'
-            // if (selected.length === 1) editing.val = false
-        },
-        onDeselect(index, selected) {
-            itemsList.item(index).style.background = 'none'
-            // if (selected.length === 0) editing.val = true
-        },
+        onSelect: (i) => listManager.item(i).style.backgroundColor = 'gray',
+        onDeselect: (i) => listManager.item(i).style.background = 'none',
         onDrop: saveChanges,
     })
+    const listManager = new DragAndDropListManager(listElement)
 
     van.derive(diff.init)
     van.derive(focusEditorWhenEmpty)
     van.derive(toggleEditModeOnToggleVirtualKeyboard)
     van.derive(blurEditorOnLeaveEditMode)
 
-    return itemsList.element
+    return listElement
 
     function focusEditorWhenEmpty() {
         if (note.items.length === 1 && !note.items[0].trim().length) {
-            setTimeout(() => itemsList.element.focus())
+            setTimeout(() => listElement.focus())
         }
     }
 
@@ -80,7 +75,7 @@ function Editor({ note, notesManager }) {
 
     function blurEditorOnLeaveEditMode() {
         if (!editing.val) {
-            itemsList.element.blur()
+            listElement.blur()
         }
     }
 }
