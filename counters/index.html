@@ -42,7 +42,8 @@
     import { registerServiceWorker } from '/lib/service-worker.js'
     import van, { bindInput, injectTagsIntoWindow, renderAfterLoad, waitPromise } from '/lib/ui/van-wrapper.js'
     import { stl } from '/lib/ui/utils.js'
-    import { debounce, transformValues } from '/lib/utils.js'
+    import { debounce } from '/lib/functions.js'
+    import { transformValues } from '/lib/utils.js'
 
     const INCREMENTS = [10, 5, 1]
     const DEBOUNCE_TIME = 300

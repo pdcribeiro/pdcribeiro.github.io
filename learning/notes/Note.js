@@ -7,7 +7,7 @@ export default class Note {
         this.now = now
     }
     get title() {
-        return items[0]?.trim()
+        return this.items[0]?.trim()
     }
     get timeUpdated() {
         return this.updateHistory.at(-1)?.timestamp

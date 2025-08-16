@@ -1,5 +1,6 @@
 import { visit } from '/lib/routing.js'
 import { Fragment, waitPromise } from '/lib/ui/van-wrapper.js'
+import { stl } from '/lib/ui/utils.js'
 
 export default function NoteListPage({ notesManager }) {
     return Fragment(
@@ -18,8 +19,17 @@ export default function NoteListPage({ notesManager }) {
 }
 
 function NoteListItem(note) {
-    return li(
-        a({ href: `#!/view?id=${note.id}` }, note.title || 'no title'),
+    return li({},
+        a({
+            href: `#!/view?id=${note.id}`,
+            style: stl({
+                display: 'inline-block',
+                padding: '0.5rem',
+                margin: '0.25rem 0',
+            })
+        },
+            note.title || 'no title'
+        ),
     )
 }
 

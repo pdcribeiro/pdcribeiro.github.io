@@ -37,6 +37,10 @@ test({
         const note = new Note({}, { now })
         ass(note.timeCreated)
     },
+    'created note does not have title': () => {
+        const note = new Note({}, { now })
+        ass(!note.title)
+    },
     'created note does not have timeUpdated': () => {
         const note = new Note({}, { now })
         ass(!note.timeUpdated)
@@ -59,13 +63,18 @@ test({
         const updated = original.update(addTwoItemsUpdate)
         eq(updated.timeCreated, original.timeCreated)
     },
-    'updated note has timeUpdated of last update': () => {
+    'updated note title is first item': () => {
+        const note = new Note({}, { now })
+            .update(addTwoItemsUpdate)
+        eq(note.title, firstItem)
+    },
+    'updated note timeUpdated is last update timestamp': () => {
         const note = new Note({}, { now })
             .update(addTwoItemsUpdate)
             .update(removeSecondItemUpdate)
         eq(note.timeUpdated, removeSecondItemUpdate.timestamp)
     },
-    'throws error when update is older': () => {
+    'rejects old updates': () => {
         const note = new Note({}, { now })
             .update(addTwoItemsUpdate)
         fail(() => note.update(oldUpdate))

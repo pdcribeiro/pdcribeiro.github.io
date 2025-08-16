@@ -1,8 +1,8 @@
+import { diffArrays, DiffChecker } from '/lib/diff.js'
+import { debounce } from '/lib/functions.js'
+import { AsyncQueue } from '/lib/queue.js'
 import DragAndDropListManager from '/lib/ui/DragAndDropListManager.js'
 import van, { waitPromise } from '/lib/ui/van-wrapper.js'
-import { AsyncQueue } from '/lib/queue.js'
-import { debounce } from '/lib/utils.js'
-import { diffArrays } from '/third-party/diff.js'
 import { now } from '../utils.js'
 
 const SAVE_DEBOUNCE_TIME = 500
@@ -15,74 +15,72 @@ export default function NoteViewPage({ params, notesManager }) {
     )
 }
 
-// TODO: figure out how to integrate the contenteditable parent element approach with the DragAndDropListManager API (addItem, etc.). should we re-render the list on input? should we use reactive state
-// FIX: created li items don't get onpointerenter listener, so dragging over them fails
-// FIX: paste/drag with beggining/ending new line introduces an extra new line. it's because contenteditable ul has children li elements. see chatgpt history
-// FIX: delete empty line with another empty line before doesn't work
-// TODO: test drag and drop on desktop and mobile
-// TODO: ignore click and hold when editing (eg. to select text on touch devices)
-// TODO: prevent text selection when dragging
+// FIX: paste creates single item. must split into elements
+// TODO: handle save errors
 function Editor({ note, notesManager }) {
-    const saveQueue = new AsyncQueue({
-        handler: async (update) => notesManager.updateNote(note.id, update), // TODO: handle errors
+    const diff = new DiffChecker({
+        read: () => itemsList.children.map(c => c.innerText),
+        diff: diffArrays,
     })
+    const saveQueue = new AsyncQueue({
+        handler: async (update) => notesManager.updateNote(note.id, update),
+    })
+    const saveChanges = debounce(() => saveQueue.push({
+        changes: diff.run(),
+        timestamp: now(),
+    }), SAVE_DEBOUNCE_TIME)
 
-    const editable = van.state(true)
+    const editing = van.state(false)
 
     const itemsList = new DragAndDropListManager({
         listProps: {
-            contenteditable: editable,
-            // onkeydown: handleListKeyDown,
-            oninput: debounce(saveChanges, SAVE_DEBOUNCE_TIME),
-            // onbeforeinput: handleListInput,
-            // ondragstart: null,
+            enabled: () => editing.val ? '' : true,
+            contenteditable: true,
+            oninput: saveChanges,
         },
         listStyle: {
             flexGrow: 1, // allow clicking anywhere to edit even if note is smaller than screen
+            paddingTop: '1rem',
+            paddingBottom: '10vh',
             outline: 'none',
         },
         items: note.items.map(t => div(t.replace(/\n$/, '').length ? t : br())),
         onSelect(index, selected) {
             itemsList.item(index).style.backgroundColor = 'gray'
-            if (selected.length === 1) editable.val = false
+            // if (selected.length === 1) editing.val = false
         },
         onDeselect(index, selected) {
             itemsList.item(index).style.background = 'none'
-            if (selected.length === 0) editable.val = true
+            // if (selected.length === 0) editing.val = true
         },
         onDrop: saveChanges,
     })
 
-    const diff = createDiffFunction({
-        getLines: () => Array.from(itemsList.element.children).map(c => c.innerText),
-        getDiff: diffArrays,
-    })
-
-    // van.derive(focusEditorWhenEmpty) // FIX
+    van.derive(diff.init)
+    van.derive(focusEditorWhenEmpty)
+    van.derive(toggleEditModeOnToggleVirtualKeyboard)
+    van.derive(blurEditorOnLeaveEditMode)
 
     return itemsList.element
 
-    function saveChanges() {
-        saveQueue.push({
-            changes: diff(),
-            timestamp: now(),
-        })
-    }
-
     function focusEditorWhenEmpty() {
         if (note.items.length === 1 && !note.items[0].trim().length) {
-            itemsList.item(0).focus()
+            setTimeout(() => itemsList.element.focus())
         }
     }
-}
 
-function createDiffFunction({ getLines, getDiff }) {
-    let oldLines = getLines()
+    function toggleEditModeOnToggleVirtualKeyboard() {
+        const fullHeight = visualViewport.height
+        visualViewport.addEventListener('resize', () =>
+            visualViewport.height < fullHeight
+                ? editing.val = true
+                : editing.val = false
+        )
+    }
 
-    return () => {
-        const newLines = getLines()
-        const changes = getDiff(oldLines, newLines)
-        oldLines = newLines
-        return changes
+    function blurEditorOnLeaveEditMode() {
+        if (!editing.val) {
+            itemsList.element.blur()
+        }
     }
 }

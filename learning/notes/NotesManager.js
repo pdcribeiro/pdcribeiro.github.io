@@ -7,26 +7,30 @@ export default class NotesManager {
         this.now = now
     }
     async listNotes() {
-        return await this.repo.find()
+        const notesData = await this.repo.find()
+        return notesData.map(n => this.#initNote(n))
     }
     async createNote() {
-        const note = new Note({ items: [''] }, { now: this.now })
-        return await this.repo.add(note)
+        const note = this.#initNote({ items: [''] })
+        const noteData = await this.repo.add(note)
+        return this.#initNote(noteData)
     }
     async viewNote(id) {
         const noteData = await this.repo.get(id)
-        return new Note(noteData, { now: this.now })
+        return this.#initNote(noteData)
     }
     async updateNote(id, update) {
         console.debug('[NotesManager] updating note...', update)
         const noteData = await this.repo.get(id)
-        const updated = new Note(noteData, { now: this.now })
+        const updated = this.#initNote(noteData)
             .update(update)
         await this.repo.set(id, updated)
-        console.log('updated items', updated.items)
         return updated
     }
     async deleteNote(id) {
         return await this.repo.del(id)
+    }
+    #initNote(data) {
+        return new Note(data, { now: this.now })
     }
 }
