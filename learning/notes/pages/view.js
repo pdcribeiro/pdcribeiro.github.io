@@ -16,11 +16,14 @@ export default function NoteViewPage({ params, notesManager }) {
     )
 }
 
-// FIX: paste creates single item. must split into elements
+// FIX: paste/drop creates single item. must split into elements
+
+// FIX: prevent double click text selection on touch devices when selecting
+// TODO: allow selecting text across items and then drag them together
 // TODO: handle save errors
 function NoteEditor({ note, notesManager }) {
     const diff = new DiffChecker({
-        read: () => listManager.children.map(c => c.innerText),
+        read: () => list.children.map(c => c.innerText),
         diff: diffArrays,
     })
     const saveQueue = new AsyncQueue({
@@ -35,7 +38,9 @@ function NoteEditor({ note, notesManager }) {
         listProps: {
             contenteditable: true,
             oninput: saveChanges,
-            onkeyup: (e) => e.key === 'Escape' && setEditMode(false),
+            onfocus: (e) => list.selection.empty ? setEditMode(true) : e.target.blur(), // prevent focus when selecting items
+            onblur: () => setEditMode(false),
+            onkeyup: (e) => e.key === 'Escape' && listElement.blur(),
             style: stl({
                 flexGrow: 1, // allow clicking anywhere to edit even if note is smaller than screen
                 paddingTop: '1rem',
@@ -48,10 +53,10 @@ function NoteEditor({ note, notesManager }) {
             setItemBackground(i, 'gray')
             setEditMode(false)
         },
-        onDeselect: (i) => setItemBackground(i, 'transparent'),
+        onDeselect: (i) => setItemBackground(i, ''),
         onDrop: saveChanges,
     }, note.items.map(t => div(t.replace(/\n$/, '').length ? t : br())))
-    const listManager = new DragAndDropListManager(listElement)
+    const list = new DragAndDropListManager(listElement)
 
     van.derive(diff.read)
     van.derive(focusEditorWhenEmpty)
@@ -61,8 +66,15 @@ function NoteEditor({ note, notesManager }) {
 
     return listElement
 
+    function setEditMode(enabled) {
+        if (!enabled) {
+            listElement.blur()
+        }
+        list.setEnabled(!enabled)
+    }
+
     function setItemBackground(index, value) {
-        listManager.item(index).style.backgroundColor = value
+        list.item(index).style.backgroundColor = value
     }
 
     function focusEditorWhenEmpty() {
@@ -80,16 +92,5 @@ function NoteEditor({ note, notesManager }) {
                 ? setEditMode(true)
                 : setEditMode(false)
         )
-    }
-
-    function setEditMode(enabled) {
-        setDragAndDrop(!enabled)
-        if (!enabled) {
-            listElement.blur()
-        }
-    }
-
-    function setDragAndDrop(enabled) {
-        listElement.setAttribute('enabled', enabled ? true : '')
     }
 }
