@@ -75,11 +75,13 @@ function NoteEditor({ note, notesManager }) {
     }
 
     function setEditMode(enabled) {
-        if (enabled) {
-            listElement.setAttribute('enabled', '')
-        } else {
-            listElement.setAttribute('enabled', true)
+        setDragAndDrop(!enabled)
+        if (!enabled) {
             listElement.blur()
         }
+    }
+
+    function setDragAndDrop(enabled) {
+        listElement.setAttribute('enabled', enabled ? true : '')
     }
 }
