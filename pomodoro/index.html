@@ -92,9 +92,9 @@
 
 <script type="module">
     import { beep } from '/lib/audio.js'
-    import { cls } from '/lib/ui/utils.js'
+    import { cls } from '/lib/ui/web/utils.js'
     import { registerServiceWorker } from '/lib/service-worker.js'
-    import van, { injectTagsIntoWindow, renderAfterLoad } from '/lib/ui/van-wrapper.js'
+    import van, { injectTagsIntoWindow, renderAfterLoad } from '/lib/ui/web/van-wrapper.js'
     import { loadConfig, saveConfig } from './config.js'
     import { PHASES, TIMER_STATES, pomodoro, sanitizeConfig } from './pomodoro.js'
 

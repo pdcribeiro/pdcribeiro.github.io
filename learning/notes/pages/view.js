@@ -2,8 +2,8 @@ import { diffArrays, DiffChecker } from '/lib/diff.js'
 import { debounce } from '/lib/functions.js'
 import { AsyncQueue } from '/lib/queue.js'
 import DragAndDropList, { DragAndDropListManager } from '/lib/ui/components/DragAndDropList.js'
-import van, { waitPromise } from '/lib/ui/van-wrapper.js'
-import { stl } from '/lib/ui/utils.js'
+import van, { waitPromise } from '/lib/ui/web/van-wrapper.js'
+import { stl } from '/lib/ui/web/utils.js'
 import { now } from '../utils.js'
 
 const SAVE_DEBOUNCE_TIME = 500

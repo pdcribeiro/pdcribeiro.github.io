@@ -1,6 +1,6 @@
 import { visit } from '/lib/routing.js'
-import { Fragment, waitPromise } from '/lib/ui/van-wrapper.js'
-import { stl } from '/lib/ui/utils.js'
+import { Fragment, waitPromise } from '/lib/ui/web/van-wrapper.js'
+import { stl } from '/lib/ui/web/utils.js'
 
 export default function NoteListPage({ notesManager }) {
     return Fragment(

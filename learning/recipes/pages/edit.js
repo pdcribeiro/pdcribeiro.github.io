@@ -1,5 +1,5 @@
 import { getUrlParams, visit } from '/lib/routing.js'
-import { Fragment, stateAsync, waitState } from '/lib/ui/van-wrapper.js'
+import { Fragment, stateAsync, waitState } from '/lib/ui/web/van-wrapper.js'
 import db from '../database.js'
 import { getTitle, isValidText } from '../recipes.js'
 

@@ -1,4 +1,4 @@
-import { Fragment, waitPromise } from '/lib/ui/van-wrapper.js'
+import { Fragment, waitPromise } from '/lib/ui/web/van-wrapper.js'
 import db from '../database.js'
 import { getTitle } from '../recipes.js'
 
