@@ -50,7 +50,7 @@ function NoteEditor({ note, notesManager }) {
     }, note.items.map(t => div(t.replace(/\n$/, '').length ? t : br())))
     const listManager = new DragAndDropListManager(listElement)
 
-    van.derive(diff.init)
+    van.derive(diff.read)
     van.derive(focusEditorWhenEmpty)
     van.derive(toggleEditModeOnToggleVirtualKeyboard)
 
