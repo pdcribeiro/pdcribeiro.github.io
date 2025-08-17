@@ -35,6 +35,7 @@ function NoteEditor({ note, notesManager }) {
         listProps: {
             contenteditable: true,
             oninput: saveChanges,
+            onkeyup: (e) => e.key === 'Escape' && setEditMode(false),
             style: stl({
                 flexGrow: 1, // allow clicking anywhere to edit even if note is smaller than screen
                 paddingTop: '1rem',
