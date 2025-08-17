@@ -32,6 +32,9 @@
 !counters/
 !counters/**
 
+!greens/
+!greens/**
+
 !notes/
 !notes/**
 
@@ -40,6 +43,8 @@
 
 !root-timer/
 !root-timer/**
+
+!/index.html
 
 # Ignore
 
