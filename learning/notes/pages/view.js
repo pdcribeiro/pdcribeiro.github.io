@@ -44,8 +44,11 @@ function NoteEditor({ note, notesManager }) {
                 outline: 'none',
             }),
         },
-        onSelect: (i) => listManager.item(i).style.backgroundColor = 'gray',
-        onDeselect: (i) => listManager.item(i).style.background = 'none',
+        onSelect: (i) => {
+            setItemBackground(i, 'gray')
+            setEditMode(false)
+        },
+        onDeselect: (i) => setItemBackground(i, 'transparent'),
         onDrop: saveChanges,
     }, note.items.map(t => div(t.replace(/\n$/, '').length ? t : br())))
     const listManager = new DragAndDropListManager(listElement)
@@ -57,6 +60,10 @@ function NoteEditor({ note, notesManager }) {
     setEditMode(false)
 
     return listElement
+
+    function setItemBackground(index, value) {
+        listManager.item(index).style.backgroundColor = value
+    }
 
     function focusEditorWhenEmpty() {
         if (note.items.length === 1 && !note.items[0].trim().length) {

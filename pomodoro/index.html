@@ -107,6 +107,7 @@
     renderAfterLoad(app)
     registerServiceWorker()
 
+    // FIX: sometimes timer doesn't start
     function app() {
         let currentConfig = loadConfig()
         let tickInterval
