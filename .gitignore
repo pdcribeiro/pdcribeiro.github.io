@@ -26,6 +26,7 @@
 !utils/**
 
 !.gitignore
+!jsconfig.json
 
 # Add apps
 
