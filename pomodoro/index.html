@@ -94,8 +94,8 @@
     import { beep } from '/lib/audio.js'
     import { cls } from '/lib/ui/web/utils.js'
     import { registerServiceWorker } from '/lib/service-worker.js'
-    import van, { injectTagsIntoWindow, renderAfterLoad } from '/lib/ui/web/van-wrapper.js'
-    import { loadConfig, saveConfig } from './config.js'
+    import van, { injectTagsIntoWindow, renderAfterLoad, waitPromise } from '/lib/ui/web/van-wrapper.js'
+    import { configManager } from './config.js'
     import { PHASES, TIMER_STATES, pomodoro, sanitizeConfig } from './pomodoro.js'
 
     const TICK_INTERVAL_MS = 1000
@@ -104,12 +104,14 @@
     const primaryButtonStyle = { style: 'font-size: 2.5rem' }
 
     injectTagsIntoWindow()
-    renderAfterLoad(app)
+    renderAfterLoad(
+        waitPromise(configManager.load(), (config) => app({ config }))
+    )
     registerServiceWorker()
 
     // FIX: sometimes timer doesn't start
-    function app() {
-        let currentConfig = loadConfig()
+    function app({ config }) {
+        let currentConfig = config
         let tickInterval
         let notifyInterval
 
@@ -186,11 +188,11 @@
             if (configVisible.val) {
                 configTextarea.value = stringifyConfig(currentConfig)
             } else {
-                const newConfig = parseConfig(configTextarea.value)
+                const newConfig = configManager.parse(configTextarea.value)
                 if (stringifyConfig(newConfig) !== stringifyConfig(currentConfig)) {
                     const sanitizedConfig = sanitizeConfig(newConfig)
                     pomodoroState.val = pomodoro.init(sanitizedConfig)
-                    saveConfig(sanitizedConfig)
+                    configManager.save(sanitizedConfig)
                     currentConfig = sanitizedConfig
                 }
             }
@@ -221,25 +223,9 @@
     }
 
     function stringifyConfig(config) {
-        return ` work: ${config.workDuration}\nshort: ${config.shortBreakDuration}\n long: ${config.longBreakDuration}\ncount: ${config.workCountUntilLongBreak}`
-    }
-
-    function parseConfig(config) {
-        const parsed = Object.fromEntries(
-            config
-                .split('\n')
-                .map(line =>
-                    line
-                        .split(':')
-                        .map(it => it.trim()))
-                .map(([k, v]) => [k, Number(v)])
-        )
-        return {
-            workDuration: parsed.work,
-            shortBreakDuration: parsed.short,
-            longBreakDuration: parsed.long,
-            workCountUntilLongBreak: parsed.count,
-        }
+        return configManager.stringify(config)
+            .replace('work', ' work')
+            .replace('long', ' long')
     }
 </script>
 <script type="module" src="./pomodoro.user.test.js"></script>

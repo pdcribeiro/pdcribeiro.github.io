@@ -1,12 +1,37 @@
+import AppConfigManager from '../lib/config/AppConfigManager.js'
+import LocalStorageConfigRepo from '/lib/config/LocalStorageConfigRepo.js'
+import { transformEntries } from '/lib/utils.js'
 import { sanitizeConfig } from './pomodoro.js'
 
 const STORAGE_KEY = 'pomodoro-config'
 
-export function loadConfig() {
-    const config = localStorage.getItem(STORAGE_KEY)
-    return sanitizeConfig(JSON.parse(config) ?? {})
+const abbreviations = {
+    workDuration: 'work',
+    shortBreakDuration: 'short',
+    longBreakDuration: 'long',
+    workCountUntilLongBreak: 'count',
+}
+const reverseAbrvs = transformEntries(abbreviations, ([k, v]) => [v, k])
+
+class PomodoroConfigManager extends AppConfigManager {
+    async load() {
+        return sanitizeConfig(await super.load())
+    }
+    stringify(config) {
+        return Object.entries(abbreviations).reduce(
+            (s, [k, v]) => s.replace(k, v),
+            super.stringify(config)
+        )
+    }
+    parse(string) {
+        return transformEntries(
+            super.parse(string),
+            ([k, v]) => [reverseAbrvs[k], Number(v)]
+        )
+    }
 }
 
-export function saveConfig(config) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(config))
-}
+export const configManager = new PomodoroConfigManager({
+    repo: new LocalStorageConfigRepo(STORAGE_KEY),
+    schema: {},
+})
