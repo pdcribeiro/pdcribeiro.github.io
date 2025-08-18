@@ -1,9 +1,18 @@
 {
     "compilerOptions": {
+        "checkJs": true,
         "paths": {
             "/*": [
-                "./*"
-            ]
-        }
-    }
+                "./*",
+            ],
+        },
+        "target": "ES2022",
+    },
+    "include": [
+        "**/*.js",
+        "**/*.d.ts",
+    ],
+    "exclude": [
+        "**/node_modules/*",
+    ],
 }

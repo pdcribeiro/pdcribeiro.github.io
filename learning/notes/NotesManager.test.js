@@ -13,32 +13,32 @@ const addTwoItemsUpdate = {
 
 test({
     'has no notes ': async () => {
-        const manager = new TestManager()
+        const manager = createTestManager()
         const notes = await manager.listNotes()
         eq(notes.length, 0)
     },
     'creates note': async () => {
-        const manager = new TestManager()
+        const manager = createTestManager()
         await manager.createNote()
         const notes = await manager.listNotes()
         eq(notes.length, 1)
     },
     'created note has one empty item': async () => {
-        const manager = new TestManager()
+        const manager = createTestManager()
         const { id } = await manager.createNote()
         const { items } = await manager.viewNote(id)
         eq(items.length, 1)
         eq(items[0], '')
     },
     'deletes note': async () => {
-        const manager = new TestManager()
+        const manager = createTestManager()
         const { id } = await manager.createNote()
         await manager.deleteNote(id)
         const notes = await manager.listNotes()
         eq(notes.length, 0)
     },
     'updates note': async () => {
-        const manager = new TestManager()
+        const manager = createTestManager()
         const { id } = await manager.createNote()
         await manager.updateNote(id, addTwoItemsUpdate)
         const { items } = await manager.viewNote(id)
@@ -48,7 +48,7 @@ test({
     },
 })
 
-function TestManager() {
+function createTestManager() {
     return new NotesManager({
         repo: new InMemoryRepo(),
         now: Date.now,

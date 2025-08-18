@@ -53,7 +53,7 @@
 
     injectTagsIntoWindow()
 
-    const repo = new LocalStorageRepo('counters')
+    const repo = new LocalStorageRepo({ key: 'counters' })
     const styles = transformValues({
         counterContainer: stl({
             display: 'flex',

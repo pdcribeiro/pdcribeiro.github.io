@@ -21,7 +21,7 @@
     import NotesManager from './NotesManager.js'
     import { now } from './utils.js'
 
-    const repo = new LocalStorageRepo('notes')
+    const repo = new LocalStorageRepo({ key: 'notes' })
     const notesManager = new NotesManager({ repo, now })
 
     injectTagsIntoWindow()
