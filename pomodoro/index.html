@@ -125,6 +125,7 @@
         const configVisible = van.state(false)
         const configTextarea = textarea({ rows: 4, cols: 10 })
         van.derive(handleConfigToggle)
+        van.derive(closeSettingsOnClickOutside)
 
         return main({ class: () => cls(configVisible.val && 'darken') },
             () => time({ class: cls(!working.val && 'darken') },
@@ -149,7 +150,7 @@
             button({
                 ariaLabel: 'Settings',
                 class: () => cls('config-toggle', configVisible.val && 'lighten'),
-                onclick: () => configVisible.val = !configVisible.val
+                onclick: () => configVisible.val = true
             },
                 i({ class: 'fa-solid fa-gear' })
             ),
@@ -211,6 +212,15 @@
             update(s => s.start(now()))
             tickInterval = setInterval(() => update(s => s.tick(now())), TICK_INTERVAL_MS)
             clearInterval(notifyInterval)
+        }
+
+        function closeSettingsOnClickOutside() {
+            document.addEventListener('click', (e) => {
+                if (configVisible.val && e.target !== configTextarea) {
+                    configVisible.val = false
+                    e.stopPropagation()
+                }
+            }, true)
         }
     }
 
