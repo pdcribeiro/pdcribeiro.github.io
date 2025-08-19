@@ -35,14 +35,23 @@ export const pomodoro = {
             timeRemaining: workDuration * 60,
             workCount: 0,
         }
-        return {
-            ...initialState,
+
+        const proto = {
+            get working() {
+                return this.phase === PHASES.work
+            },
+            get running() {
+                return this.timerState === TIMER_STATES.running
+            },
+            get iteration() {
+                return (this.working ? this.workCount : this.workCount - 1) % 4 + 1
+            },
             start(timestamp) {
-                return {
+                return update({
                     ...this,
                     timerState: TIMER_STATES.running,
                     lastTimestamp: timestamp,
-                }
+                })
             },
             tick(timestamp) {
                 if (this.timerState !== TIMER_STATES.running) {
@@ -53,44 +62,44 @@ export const pomodoro = {
                 if (timeRemaining <= 0) {
                     return this.nextPhase()
                 }
-                return {
+                return update({
                     ...this,
                     timeRemaining,
                     lastTimestamp: timestamp,
-                }
+                })
             },
             pause() {
-                return { ...this, timerState: TIMER_STATES.paused }
+                return update({ ...this, timerState: TIMER_STATES.paused })
             },
             stop() {
                 const isWork = this.phase === PHASES.work
                 const isLongBreak = this.workCount % workCountUntilLongBreak === 0
                 const minutesRemaining = isWork ? workDuration : isLongBreak ? longBreakDuration : shortBreakDuration
-                return {
+                return update({
                     ...this,
                     timerState: TIMER_STATES.stopped,
                     timeRemaining: minutesRemaining * 60,
-                }
+                })
             },
             nextPhase() {
                 if (this.phase === PHASES.work) {
                     const workCount = this.workCount + 1
                     const nextIsLongBreak = workCount % workCountUntilLongBreak === 0
                     const minutesRemaining = nextIsLongBreak ? longBreakDuration : shortBreakDuration
-                    return {
+                    return update({
                         ...this,
                         phase: PHASES.break,
                         timerState: TIMER_STATES.stopped,
                         timeRemaining: minutesRemaining * 60,
                         workCount,
-                    }
+                    })
                 } else {
-                    return {
+                    return update({
                         ...this,
                         phase: PHASES.work,
                         timerState: TIMER_STATES.stopped,
                         timeRemaining: workDuration * 60,
-                    }
+                    })
                 }
             },
             prevPhase() {
@@ -103,23 +112,26 @@ export const pomodoro = {
                     }
                     const prevIsLongBreak = this.workCount % workCountUntilLongBreak === 0
                     const minutesRemaining = prevIsLongBreak ? longBreakDuration : shortBreakDuration
-                    return {
+                    return update({
                         ...this,
                         phase: PHASES.break,
                         timerState: TIMER_STATES.stopped,
                         timeRemaining: minutesRemaining * 60,
-                    }
+                    })
                 } else {
-                    return {
+                    return update({
                         ...this,
                         phase: PHASES.work,
                         timerState: TIMER_STATES.stopped,
                         timeRemaining: workDuration * 60,
                         workCount: this.workCount - 1,
-                    }
+                    })
                 }
             },
         }
+        const update = (data) => Object.assign(Object.create(proto), this, data)
+
+        return update(initialState)
     },
 }
 

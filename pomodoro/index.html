@@ -96,7 +96,7 @@
     import { registerServiceWorker } from '/lib/service-worker.js'
     import van, { injectTagsIntoWindow, renderAfterLoad, waitPromise } from '/lib/ui/web/van-wrapper.js'
     import { configManager } from './config.js'
-    import { PHASES, TIMER_STATES, pomodoro, sanitizeConfig } from './pomodoro.js'
+    import { pomodoro, sanitizeConfig } from './pomodoro.js'
 
     const TICK_INTERVAL_MS = 1000
     const NOTIFY_INTERVAL_S = 60
@@ -109,16 +109,27 @@
     )
     registerServiceWorker()
 
+    const deriveMemo = (deriveCb, memoCb) => {
+        const memo = van.derive(memoCb)
+        return van.derive(() => {
+            memo.val !== memo.oldVal
+            return deriveCb()
+        })
+    }
+    const pick = (object, keys) => keys.reduce((p, k) => ({ ...p, [k]: object[k] }), {})
+    const deriveSubset = (state, props) => deriveMemo(
+        () => pick(state.rawVal, props),
+        () => props.map(k => state.val[k]).join('|'),
+    )
+
     // FIX: sometimes timer doesn't start
     function app({ config }) {
         let currentConfig = config
         let tickInterval
         let notifyInterval
 
-        const pomodoroState = van.state(pomodoro.init(currentConfig))
-        const phase = van.derive(() => pomodoroState.val.phase)
-        const working = van.derive(() => phase.val === PHASES.work)
-        const iteration = van.derive(() => (working.val ? pomodoroState.val.workCount : pomodoroState.val.workCount - 1) % 4 + 1)
+        const timerState = van.state(pomodoro.init(currentConfig))
+        const timer = deriveSubset(timerState, ['phase', 'working', 'running', 'iteration'])
         van.derive(handlePhaseChange)
         van.derive(startTimerOnSpacePress)
 
@@ -128,15 +139,15 @@
         van.derive(closeSettingsOnClickOutside)
 
         return main({ class: () => cls(configVisible.val && 'darken') },
-            () => time({ class: cls(!working.val && 'darken') },
-                formatTime(pomodoroState.val.timeRemaining)
+            () => time({ class: cls(!timer.val.working && 'darken') },
+                formatTime(timerState.val.timeRemaining)
             ),
-            () => span(`${iteration.val} / 4`),
+            () => span(`${timer.val.iteration} / 4`),
             fieldset({ disabled: () => configVisible.val },
                 button({ ariaLabel: 'Previous', onclick: () => clearIntervalAndUpdate(s => s.prevPhase()) },
                     i({ class: 'fa-solid fa-backward-step' }),
                 ),
-                () => pomodoroState.val.timerState === TIMER_STATES.running
+                () => timer.val.running
                     ? button({ ariaLabel: 'Pause', onclick: () => clearIntervalAndUpdate(s => s.pause()), ...primaryButtonStyle },
                         i({ class: 'fa-solid fa-pause' }),
                     )
@@ -158,11 +169,11 @@
         )
 
         function handlePhaseChange() {
-            if (phase.val === phase.oldVal) {
+            if (timer.val.phase === timer.oldVal.phase) {
                 return
             }
             clearInterval(tickInterval)
-            if (pomodoroState.oldVal.timeRemaining <= 1) {
+            if (timerState.oldVal.timeRemaining <= 1) {
                 beep(2)
                 notifyInterval = setInterval(() => beep(2), NOTIFY_INTERVAL_S * 1000)
             }
@@ -173,7 +184,7 @@
                 e.target.tagName !== 'BUTTON' // ignore tab navigation space clicks
                 && e.key === ' '
                 && !configVisible.val
-                && pomodoroState.val !== TIMER_STATES.running
+                && !timer.val.running
                 && start()
             )
             document.addEventListener('click', () =>
@@ -192,7 +203,7 @@
                 const newConfig = configManager.parse(configTextarea.value)
                 if (stringifyConfig(newConfig) !== stringifyConfig(currentConfig)) {
                     const sanitizedConfig = sanitizeConfig(newConfig)
-                    pomodoroState.val = pomodoro.init(sanitizedConfig)
+                    timerState.val = pomodoro.init(sanitizedConfig)
                     configManager.save(sanitizedConfig)
                     currentConfig = sanitizedConfig
                 }
@@ -205,7 +216,7 @@
         }
 
         function update(callback) {
-            pomodoroState.val = callback(pomodoroState.val)
+            timerState.val = callback(timerState.val)
         }
 
         function start() {
