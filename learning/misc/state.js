@@ -28,9 +28,14 @@ function state(target) {
                     const compute = getCompute(target, path.slice(0, -1))
                     const update = () => callback(compute())
                     listeners.push({ path, update })
-                    update()
                     path = []
-                    return
+                    return update()
+                }
+                case '_render': {
+                    path.pop()
+                    const update = createStateNode()
+                    const node = thisArg_._listen((v) => update(args[0](v)))
+                    return node
                 }
             }
             path.push({ args })
@@ -66,6 +71,19 @@ function getCompute(target, path) {
 
 // DOM
 
+function createStateNode() {
+    let node = document.createTextNode('')
+    return (v) => {
+        let newNode
+        if (!v) newNode = document.createTextNode('')
+        else if (v instanceof Element) newNode = v
+        else newNode = document.createTextNode(v)
+        node.replaceWith(newNode)
+        node = newNode
+        return node
+    }
+}
+
 const tags = new Proxy({}, {
     get(_, name) {
         return tag.bind(undefined, name)
@@ -85,8 +103,8 @@ function tag(name, ...args) {
 function add(dom, ...children) {
     for (const c of children.flat(Infinity)) {
         if (c._isState) {
-            const node = document.createTextNode('aa')
-            c._listen((v) => node.textContent = v)
+            const update = createStateNode()
+            const node = c._listen(update)
             dom.append(node)
         } else {
             dom.append(c)
@@ -108,6 +126,8 @@ input.oninput = (e) => s.user.name = e.target.value
 const app = tags.div(
     input,
     tags.h1('hello ', s.user.name),
+    tags.p(s.user.name.toUpperCase()),
+    tags.p(s.user.name._render((v) => v === 'di' && tags.span('admin'))),
 )
 
 add(document.body, app)
