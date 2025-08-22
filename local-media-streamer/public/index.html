@@ -1,0 +1,95 @@
+<!-- AI generated -->
+
+<html>
+
+<body>
+    <div id="file-name"></div>
+    <div id="player-container"></div>
+    <div id="file-list"></div>
+
+    <script>
+        const container = document.getElementById('player-container')
+        const listDiv = document.getElementById('file-list')
+
+        function getFileParam() {
+            return new URLSearchParams(window.location.search).get('file')
+        }
+
+        function getTypeParam() {
+            return new URLSearchParams(window.location.search).get('type')
+        }
+
+        function setFileParam(file, type) {
+            const params = new URLSearchParams(window.location.search)
+            params.set('file', file)
+            params.set('type', type)
+            history.replaceState({}, '', '?' + params)
+        }
+
+        function savePosition(id, time) {
+            localStorage.setItem('pos_' + id, time)
+        }
+
+        function loadPosition(id) {
+            return parseFloat(localStorage.getItem('pos_' + id)) || 0
+        }
+
+        const fileNameDiv = document.getElementById('file-name')
+
+        function createPlayer(file, type, id) {
+            fileNameDiv.textContent = file // show file name above player
+
+            container.innerHTML = ''
+            const el = document.createElement(type)
+            el.controls = true
+            el.src = `/${type}/${file}`
+            el.style.width = '400px'
+
+            el.currentTime = loadPosition(id)
+
+            el.addEventListener('timeupdate', () => savePosition(id, el.currentTime))
+            container.appendChild(el)
+        }
+
+        function loadFile(file, type, id) {
+            setFileParam(file, type)
+            createPlayer(file, type, id)
+        }
+
+        function loadFileList() {
+            fetch('/files')
+                .then(r => r.text())
+                .then(html => {
+                    listDiv.innerHTML = html
+                    const links = document.querySelectorAll('.file-link')
+
+                    links.forEach(link => {
+                        link.addEventListener('click', e => {
+                            e.preventDefault()
+                            const file = link.dataset.file
+                            const type = link.dataset.type
+                            const id = link.dataset.id
+                            loadFile(file, type, id)
+                        })
+                    })
+
+                    // If URL has file param, auto-select it
+                    const fileParam = getFileParam()
+                    const typeParam = getTypeParam()
+                    if (fileParam && typeParam) {
+                        const match = Array.from(links).find(l =>
+                            l.dataset.file === fileParam && l.dataset.type === typeParam
+                        )
+                        if (match) {
+                            loadFile(match.dataset.file, match.dataset.type, match.dataset.id)
+                        }
+                    }
+                })
+        }
+
+        // Initialization
+        loadFileList();
+    </script>
+</body>
+
+</html>
