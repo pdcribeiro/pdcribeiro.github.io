@@ -4,7 +4,13 @@
 
 <body>
     <div id="file-name"></div>
-    <div id="player-container"></div>
+    <div id="player-container" style="display: none">
+        <div id="player"></div>
+        <div>
+            <button onclick="skip(-10)">« 10s</button>
+            <button onclick="skip(10)">10s »</button>
+        </div>
+    </div>
     <div id="file-list"></div>
 
     <script>
@@ -39,8 +45,8 @@
         function createPlayer(file, type, id) {
             fileNameDiv.textContent = file // show file name above player
 
-            container.innerHTML = ''
             const el = document.createElement(type)
+            el.id = 'player'
             el.controls = true
             el.src = `/${type}/${file}`
             el.style.width = '400px'
@@ -48,7 +54,11 @@
             el.currentTime = loadPosition(id)
 
             el.addEventListener('timeupdate', () => savePosition(id, el.currentTime))
-            container.appendChild(el)
+
+            const player = document.getElementById('player')
+            player.replaceWith(el)
+
+            container.style.display = ''
         }
 
         function loadFile(file, type, id) {
@@ -85,6 +95,13 @@
                         }
                     }
                 })
+        }
+
+        function skip(seconds) {
+            const player = document.getElementById('player')
+            if (player) {
+                player.currentTime = Math.max(0, Math.min(player.duration, player.currentTime + seconds))
+            }
         }
 
         // Initialization
