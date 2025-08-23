@@ -92,6 +92,7 @@
 
 <script type="module">
     import { beep } from '/lib/audio.js'
+    import { monkeyPatchHelperMethods } from '/lib/helpers.js'
     import { cls } from '/lib/ui/web/utils.js'
     import { registerServiceWorker } from '/lib/service-worker.js'
     import van, { injectTagsIntoWindow, renderAfterLoad, waitPromise } from '/lib/ui/web/van-wrapper.js'
@@ -103,13 +104,12 @@
 
     const primaryButtonStyle = { style: 'font-size: 2.5rem' }
 
+    monkeyPatchHelperMethods()
     injectTagsIntoWindow()
     renderAfterLoad(
         waitPromise(configManager.load(), (config) => app({ config }))
     )
     registerServiceWorker()
-
-    const pick = (object, keys) => keys.reduce((p, k) => ({ ...p, [k]: object[k] }), {})
 
     // FIX: sometimes timer doesn't start
     function app({ config }) {
@@ -118,7 +118,7 @@
         let notifyInterval
 
         const timerState = van.state(pomodoro.init(currentConfig))
-        const timer = van.derive(() => pick(timerState.val, ['phase', 'working', 'running', 'iteration']))
+        const timer = van.derive(() => timerState.val.pick('phase', 'working', 'running', 'iteration'))
         van.derive(handlePhaseChange)
         van.derive(startTimerOnSpacePress)
 
@@ -238,6 +238,6 @@
             .replace('long', ' long')
     }
 </script>
-<!-- <script type="module" src="./pomodoro.user.test.js"></script> -->
+<script type="module" src="./pomodoro.user.test.js"></script>
 
 </html>
