@@ -109,18 +109,7 @@
     )
     registerServiceWorker()
 
-    const deriveMemo = (deriveCb, memoCb) => {
-        const memo = van.derive(memoCb)
-        return van.derive(() => {
-            memo.val !== memo.oldVal
-            return deriveCb()
-        })
-    }
     const pick = (object, keys) => keys.reduce((p, k) => ({ ...p, [k]: object[k] }), {})
-    const deriveSubset = (state, props) => deriveMemo(
-        () => pick(state.rawVal, props),
-        () => props.map(k => state.val[k]).join('|'),
-    )
 
     // FIX: sometimes timer doesn't start
     function app({ config }) {
@@ -129,7 +118,7 @@
         let notifyInterval
 
         const timerState = van.state(pomodoro.init(currentConfig))
-        const timer = deriveSubset(timerState, ['phase', 'working', 'running', 'iteration'])
+        const timer = van.derive(() => pick(timerState.val, ['phase', 'working', 'running', 'iteration']))
         van.derive(handlePhaseChange)
         van.derive(startTimerOnSpacePress)
 
@@ -249,6 +238,6 @@
             .replace('long', ' long')
     }
 </script>
-<script type="module" src="./pomodoro.user.test.js"></script>
+<!-- <script type="module" src="./pomodoro.user.test.js"></script> -->
 
 </html>
