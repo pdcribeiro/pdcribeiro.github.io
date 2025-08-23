@@ -5,8 +5,10 @@ const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
 
-const app = express()
+const HOST = '0.0.0.0'
 const PORT = 3000
+
+const app = express()
 
 app.use(express.static(path.join(__dirname, 'public')))
 
@@ -101,4 +103,7 @@ app.get('/files', (req, res) => {
   `)
 })
 
-app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`))
+app.listen(PORT, HOST, (e) => e ?
+    console.error(e) :
+    console.log(`Server running at http://${HOST}:${PORT}`)
+)
