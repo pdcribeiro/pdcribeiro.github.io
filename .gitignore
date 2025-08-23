@@ -36,6 +36,9 @@
 !greens/
 !greens/**
 
+!local-media-streamer/
+!local-media-streamer/**
+
 !notes/
 !notes/**
 
@@ -49,4 +52,5 @@
 
 # Ignore
 
+node_modules/
 README.md
