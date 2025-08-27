@@ -1,6 +1,6 @@
 import AppConfigManager from '../lib/config/AppConfigManager.js'
 import LocalStorageConfigRepo from '/lib/config/LocalStorageConfigRepo.js'
-import { transformEntries } from '/lib/objects.js'
+import { transformEntries } from '/lib/object.js'
 import { sanitizeConfig } from './pomodoro.js'
 
 const STORAGE_KEY = 'pomodoro-config'

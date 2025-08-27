@@ -1,0 +1,11 @@
+body {
+    background: #1d1d1d;
+    font-family: sans-serif;
+    color: #c5c5c5;
+}
+
+input,
+button {
+    background: inherit;
+    color: inherit;
+}

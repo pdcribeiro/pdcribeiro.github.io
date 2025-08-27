@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>misc</title>
+    <link rel="stylesheet" href="/style/dark.css" />
+    <script type="module" src="./fw.js"></script>
+</head>
+
+<body style="margin: auto; max-width: 1280px">
+</body>
+
+<template app>
+    <script>
+        let newTask = $state('')
+        let filter = $state('all')
+        let tasks = $state([])
+
+        let tasksByFilter = $derive(() => ({
+            all: tasks,
+            active: tasks.filter(t => !t.done),
+            completed: tasks.filter(t => t.done),
+        }))
+        let filtered = $derive(() => tasksByFilter[filter])
+
+        let createTask = (title) => { }
+        let toggleTask = (id) => { }
+        let deleteTask = (id) => { }
+    </script>
+
+    <header>
+        <h1>Task Tracker</h1>
+    </header>
+
+    <div style="display: flex">
+        <main style="flex: 1">
+            <input type="text" :model="newTask" placeholder="New task">
+            <button @click="createTask">Add task</button>
+
+            <div>
+                <button @click="filter = 'all'">All</button>
+                <button @click="filter = 'active'">Active</button>
+                <button @click="filter = 'completed'">Completed</button>
+            </div>
+
+            <ul>
+                <li :if="filtered.length" :for="task in filtered">
+                    <task-item :task @toggle="toggleTask" @delete="deleteTask"></task-item>
+                </li>
+                <li :else>No tasks</li>
+            </ul>
+        </main>
+
+        <aside>
+            <div>
+                <p>Total tasks: {tasksByFilter.all.length}</p>
+                <p>Active tasks: {tasksByFilter.active.length}</p>
+                <p>Completed tasks: {tasksByFilter.completed.length}</p>
+            </div>
+        </aside>
+    </div>
+</template>
+
+<template component="TaskItem">
+    <script>
+        let { task } = $props()
+    </script>
+
+    <input type="checkbox" :checked="task.done" @input="$emit('toggle', task.id)">
+    <span>{task.title}</span>
+    <delete-button @click="$emit('delete', task.id)"></delete-button>
+
+    <template component="DeleteButton">
+        <button @click="confirm('Are you sure?') && $emit('click')">x</button>
+
+        <style>
+            button {
+                color: red;
+            }
+        </style>
+    </template>
+</template>
+
+</html>
