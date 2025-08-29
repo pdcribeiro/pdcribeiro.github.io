@@ -1,8 +1,6 @@
 // vanjs fork https://github.com/vanjs-org/van
 // thank you Tao! :)
 
-// FIX: breaking for other derives in todo demo app
-
 let protoOf = Object.getPrototypeOf
 let changedStates, derivedStates, curDeps, curNewDerives, alwaysConnectedDom = { isConnected: 1 }
 let gcCycleInMs = 1000, statesToGc, propSetterCache = {}
@@ -78,8 +76,7 @@ let state = (obj) => {
         _bindings: {},
         _listeners: {},
         _set: (props) => {
-            if (!props) return
-
+            isObject(props) || (props = { val: props })
             let propsAndDels = { ...props }
             Object.keys(_raw).forEach(k => k in props || (propsAndDels[k] = undefined))
             Object.assign(proxy, propsAndDels)
@@ -153,7 +150,7 @@ let updateDoms = () => {
         derivedStates = new Map()
         for (let l of new Set(derivedStatesArray.flatMap(([s, p]) => s._listeners[p] = keepConnected(s._listeners[p]))))
             derive(l.f, l.s, l._dom), l._dom = _undefined
-    } while (++iter < 100 && (derivedStatesArray = Array.from(derivedStates)).length)
+    } while (++iter < 100 && (derivedStatesArray = Array.from(derivedStates).flatMap(([s, props]) => Array.from(props).map(p => [s, p]))).length)
     let changedStatesArray = Array.from(changedStates).flatMap(([s, props]) => Array.from(props).map(p => [s, p])).filter(([s, p]) => s._raw[p] !== s._old[p])
     changedStates = _undefined
     derivedStates = _undefined

@@ -14,19 +14,24 @@
 
 <template app>
     <script>
+        // FIX: breaking for other derives
+
         let newTask = $state('')
         let filter = $state('all')
         let tasks = $state([])
 
+        let demo = $derive(() => 'task: ' + newTask.val)
         $derive(() => {
-            console.log('newTask', newTask.val)
+            console.log('newTask', demo.val)
         })
-        console.log('listeners', newTask._listeners)
+
         setInterval(() => {
             // console.log('before', newTask.val)
             newTask.val += 'foo'
             // console.log('after', newTask.val)
-        }, 1000)
+            // console.log('newTask._listeners', newTask._listeners)
+            // console.log('demo._listeners', demo._listeners)
+        }, 2000)
 
         // let tasksByFilter = $derive(() => ({
         //     all: tasks,
