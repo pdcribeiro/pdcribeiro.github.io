@@ -1,21 +1,29 @@
 // vanjs fork https://github.com/vanjs-org/van
 // thank you Tao! :)
 
+// FIX: breaking for other derives in todo demo app
+
 let protoOf = Object.getPrototypeOf
 let changedStates, derivedStates, curDeps, curNewDerives, alwaysConnectedDom = { isConnected: 1 }
 let gcCycleInMs = 1000, statesToGc, propSetterCache = {}
 let objProto = protoOf(alwaysConnectedDom), funcProto = protoOf(protoOf), _undefined
 
 let states = new WeakMap()
-let isObject = (val) => val && typeof val === 'object' // includes arrays
-let isArray = (val) => Array.isArray(val)
-let cloneObject = (obj) =>
+let isObject = val => val && typeof val === 'object' // includes arrays
+let isArray = val => Array.isArray(val)
+let cloneObject = obj =>
     isArray(obj) ? obj.slice() : Object.assign(Object.create(protoOf(obj)), obj)
 let addToSetInMap = (map, key, val) => {
     let set = map.get(key) ?? new Set()
     set.add(val)
     map.set(key, set)
     return map
+}
+let pushToArrayInObject = (obj, key, val) => {
+    let arr = obj[key] ?? []
+    arr.push(val)
+    obj[key] = arr
+    return obj
 }
 
 let addAndScheduleOnFirst = (map, state, prop, f, waitMs) => {
@@ -40,15 +48,13 @@ let runAndCaptureDeps = (f, deps, arg) => {
     }
 }
 
-let keepConnected = l => l.filter(b => b._dom?.isConnected)
+let keepConnected = l => l ? l.filter(b => b._dom?.isConnected) : []
 
 let addStatesToGc = (state, prop) => statesToGc = addAndScheduleOnFirst(statesToGc, state, prop, () => {
-    for (let [s, props] of statesToGc) {
-        for (let p of props) {
-            s._bindings[p] = keepConnected(s._bindings[p])
-            s._listeners[p] = keepConnected(s._listeners[p])
-        }
-    }
+    for (let [s, props] of statesToGc)
+        for (let p of props)
+            s._bindings[p] = keepConnected(s._bindings[p]),
+                s._listeners[p] = keepConnected(s._listeners[p])
     statesToGc = _undefined
 }, gcCycleInMs)
 
@@ -72,6 +78,8 @@ let state = (obj) => {
         _bindings: {},
         _listeners: {},
         _set: (props) => {
+            if (!props) return
+
             let propsAndDels = { ...props }
             Object.keys(_raw).forEach(k => k in props || (propsAndDels[k] = undefined))
             Object.assign(proxy, propsAndDels)
@@ -79,6 +87,7 @@ let state = (obj) => {
     }
     let proxy = new Proxy(stateObj, {
         get(stateObj, prop, proxy) {
+            if (typeof prop !== 'string') return
             if (prop.startsWith('_')) return Reflect.get(...arguments)
 
             let isOld = prop.startsWith(oldPrefix)
@@ -95,7 +104,8 @@ let state = (obj) => {
             // if (isObject(val)) val = state(val)
             if (val !== _raw[prop]) {
                 _raw[prop] = val
-                if (stateObj._bindings[prop].length + stateObj._listeners[prop].length) {
+                let len = obj => obj[prop]?.length ?? 0
+                if (len(stateObj._bindings) + len(stateObj._listeners)) {
                     changedStates = addAndScheduleOnFirst(changedStates, proxy, prop, updateDoms)
                     derivedStates && addToSetInMap(derivedStates, proxy, prop)
                 } else {
@@ -116,35 +126,37 @@ let bind = (f, dom) => {
     curNewDerives = []
     let newDom = runAndCaptureDeps(f, deps, dom)
     newDom = (newDom ?? document).nodeType ? newDom : new Text(newDom)
-    for (let [state, prop] of deps._getters)
-        deps._setters.get(state)?.has(prop) || (addStatesToGc(state, prop), state._bindings[prop].push(binding))
+    for (let [s, props] of deps._getters)
+        for (let p of props)
+            deps._setters.get(s)?.has(p) || (addStatesToGc(s, p), pushToArrayInObject(s._bindings, p, binding))
     for (let l of curNewDerives) l._dom = newDom
     curNewDerives = prevNewDerives
     return binding._dom = newDom
 }
 
 // TODO: test _set: check doesn't log: let s = state({a:1}); let d = derive(() => ({a:s.a, b:2})); derive(() => console.log(d.b))
-let derive = (f, s = state(), dom) => {
-    let deps = { _getters: new Map(), _setters: new Map() }, listener = { f, s }
+let derive = (f, derived = state(), dom) => {
+    let deps = { _getters: new Map(), _setters: new Map() }, listener = { f, s: derived }
     listener._dom = dom ?? curNewDerives?.push(listener) ?? alwaysConnectedDom
-    s._set(runAndCaptureDeps(f, deps, s.rawVal))
-    for (let [state, prop] of deps._getters)
-        deps._setters.get(state)?.has(prop) || (addStatesToGc(state, prop), state._listeners[prop].push(listener))
-    return s
+    derived._set(runAndCaptureDeps(f, deps))
+    for (let [s, props] of deps._getters)
+        for (let p of props)
+            deps._setters.get(s)?.has(p) || (addStatesToGc(s, p), pushToArrayInObject(s._listeners, p, listener))
+    return derived
 }
 
 let update = (dom, newDom) => newDom ? newDom !== dom && dom.replaceWith(newDom) : dom.remove()
 
 let updateDoms = () => {
-    let iter = 0, derivedStatesArray = Array.from(changedStates).filter(([s, p]) => s._raw[p] !== s._old[p])
+    let iter = 0, derivedStatesArray = Array.from(changedStates).flatMap(([s, props]) => Array.from(props).map(p => [s, p])).filter(([s, p]) => s._raw[p] !== s._old[p])
     do {
         derivedStates = new Map()
         for (let l of new Set(derivedStatesArray.flatMap(([s, p]) => s._listeners[p] = keepConnected(s._listeners[p]))))
             derive(l.f, l.s, l._dom), l._dom = _undefined
     } while (++iter < 100 && (derivedStatesArray = Array.from(derivedStates)).length)
-    let changedStatesArray = Array.from(changedStates).filter(([s, p]) => s._raw[p] !== s._old[p])
+    let changedStatesArray = Array.from(changedStates).flatMap(([s, props]) => Array.from(props).map(p => [s, p])).filter(([s, p]) => s._raw[p] !== s._old[p])
     changedStates = _undefined
-    // derivedStates = _undefined
+    derivedStates = _undefined
     for (let b of new Set(changedStatesArray.flatMap(([s, p]) => s._bindings[p] = keepConnected(s._bindings[p]))))
         update(b._dom, bind(b.f, b._dom)), b._dom = _undefined
     for (let [s, p] of changedStatesArray) s._old[p] = s._raw[p]

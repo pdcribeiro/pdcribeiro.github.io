@@ -18,12 +18,22 @@
         let filter = $state('all')
         let tasks = $state([])
 
-        let tasksByFilter = $derive(() => ({
-            all: tasks,
-            active: tasks.filter(t => !t.done),
-            completed: tasks.filter(t => t.done),
-        }))
-        let filtered = $derive(() => tasksByFilter[filter])
+        $derive(() => {
+            console.log('newTask', newTask.val)
+        })
+        console.log('listeners', newTask._listeners)
+        setInterval(() => {
+            // console.log('before', newTask.val)
+            newTask.val += 'foo'
+            // console.log('after', newTask.val)
+        }, 1000)
+
+        // let tasksByFilter = $derive(() => ({
+        //     all: tasks,
+        //     active: tasks.filter(t => !t.done),
+        //     completed: tasks.filter(t => t.done),
+        // }))
+        // let filtered = $derive(() => tasksByFilter[filter])
 
         let createTask = (title) => { }
         let toggleTask = (id) => { }
