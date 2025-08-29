@@ -7,11 +7,12 @@
 */
 
 import { kebab } from '/lib/string.js'
+import { state, derive, bind } from './state.js'
 
 let init = () => {
     let $props = () => ({}) // creates state object that reacts to changes on parent component
-    let $state = v => v
-    let $derive = f => f()
+    let $state = state
+    let $derive = derive
     let $emit = () => { }
 
     let baseScope = {
@@ -84,7 +85,7 @@ let parseTemplate = (template, scope = {}) => {
 
     let components = findAndDefineComponents(root, scope)
 
-    // TODO parse and bind html
+    parseAndBindDom(root)
 
     return { root, scope }
 }
@@ -101,17 +102,17 @@ let defineComponent = (template) => {
     customElements.define(kebab(name), Component)
 }
 
-init()
-
-function walk() {
-    let walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT)
+let parseAndBindDom = (root) => {
+    let walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT)
     let node = walker.firstChild()
     while (node) {
         // console.log(node, node.attributes)
+
+        // TODO bind attributes
         for (let attr of node.attributes) {
             // console.log('attr', attr.name)
-            const expr = node.getAttribute(attr.name)
-            const func = () => evaluate(expr,)
+            let expr = node.getAttribute(attr.name)
+            let func = () => evaluate(expr,)
             switch (attr.name) {
                 case ':if': {
                     // bind(node, attr.value, (val) => {
@@ -133,13 +134,18 @@ function walk() {
                 }
             }
         }
+
+        // TODO parse and bind innerText
+
         node = walker.nextNode()
     }
 }
 
-function evaluate(expr, scope) {
-    const keys = Object.keys(scope)
-    const values = Object.values(scope)
-    const fn = new Function(...keys, `return ${expr};`)
+let evaluate = (expr, scope) => {
+    let keys = Object.keys(scope)
+    let values = Object.values(scope)
+    let fn = new Function(...keys, `return ${expr};`)
     return fn(...values)
 }
+
+init()
