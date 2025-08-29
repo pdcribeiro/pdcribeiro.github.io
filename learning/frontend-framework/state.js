@@ -7,8 +7,8 @@ let gcCycleInMs = 1000, statesToGc, propSetterCache = {}
 let objProto = protoOf(alwaysConnectedDom), funcProto = protoOf(protoOf), _undefined
 
 let states = new WeakMap()
-let isObject = val => val && typeof val === 'object' // includes arrays
-let isArray = val => Array.isArray(val)
+let { isArray } = Array
+let isObject = val => val && typeof val === 'object' && !isArray(val)
 let cloneObject = obj =>
     isArray(obj) ? obj.slice() : Object.assign(Object.create(protoOf(obj)), obj)
 let addToSetInMap = (map, key, val) => {
@@ -84,7 +84,7 @@ let state = (obj) => {
     }
     let proxy = new Proxy(stateObj, {
         get(stateObj, prop, proxy) {
-            if (typeof prop !== 'string') return
+            if (prop in protoOf(_raw)) return _raw[prop]
             if (prop.startsWith('_')) return Reflect.get(...arguments)
 
             let isOld = prop.startsWith(oldPrefix)
@@ -96,9 +96,13 @@ let state = (obj) => {
             return isObject(val) ? state(val) : val
         },
         set(stateObj, prop, val, proxy) {
+            if (prop in protoOf(_raw)) {
+                _raw[prop] = val
+                return true
+            }
+
             curDeps && addToSetInMap(curDeps._setters, proxy, prop)
 
-            // if (isObject(val)) val = state(val)
             if (val !== _raw[prop]) {
                 _raw[prop] = val
                 let len = obj => obj[prop]?.length ?? 0
