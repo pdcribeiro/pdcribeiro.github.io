@@ -1,6 +1,8 @@
 // vanjs fork https://github.com/vanjs-org/van
 // thank you Tao! :)
 
+// TODO: refactor dependencies to avoid handling sets inside map. idea: use map with two keys
+
 let protoOf = Object.getPrototypeOf
 let changedStates, derivedStates, curDeps, curNewDerives, alwaysConnectedDom = { isConnected: 1 }
 let gcCycleInMs = 1000, statesToGc, propSetterCache = {}
@@ -23,6 +25,7 @@ let pushToArrayInObject = (obj, key, val) => {
     obj[key] = arr
     return obj
 }
+let flattenMapOfSets = (map) => Array.from(map).flatMap(([k, set]) => Array.from(set).map(v => [k, v]))
 
 let addAndScheduleOnFirst = (map, state, prop, f, waitMs) => {
     if (!map) {
@@ -49,10 +52,9 @@ let runAndCaptureDeps = (f, deps, arg) => {
 let keepConnected = l => l ? l.filter(b => b._dom?.isConnected) : []
 
 let addStatesToGc = (state, prop) => statesToGc = addAndScheduleOnFirst(statesToGc, state, prop, () => {
-    for (let [s, props] of statesToGc)
-        for (let p of props)
-            s._bindings[p] = keepConnected(s._bindings[p]),
-                s._listeners[p] = keepConnected(s._listeners[p])
+    for (let [s, p] of flattenMapOfSets(statesToGc))
+        s._bindings[p] = keepConnected(s._bindings[p]),
+            s._listeners[p] = keepConnected(s._listeners[p])
     statesToGc = _undefined
 }, gcCycleInMs)
 
@@ -127,9 +129,8 @@ let bind = (f, dom) => {
     curNewDerives = []
     let newDom = runAndCaptureDeps(f, deps, dom)
     newDom = (newDom ?? document).nodeType ? newDom : new Text(newDom)
-    for (let [s, props] of deps._getters)
-        for (let p of props)
-            deps._setters.get(s)?.has(p) || (addStatesToGc(s, p), pushToArrayInObject(s._bindings, p, binding))
+    for (let [s, p] of flattenMapOfSets(deps._getters))
+        deps._setters.get(s)?.has(p) || (addStatesToGc(s, p), pushToArrayInObject(s._bindings, p, binding))
     for (let l of curNewDerives) l._dom = newDom
     curNewDerives = prevNewDerives
     return binding._dom = newDom
@@ -140,22 +141,21 @@ let derive = (f, derived = state(), dom) => {
     let deps = { _getters: new Map(), _setters: new Map() }, listener = { f, s: derived }
     listener._dom = dom ?? curNewDerives?.push(listener) ?? alwaysConnectedDom
     derived._set(runAndCaptureDeps(f, deps))
-    for (let [s, props] of deps._getters)
-        for (let p of props)
-            deps._setters.get(s)?.has(p) || (addStatesToGc(s, p), pushToArrayInObject(s._listeners, p, listener))
+    for (let [s, p] of flattenMapOfSets(deps._getters))
+        deps._setters.get(s)?.has(p) || (addStatesToGc(s, p), pushToArrayInObject(s._listeners, p, listener))
     return derived
 }
 
 let update = (dom, newDom) => newDom ? newDom !== dom && dom.replaceWith(newDom) : dom.remove()
 
 let updateDoms = () => {
-    let iter = 0, derivedStatesArray = Array.from(changedStates).flatMap(([s, props]) => Array.from(props).map(p => [s, p])).filter(([s, p]) => s._raw[p] !== s._old[p])
+    let iter = 0, derivedStatesArray = flattenMapOfSets(changedStates).filter(([s, p]) => s._raw[p] !== s._old[p])
     do {
         derivedStates = new Map()
         for (let l of new Set(derivedStatesArray.flatMap(([s, p]) => s._listeners[p] = keepConnected(s._listeners[p]))))
             derive(l.f, l.s, l._dom), l._dom = _undefined
-    } while (++iter < 100 && (derivedStatesArray = Array.from(derivedStates).flatMap(([s, props]) => Array.from(props).map(p => [s, p]))).length)
-    let changedStatesArray = Array.from(changedStates).flatMap(([s, props]) => Array.from(props).map(p => [s, p])).filter(([s, p]) => s._raw[p] !== s._old[p])
+    } while (++iter < 100 && (derivedStatesArray = flattenMapOfSets(derivedStates)).length)
+    let changedStatesArray = flattenMapOfSets(changedStates).filter(([s, p]) => s._raw[p] !== s._old[p])
     changedStates = _undefined
     derivedStates = _undefined
     for (let b of new Set(changedStatesArray.flatMap(([s, p]) => s._bindings[p] = keepConnected(s._bindings[p]))))
