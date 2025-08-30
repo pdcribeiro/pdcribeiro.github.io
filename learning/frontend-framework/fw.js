@@ -154,9 +154,6 @@ let parseAndBindAttribute = (name, element, scope) => {
             }, anchor)
             break
         }
-        case ':else': {
-            break
-        }
         case ':for': {
             break
         }
