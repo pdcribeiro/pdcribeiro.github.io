@@ -110,8 +110,9 @@ let parseAndImportScript = async (root) => {
 let parseAndBindDom = (element, scope) => {
     console.debug('parseAndBindDom', { element, scope })
 
-    for (let { name } of element.attributes)
-        parseAndBindAttribute(name, element, scope)
+    if (!(element instanceof ShadowRoot))
+        for (let { name } of element.attributes)
+            parseAndBindAttribute(name, element, scope)
 
     for (let child of element.children)
         console.debug({ child }, child.isComponent),
