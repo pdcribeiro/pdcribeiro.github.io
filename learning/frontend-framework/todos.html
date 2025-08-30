@@ -16,7 +16,9 @@
     <script>
         let newTask = $state('')
         let filter = $state('all')
-        let tasks = $state([])
+        let tasks = $state([
+            { title: 'first task', done: true }, { title: 'second task', done: false },
+        ])
 
         let tasksByFilter = $derive(() => ({
             all: tasks.val,
@@ -25,16 +27,21 @@
         }))
         let filtered = $derive(() => tasksByFilter[filter.val])
 
-        $derive(() => {
-            console.log(tasks.val)
-        })
-        setInterval(() => {
-            tasks.val = [...tasks.val, tasks.val.length]
-        }, 1000)
+        let createTask = (title) => {
+            tasks.val = [...tasks.val, { title, done: false, id: tasks.val.length }]
+        }
+        let toggleTask = (id) => {
+            tasks.val = tasks.val.map(t => t.id === id ? { ...t, done: !t.done } : t)
+        }
+        let deleteTask = (id) => {
+            tasks.val = tasks.val.filter(t => t.id !== id)
+        }
 
-        let createTask = (title) => { }
-        let toggleTask = (id) => { }
-        let deleteTask = (id) => { }
+        // setInterval(() => createTask(''), 2000)
+        // $derive(() => console.log('tasks', tasks.val.length))
+        $derive(() => console.log({ filter: filter.val, filtered: filtered.val }))
+
+        let task = $derive(() => tasks.val[0])
     </script>
 
     <header>
@@ -47,13 +54,13 @@
             <button @click="createTask">Add task</button>
 
             <div>
-                <button @click="filter = 'all'">All</button>
-                <button @click="filter = 'active'">Active</button>
-                <button @click="filter = 'completed'">Completed</button>
+                <button @click="filter.val = 'all'">All</button>
+                <button @click="filter.val = 'active'">Active</button>
+                <button @click="filter.val = 'completed'">Completed</button>
             </div>
 
             <ul>
-                <li :if="filtered.length" :for="task in filtered">
+                <li :if="filtered.val.length" :for="task in filtered">
                     <task-item :task @toggle="toggleTask" @delete="deleteTask"></task-item>
                 </li>
                 <li :else>No tasks</li>
@@ -72,22 +79,24 @@
 
 <template component="TaskItem">
     <script>
-        let { task } = $props()
+        let { task } = $props
+        $derive(() => console.log('derive task', { task: $props.task }))
+        // $derive(() => console.log('derive done', { task: $props.task.done }))
     </script>
 
     <input type="checkbox" :checked="task.done" @input="$emit('toggle', task.id)">
     <span>{task.title}</span>
     <delete-button @click="$emit('delete', task.id)"></delete-button>
+</template>
 
-    <template component="DeleteButton">
-        <button @click="confirm('Are you sure?') && $emit('click')">x</button>
+<template component="DeleteButton">
+    <button @click="confirm('Are you sure?') && $emit('click')">x</button>
 
-        <style>
-            button {
-                color: red;
-            }
-        </style>
-    </template>
+    <style>
+        button {
+            color: red;
+        }
+    </style>
 </template>
 
 </html>

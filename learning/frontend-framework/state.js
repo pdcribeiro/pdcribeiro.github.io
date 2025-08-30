@@ -61,6 +61,7 @@ let addStatesToGc = (state, prop) => statesToGc = addAndScheduleOnFirst(statesTo
 const oldPrefix = '$old_'
 
 // TODO: cleanup deleted props. in updateDoms?
+// TODO: handle: deleteProperty, ownKeys (https://github.com/vanjs-org/van/blob/main/x/src/van-x.js)
 let state = (obj) => {
     if (isObject(obj)) {
         let existing = states.get(obj)
@@ -88,6 +89,7 @@ let state = (obj) => {
         get(stateObj, prop, proxy) {
             if (prop in protoOf(_raw)) return _raw[prop]
             if (prop.startsWith('_')) return Reflect.get(...arguments)
+            if (prop === 'isState') return true
 
             let isOld = prop.startsWith(oldPrefix)
             if (isOld) prop = prop.slice(oldPrefix.length)
@@ -102,6 +104,7 @@ let state = (obj) => {
                 _raw[prop] = val
                 return true
             }
+            if (prop.startsWith('_')) return Reflect.set(...arguments)
 
             curDeps && addToSetInMap(curDeps._setters, proxy, prop)
 
@@ -163,4 +166,4 @@ let updateDoms = () => {
     for (let [s, p] of changedStatesArray) s._old[p] = s._raw[p]
 }
 
-export { bind, state, derive }
+export { state, derive, bind }
