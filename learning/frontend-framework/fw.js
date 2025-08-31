@@ -146,15 +146,15 @@ let parseAndBindAttribute = (name, element, scope) => {
     let rawName = name.startsWith(':') ? name.slice(1) : name
     let value = element.getAttribute(name)
     if (name.startsWith(':')) {
+        let evaluate = getEvaluator(value || rawName, scope)
         if (element.isComponent)
             bind(() => {
-                let result = evaluate(value || rawName, scope)
+                let result = evaluate()
                 element._props[rawName] = result.isState ? result.val : result
             }, element)
         else
             bind(() => {
-                let result = evaluate(value || rawName, scope)
-                element.setAttribute(rawName, result)
+                element.setAttribute(rawName, evaluate())
             }, element)
         // } else if (name.startsWith('@')) {
     }
@@ -179,6 +179,7 @@ let bindIfAttr = (element, scope) => {
             break
     }
     for (let b of branches) {
+        b.eval = b.exp ? getEvaluator(b.exp, scope) : () => true // elsif : else
         let { el } = b
         b.el = el.cloneNode(true)
         el.remove()
@@ -188,7 +189,7 @@ let bindIfAttr = (element, scope) => {
 
     // bind async to prevent current parseAndBindDom from catching added elements
     setTimeout(() => bind(() => {
-        let active = branches.find(b => !b.exp || evaluate(b.exp, scope))?.el // else || eval(elsif)
+        let active = branches.find(b => b.eval())?.el
         let current = branches.find(b => b.el.isConnected)?.el
         if (active !== current) {
             current?.remove()
@@ -215,19 +216,20 @@ let bindForAttr = (element, scope) => {
     parent.insertBefore(anchor, element)
 
     let value = extractAttr(ATTRIBUTES.for, element)
-    let [itemName, listExpr] = value.split(' in ')
+    let [itemExpr, listExpr] = value.split(' in ')
 
     let template = element.cloneNode(true)
     element.remove()
     for (let c of element.children)
         c.remove() // remove original children to prevent current parseAndBindDom run from catching them. they'll be rendered with item scope when bind runs the first time
 
+    let evaluateList = getEvaluator(listExpr, scope)
     let current = []
     // bind async to prevent current parseAndBindDom from catching added elements
     setTimeout(() => bind(() => {
-        let active = evaluate(listExpr, scope).map(item => {
+        let active = evaluateList().map(item => {
             let el = template.cloneNode(true)
-            let itemScope = { ...scope, [itemName]: item }
+            let itemScope = { ...scope, [itemExpr]: item }
             return { el, scope: itemScope }
         })
         current.forEach(el => el.remove())
@@ -235,6 +237,7 @@ let bindForAttr = (element, scope) => {
             parent.insertBefore(item.el, anchor)
             parseAndBindDom(item.el, item.scope)
         }
+        current = active
     }))
 }
 
@@ -248,18 +251,35 @@ let bindModelAttr = (element, scope) => {
     // element.oninput = (e) => 
 }
 
-let evaluate = (expr, scope) => {
-    console.debug('evaluate', { expr, scope })
+let getEvaluator = (expr, scope) => {
+    console.debug('getEvaluator', { expr, scope })
+
     let keys = Object.keys(scope)
     let values = Object.values(scope)
+    let evaluate
+    let fallback = () => expr
     try {
-        let fn = new Function(...keys, `return ${expr};`)
-        return fn(...values)
+        evaluate = new Function(...keys, `return ${expr};`)
     } catch (e) {
-        console.error('evaluate error', { expr, scope })
-        console.error(e)
-        return expr
+        handleEvaluatorError(e, { expr, scope })
+        evaluate = fallback
     }
+    return () => {
+        console.debug('evaluate', { expr, scope })
+
+        try {
+            return evaluate(...values)
+        }
+        catch (e) {
+            handleEvaluatorError(e, { expr, scope })
+            return fallback()
+        }
+    }
+}
+
+let handleEvaluatorError = (e, args) => {
+    console.error('evaluator error', args)
+    console.error(e)
 }
 
 let attributesObserver = new MutationObserver((mutations) => {
