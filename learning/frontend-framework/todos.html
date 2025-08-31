@@ -14,6 +14,8 @@
 
 <template app>
     <script>
+        console.debug('script', { isESModule: typeof import.meta !== "undefined" }) // DEV
+
         let newTask = $state('')
         let filter = $state('all')
         let tasks = $state([
@@ -39,49 +41,55 @@
 
         // setInterval(() => createTask(''), 2000)
         // $derive(() => console.log('tasks', tasks.val.length))
-        $derive(() => console.log({ filter: filter.val, filtered: filtered.val }))
+        // $derive(() => console.log({ filter: filter.val, filtered: filtered.val }))
 
-        let task = $derive(() => tasks.val[0])
+        // let task = $derive(() => tasks.val[0]) // FIX undefined
+        // $derive(() => console.log('parent task', task.val))
     </script>
 
-    <header>
+    <!-- <header>
         <h1>Task Tracker</h1>
-    </header>
+    </header> -->
 
     <div style="display: flex">
         <main style="flex: 1">
-            <input type="text" :model="newTask" placeholder="New task">
+            <!-- <input type="text" :model="newTask" placeholder="New task">
             <button @click="createTask">Add task</button>
 
             <div>
                 <button @click="filter.val = 'all'">All</button>
                 <button @click="filter.val = 'active'">Active</button>
                 <button @click="filter.val = 'completed'">Completed</button>
-            </div>
+            </div> -->
 
             <ul>
-                <li :if="filtered.val.length" :for="task in filtered">
-                    <task-item :task @toggle="toggleTask" @delete="deleteTask"></task-item>
+                <!-- <li :if="filtered.val.length" :for="task in filtered.val"> -->
+                <li :for="task in filtered.val">
+                    <input type="text" :value="task.title">
+                    <!-- <task-item :task @toggle="toggleTask" @delete="deleteTask"></task-item> -->
                 </li>
-                <li :else>No tasks</li>
+                <!-- <li :else>No tasks</li> -->
             </ul>
         </main>
 
-        <aside>
+        <!-- <aside>
             <div>
                 <p>Total tasks: {tasksByFilter.all.length}</p>
                 <p>Active tasks: {tasksByFilter.active.length}</p>
                 <p>Completed tasks: {tasksByFilter.completed.length}</p>
             </div>
-        </aside>
+        </aside> -->
     </div>
 </template>
 
 <template component="TaskItem">
     <script>
+        console.debug('script', { isESModule: typeof import.meta !== "undefined" }) // DEV
+
         let { task } = $props
-        $derive(() => console.log('derive task', { task: $props.task }))
-        // $derive(() => console.log('derive done', { task: $props.task.done }))
+        // $derive(() => console.log('component task', { task: $props.task }))
+        $derive(() => console.log('component task.title', { task: $props.task?.title }))
+        // $derive(() => console.log('component task done', { task: $props.task.done }))
     </script>
 
     <input type="checkbox" :checked="task.done" @input="$emit('toggle', task.id)">

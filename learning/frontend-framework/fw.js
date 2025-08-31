@@ -9,6 +9,14 @@
 import { kebab } from '/lib/string.js'
 import { state, derive, bind } from './state.js'
 
+let ATTRIBUTES = {
+    if: ':if',
+    elsif: ':elsif',
+    else: ':else',
+    for: ':for',
+    model: ':model',
+}
+
 let init = async () => {
     setGlobals({
         $state: state,
@@ -19,10 +27,10 @@ let init = async () => {
     findAndDefineComponents(document)
     // observeComponentAttributesAndUpdateProps(document.body)
 
-    let app = getAppElement()
-    let scope = await parseAndImportScript(app)
+    let app = extractAppContent()
+    let exports = await parseAndImportScript(app)
     document.body.append(app)
-    parseAndBindDom(document.body, scope) // must happen after appendChild. doesn't parse custom elements
+    parseAndBindDom(document.body, exports) // must happen after appendChild. doesn't parse custom elements
     // TODO: maybe parseAndBindDom should happen before app mounts. can we make it work? (eg. parseAndBindDom(app, scope)). check logs before and after changing
 }
 
@@ -33,18 +41,18 @@ let findAndDefineComponents = (root) => {
         .forEach(t => (defineComponent(t), t.remove()))
 }
 
-let getAppElement = () => {
+let extractAppContent = () => {
     let template = document.querySelector('template[app]')
-    let element = template.content.cloneNode(true)
+    let content = template.content.cloneNode(true)
     template.remove()
-    return element
+    return content
 }
 
 let defineComponent = (template) => {
     let name = template.getAttribute('component')
     class Component extends HTMLElement {
         constructor() {
-            console.debug('constructor', name)
+            console.log('constructor', name)
             super()
             this.#init()
         }
@@ -62,7 +70,7 @@ let defineComponent = (template) => {
                 $props: this._props,
             })
 
-            let scope = await parseAndImportScript(root) // must happen before appendChild
+            let exports = await parseAndImportScript(root) // must happen before appendChild
             // TODO: this async call makes it so document is bound before components, but is it realiable?
 
             let shadowRoot = this.attachShadow({ mode: 'open' })
@@ -70,7 +78,8 @@ let defineComponent = (template) => {
 
             shadowRoot.appendChild(root)
 
-            parseAndBindDom(shadowRoot, scope) // must happen after appendChild
+            for (let c of shadowRoot.children) // must happen after appendChild
+                parseAndBindDom(c, exports)
         }
     }
     customElements.define(kebab(name), Component)
@@ -105,84 +114,128 @@ let parseAndImportScript = async (root) => {
     return moduleExports
 }
 
+// TODO: get it working without custom components first. then with :if. then with custom components
 // TODO parse and bind innerText (get childNodes, filter text nodes, parse, bind)
 // note: careful when using document fragments. if they were already appended, they'll be empty
 let parseAndBindDom = (element, scope) => {
-    console.debug('parseAndBindDom', { element, scope })
+    console.debug('parseAndBindDom', element.tagName, { element, isComponent: !!element.isComponent, scope })
 
-    if (!(element instanceof ShadowRoot))
-        for (let { name } of element.attributes)
-            parseAndBindAttribute(name, element, scope)
+    if (element._scope)
+        scope = { ...scope, ...element._scope }
+
+    for (let { name } of element.attributes)
+        parseAndBindAttribute(name, element, scope)
 
     for (let child of element.children)
-        console.debug({ child }, child.isComponent),
-            parseAndBindDom(child, scope)
+        parseAndBindDom(child, scope)
 }
 
 let boundAttributeRe = /^(:|@)\w+$/
 
+// FIX: when we set a bounded attribute on a non-component element, the `for (let { name } of element.attributes)` then finds and processes it again
+// TODO: read vue docs and add missing essential functionality (https://vuejs.org/guide/essentials/template-syntax.html#attribute-bindings)
 let parseAndBindAttribute = (name, element, scope) => {
     console.debug('parseAndBindAttribute', { name, element, scope })
 
+    switch (name) {
+        case ':if': return bindIfAttr(element, scope)
+        case ':for': return bindForAttr(element, scope)
+        case ':model': return bindModelAttr(element, scope)
+    }
+
     let rawName = name.startsWith(':') ? name.slice(1) : name
     let value = element.getAttribute(name)
-    switch (name) {
-        // TODO: test in custom elements with multiple children
-        case ':if': {
-            let parent = element.parentElement
-            let anchor = new Comment(':if')
-            parent.insertBefore(anchor, element)
-
-            let el = element
-            let branches = [{ exp: value, el }]
-            while (el = el.nextElementSibling) {
-                let exp = extractAttr(':else-if', el)
-                if (exp || extractAttr(':else', el) !== null)
-                    branches.push({ exp, el })
-                else
-                    break
-            }
-            branches.forEach(b => b.el.remove())
-
+    if (name.startsWith(':')) {
+        if (element.isComponent)
             bind(() => {
-                let active = branches.find(b => !b.exp || evaluate(b.exp, scope))?.el
-                let current = branches.find(b => b.el.isConnected)?.el
-                if (active !== current) {
-                    current?.remove()
-                    parent.insertBefore(active, anchor)
-                }
-            }, anchor)
-            break
-        }
-        case ':for': {
-            break
-        }
-        case ':model': {
-            // bind(() => element.value = evaluate(value), element)
-            // TODO: set state value. handle object state and primitive state (.val)
-            // TODO: use addEventListener (guarantee run once)
-            // element.oninput = (e) => 
-            break
-        }
-        default: {
-            if (name.startsWith(':')) {
-                if (element.isComponent)
-                    bind(() => {
-                        let result = evaluate(value || rawName, scope)
-                        element._props[rawName] = result.isState ? result.val : result
-                    }, element)
-                else
-                    bind(() => element.setAttribute(rawName, value), element)
-                // } else if (name.startsWith('@')) {
-            }
-        }
+                let result = evaluate(value || rawName, scope)
+                element._props[rawName] = result.isState ? result.val : result
+            }, element)
+        else
+            bind(() => {
+                let result = evaluate(value || rawName, scope)
+                element.setAttribute(rawName, result)
+            }, element)
+        // } else if (name.startsWith('@')) {
     }
+}
+
+// TODO: test in custom elements with multiple children
+let bindIfAttr = (element, scope) => {
+    console.debug('bindIfAttr', element.tagName, { element, scope })
+    let parent = element.parentElement
+    let anchor = new Comment(ATTRIBUTES.if)
+    parent.insertBefore(anchor, element)
+
+    let value = extractAttr(ATTRIBUTES.if, element)
+    let el = element
+    let branches = [{ exp: value, el }]
+    while (el = el.nextElementSibling) {
+        let exp = extractAttr(ATTRIBUTES.elsif, el)
+        if (exp || extractAttr(ATTRIBUTES.else, el) !== null)
+            branches.push({ exp, el })
+        else
+            break
+    }
+    branches.forEach(b => b.el.remove())
+
+    bind(() => {
+        let active = branches.find(b => !b.exp || evaluate(b.exp, scope))?.el // else || eval(elsif)
+        let current = branches.find(b => b.el.isConnected)?.el
+        if (active !== current) {
+            current?.remove()
+            parent.insertBefore(active, anchor)
+        }
+    }, anchor)
 }
 
 let extractAttr = (name, el) => {
     let val = el.getAttribute(name)
     if (val !== null) el.removeAttribute(name)
     return val
+}
+
+// FIX: must happen before rendering children
+// LATER: handle destructure
+// LATER: optimize re-render
+let bindForAttr = (element, scope) => {
+    console.debug('bindForAttr', element.tagName, { element, scope })
+
+    let parent = element.parentElement
+    let anchor = new Comment(ATTRIBUTES.for)
+    parent.insertBefore(anchor, element)
+    element.remove()
+
+    let value = extractAttr(ATTRIBUTES.for, element)
+    let [itemName, listExpr] = value.split(' in ')
+
+    let template = element.cloneNode(true)
+    element.remove()
+    for (let c of element.children)
+        c.remove() // remove original children to prevent current parseAndBindDom run from catching them. they'll be rendered with item scope when bind runs the first time
+
+    let current = []
+    setTimeout(() => bind(() => {
+        let active = evaluate(listExpr, scope).map(item => {
+            let el = template.cloneNode(true)
+            let itemScope = { ...scope, [itemName]: item }
+            parseAndBindDom(el, itemScope)
+            return el
+        })
+        current.forEach(el => el.remove())
+        active.forEach(el => parent.insertBefore(el, anchor))
+    }))
+
+}
+
+let bindModelAttr = (element, scope) => {
+    console.debug('bindModelAttr', element.tagName, { element, scope })
+
+    // let value = extractAttr(ATTRIBUTES.model, element)
+    // bind(() => element.value = evaluate(value), element)
+    // TODO: set state value. handle object state and primitive state (.val)
+    // TODO: use addEventListener (guarantee run once)
+    // element.oninput = (e) => 
 }
 
 let evaluate = (expr, scope) => {
@@ -194,6 +247,7 @@ let evaluate = (expr, scope) => {
         return fn(...values)
     } catch (e) {
         console.error('evaluate error', { expr, scope })
+        console.error(e)
         return expr
     }
 }
