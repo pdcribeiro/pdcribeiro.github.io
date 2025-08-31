@@ -39,7 +39,9 @@
             tasks.val = tasks.val.filter(t => t.id !== id)
         }
 
-        // setInterval(() => createTask(''), 2000)
+        // setInterval(() => {
+        //     createTask(`task ${tasks.val.length + 1}`)
+        // }, 2000)
         // $derive(() => console.log('tasks', tasks.val.length))
         // $derive(() => console.log({ filter: filter.val, filtered: filtered.val }))
 
@@ -64,9 +66,7 @@
 
             <ul>
                 <li :if="filtered.val.length" :for="task in filtered.val">
-                    <!-- <li :for="task in filtered.val"> -->
-                    <input type="text" :value="task.title">
-                    <!-- <task-item :task @toggle="toggleTask" @delete="deleteTask"></task-item> -->
+                    <task-item :task @toggle="toggleTask" @delete="deleteTask"></task-item>
                 </li>
                 <li :else>No tasks</li>
             </ul>
@@ -87,13 +87,12 @@
         console.debug('script', { isESModule: typeof import.meta !== "undefined" }) // DEV
 
         let { task } = $props
-        // $derive(() => console.log('component task', { task: $props.task }))
-        $derive(() => console.log('component task.title', { task: $props.task?.title }))
-        // $derive(() => console.log('component task done', { task: $props.task.done }))
+        $derive(() => console.log('component task.title', { task: $props.task.title }))
     </script>
 
     <input type="checkbox" :checked="task.done" @input="$emit('toggle', task.id)">
-    <span>{task.title}</span>
+    <input type="text" :value="task.title">
+    <!-- <span>{task.title}</span> -->
     <delete-button @click="$emit('delete', task.id)"></delete-button>
 </template>
 

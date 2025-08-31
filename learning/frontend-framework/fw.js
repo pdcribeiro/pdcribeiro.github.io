@@ -6,6 +6,7 @@
     - allow defining component in html file (optional: without surrounding template tag) and importing it into another html/component file
 */
 
+import { AsyncQueue } from '/lib/queue.js'
 import { kebab } from '/lib/string.js'
 import { state, derive, bind } from './state.js'
 
@@ -23,115 +24,128 @@ let init = async () => {
         $derive: derive,
         $emit: () => { },
     })
-
-    findAndDefineComponents(document)
-    // observeComponentAttributesAndUpdateProps(document.body)
-
+    loadAllComponents()
     let app = extractAppContent()
-    let exports = await parseAndImportScript(app)
+    let script = extractScript(app)
+    let scope = await parseAndImportScript(script)
     document.body.append(app)
-    parseAndBindDom(document.body, exports) // must happen after appendChild. doesn't parse custom elements
+    parseAndBindDom(document.body, scope) // must happen after appendChild. doesn't parse custom elements
     // TODO: maybe parseAndBindDom should happen before app mounts. can we make it work? (eg. parseAndBindDom(app, scope)). check logs before and after changing
 }
 
 let setGlobals = (globals) => Object.assign(window, globals)
 
-let findAndDefineComponents = (root) => {
-    root.querySelectorAll('template[component]')
-        .forEach(t => (defineComponent(t), t.remove()))
-}
+let loadAllComponents = () =>
+    document.querySelectorAll('template[component]').forEach(loadComponent)
 
 let extractAppContent = () => {
     let template = document.querySelector('template[app]')
-    let content = template.content.cloneNode(true)
+    return extractTemplateContent(template)
+}
+
+let extractScript = (root) => {
+    let script = root.querySelector('script')
+    script?.remove()
+    return script
+}
+
+let extractTemplateContent = (template) => {
+    let content = template.content
     template.remove()
     return content
 }
 
-let defineComponent = (template) => {
-    let name = template.getAttribute('component')
-    class Component extends HTMLElement {
-        constructor() {
-            console.log('constructor', name)
-            super()
-            this.#init()
-        }
-        async #init() {
-            this.isComponent = true
+let loadedComponents = new Set()
 
-            let root = template.content.cloneNode(true)
+// TODO: optimize. move heavy stuff out of constructor (or cache it). components are created on first render and can also be cloned a bunch of times
+// TODO?: prevent first render?
+let loadComponent = (template) => {
+    if (loadedComponents.has(template)) return
+
+    let name = template.getAttribute('component')
+    let content = extractTemplateContent(template)
+    let script = extractScript(content)
+
+    customElements.define(kebab(name), class extends HTMLElement {
+        isComponent = true
+
+        constructor() {
+            console.debug('constructor', name)
+            super()
 
             this._props = state({})
-            for (let { name, value } of Array.from(this.attributes)) {
-                if (name.startsWith(':')) name = name.slice(1)
-                this._props[name] = value
-            }
-            Object.assign(window, {
+            this.attachShadow({ mode: 'open' }).appendChild(content.cloneNode(true))
+        }
+        async init() {
+            console.debug('init', name)
+
+            // TODO: this async call makes it so document is bound before components, but is it realiable?
+            let exports = await runWithGlobalsAsync(() => parseAndImportScript(script), {
                 $props: this._props,
             })
 
-            let exports = await parseAndImportScript(root) // must happen before appendChild
-            // TODO: this async call makes it so document is bound before components, but is it realiable?
-
-            let shadowRoot = this.attachShadow({ mode: 'open' })
-            // observeComponentAttributesAndUpdateProps(shadowRoot)
-
-            shadowRoot.appendChild(root)
-
-            for (let c of shadowRoot.children) // must happen after appendChild
+            for (let c of this.shadowRoot.children)
                 parseAndBindDom(c, exports)
         }
-    }
-    customElements.define(kebab(name), Component)
+    })
+
+    loadedComponents.add(template)
+}
+
+let runWithGlobalsAsync = async (callback, globals) => {
+    let previous = Object.keys(globals).reduce((prev, k) => ({ ...prev, k: window[k] }), {})
+    setGlobals(globals)
+    let result = await callback()
+    setGlobals(previous)
+    return result
 }
 
 let declarationRe = /^\s*(var|let|const|function) ([{\[]\s+)?(\w+)(\s+[}\]])?[ =(]/
 let allDeclarationsRe = new RegExp(declarationRe, 'gm')
 
+// note: must import as module to allow imports inside script code
 // note: must set globals (eg. $props) before calling this
-let parseAndImportScript = async (root) => {
-    console.debug('parseAndImportScript', { root })
+let parseAndImportScript = async (script) => {
+    console.debug('parseAndImportScript', { script })
 
-    let script = root.querySelector('script')
     if (!script) return {}
 
     // parse and export declarations
     let code = script.textContent
     let declarations = code.match(allDeclarationsRe)?.map(m => m.match(declarationRe)[3]) ?? []
-    let exports = `export { ${declarations.join(', ')} }`
-
-    let codeWithExports = code + '\n' + exports
+    let codeWithExports = code + '\n' + `export { ${declarations.join(', ')} }`
 
     // LATER wrap argument of $derive calls in arrow function
 
     // import rewritten script tags
     let blob = new Blob([codeWithExports], { type: 'application/javascript' })
     let url = URL.createObjectURL(blob)
-    let moduleExports = await import(url)
+    let exports = await import(url)
 
-    script.remove()
-
-    return moduleExports
+    return exports
 }
+
+let componentInitQueue = new AsyncQueue({ handler: cmp => cmp.init() })
 
 // TODO: get it working without custom components first. then with :if. then with custom components
 // TODO parse and bind innerText (get childNodes, filter text nodes, parse, bind)
 // note: careful when using document fragments. if they were already appended, they'll be empty
 let parseAndBindDom = (element, scope) => {
-    console.debug('parseAndBindDom', element.tagName, { element, isComponent: !!element.isComponent, scope })
-
-    if (element._scope)
-        scope = { ...scope, ...element._scope }
+    console.debug('parseAndBindDom', element.tagName, { element, isComponent: !!element.isComponent, task: scope.task, scope })
 
     for (let { name } of element.attributes)
         parseAndBindAttribute(name, element, scope)
 
-    for (let child of element.children)
+    for (let child of element.children) // component elements have no children. they are bound in their init method
         parseAndBindDom(child, scope)
+
+    if (element.isComponent)
+        componentInitQueue.push(element)
 }
 
-let boundAttributeRe = /^(:|@)\w+$/
+// let boundAttributeRe = /^(:|@)\w+$/
 
+// FIX: when we set a bounded attribute to a state proxy on a component element (in props proxy), we need to extract the raw value
 // FIX: when we set a bounded attribute on a non-component element, the `for (let { name } of element.attributes)` then finds and processes it again
 // TODO: read vue docs and add missing essential functionality (https://vuejs.org/guide/essentials/template-syntax.html#attribute-bindings)
 let parseAndBindAttribute = (name, element, scope) => {
@@ -151,15 +165,22 @@ let parseAndBindAttribute = (name, element, scope) => {
             bind(() => {
                 let result = evaluate()
                 element._props[rawName] = result.isState ? result.val : result
-            }, element)
+                return element
+            })
         else
             bind(() => {
-                element.setAttribute(rawName, evaluate())
-            }, element)
+                let result = evaluate()
+                if (result)
+                    element.setAttribute(rawName, result)
+                else
+                    element.removeAttribute(rawName)
+                return element
+            })
         // } else if (name.startsWith('@')) {
     }
 }
 
+// FIX: bind attributes in bind call. check how to handle custom component shadow root children
 // TODO: test in custom elements with multiple children
 let bindIfAttr = (element, scope) => {
     console.debug('bindIfAttr', element.tagName, { element, scope })
@@ -196,6 +217,7 @@ let bindIfAttr = (element, scope) => {
             parent.insertBefore(active, anchor)
             parseAndBindDom(active, scope)
         }
+        return document // prevent garbage collection of binding
     }, anchor))
 }
 
@@ -205,9 +227,11 @@ let extractAttr = (name, el) => {
     return val
 }
 
-// FIX: must happen before rendering children
-// LATER: handle destructure
+// FIX: bind attributes in bind call. check how to handle custom component shadow root children
+// FIX: reading scope in connectedCallback won't work for non-component elements. need to read it in parseAndBindAttribute. but will component scripts have already loaded by then?
+// LATER: handle destructure. idea: pass ...rest param to evaluator
 // LATER: optimize re-render
+// LATER?: add forScope to current element
 let bindForAttr = (element, scope) => {
     console.debug('bindForAttr', element.tagName, { element, scope })
 
@@ -218,7 +242,7 @@ let bindForAttr = (element, scope) => {
     let value = extractAttr(ATTRIBUTES.for, element)
     let [itemExpr, listExpr] = value.split(' in ')
 
-    let template = element.cloneNode(true)
+    let itemEl = element.cloneNode(true)
     element.remove()
     for (let c of element.children)
         c.remove() // remove original children to prevent current parseAndBindDom run from catching them. they'll be rendered with item scope when bind runs the first time
@@ -227,17 +251,17 @@ let bindForAttr = (element, scope) => {
     let current = []
     // bind async to prevent current parseAndBindDom from catching added elements
     setTimeout(() => bind(() => {
-        let active = evaluateList().map(item => {
-            let el = template.cloneNode(true)
-            let itemScope = { ...scope, [itemExpr]: item }
-            return { el, scope: itemScope }
-        })
-        current.forEach(el => el.remove())
+        let active = evaluateList().map(item => ({
+            el: itemEl.cloneNode(true),
+            scope: { ...scope, [itemExpr]: item },
+        }))
+        current.forEach(item => item.el.remove())
         for (let item of active) {
             parent.insertBefore(item.el, anchor)
             parseAndBindDom(item.el, item.scope)
         }
         current = active
+        return document // prevent garbage collection of binding
     }))
 }
 
@@ -281,19 +305,5 @@ let handleEvaluatorError = (e, args) => {
     console.error('evaluator error', args)
     console.error(e)
 }
-
-let attributesObserver = new MutationObserver((mutations) => {
-    for (let { type, target, attributeName: name } of mutations) {
-        if (type === 'attributes' && target._props) {
-            let propName = name.startsWith(':') ? name.slice(1) : name
-            target._props[propName] = target.getAttribute(name)
-
-            console.log('mut', { name, propName, value: target._props[propName] })
-        }
-    }
-})
-
-// TODO: disconnect on component unmount
-let observeComponentAttributesAndUpdateProps = (root) => attributesObserver.observe(root, { attributes: true, subtree: true })
 
 init()
