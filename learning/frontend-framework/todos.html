@@ -63,12 +63,12 @@
             </div> -->
 
             <ul>
-                <!-- <li :if="filtered.val.length" :for="task in filtered.val"> -->
-                <li :for="task in filtered.val">
+                <li :if="filtered.val.length" :for="task in filtered.val">
+                    <!-- <li :for="task in filtered.val"> -->
                     <input type="text" :value="task.title">
                     <!-- <task-item :task @toggle="toggleTask" @delete="deleteTask"></task-item> -->
                 </li>
-                <!-- <li :else>No tasks</li> -->
+                <li :else>No tasks</li>
             </ul>
         </main>
 

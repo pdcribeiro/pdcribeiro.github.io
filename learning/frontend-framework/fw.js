@@ -135,7 +135,7 @@ let boundAttributeRe = /^(:|@)\w+$/
 // FIX: when we set a bounded attribute on a non-component element, the `for (let { name } of element.attributes)` then finds and processes it again
 // TODO: read vue docs and add missing essential functionality (https://vuejs.org/guide/essentials/template-syntax.html#attribute-bindings)
 let parseAndBindAttribute = (name, element, scope) => {
-    console.debug('parseAndBindAttribute', { name, element, scope })
+    console.debug('parseAndBindAttribute', name, { element, scope })
 
     switch (name) {
         case ':if': return bindIfAttr(element, scope)
@@ -163,6 +163,7 @@ let parseAndBindAttribute = (name, element, scope) => {
 // TODO: test in custom elements with multiple children
 let bindIfAttr = (element, scope) => {
     console.debug('bindIfAttr', element.tagName, { element, scope })
+
     let parent = element.parentElement
     let anchor = new Comment(ATTRIBUTES.if)
     parent.insertBefore(anchor, element)
@@ -177,16 +178,24 @@ let bindIfAttr = (element, scope) => {
         else
             break
     }
-    branches.forEach(b => b.el.remove())
+    for (let b of branches) {
+        let { el } = b
+        b.el = el.cloneNode(true)
+        el.remove()
+        for (let c of el.children)
+            c.remove() // remove original children to prevent current parseAndBindDom run from catching them. they'll be rendered with item scope when bind runs the first time
+    }
 
-    bind(() => {
+    // bind async to prevent current parseAndBindDom from catching added elements
+    setTimeout(() => bind(() => {
         let active = branches.find(b => !b.exp || evaluate(b.exp, scope))?.el // else || eval(elsif)
         let current = branches.find(b => b.el.isConnected)?.el
         if (active !== current) {
             current?.remove()
             parent.insertBefore(active, anchor)
+            parseAndBindDom(active, scope)
         }
-    }, anchor)
+    }, anchor))
 }
 
 let extractAttr = (name, el) => {
@@ -204,7 +213,6 @@ let bindForAttr = (element, scope) => {
     let parent = element.parentElement
     let anchor = new Comment(ATTRIBUTES.for)
     parent.insertBefore(anchor, element)
-    element.remove()
 
     let value = extractAttr(ATTRIBUTES.for, element)
     let [itemName, listExpr] = value.split(' in ')
@@ -215,17 +223,19 @@ let bindForAttr = (element, scope) => {
         c.remove() // remove original children to prevent current parseAndBindDom run from catching them. they'll be rendered with item scope when bind runs the first time
 
     let current = []
+    // bind async to prevent current parseAndBindDom from catching added elements
     setTimeout(() => bind(() => {
         let active = evaluate(listExpr, scope).map(item => {
             let el = template.cloneNode(true)
             let itemScope = { ...scope, [itemName]: item }
-            parseAndBindDom(el, itemScope)
-            return el
+            return { el, scope: itemScope }
         })
         current.forEach(el => el.remove())
-        active.forEach(el => parent.insertBefore(el, anchor))
+        for (let item of active) {
+            parent.insertBefore(item.el, anchor)
+            parseAndBindDom(item.el, item.scope)
+        }
     }))
-
 }
 
 let bindModelAttr = (element, scope) => {
