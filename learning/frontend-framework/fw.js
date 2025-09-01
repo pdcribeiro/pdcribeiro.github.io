@@ -17,6 +17,10 @@ let ATTRIBUTES = {
     for: ':for',
     model: ':model',
 }
+let TEMPLATE_DELIMITERS = {
+    open: '{',
+    close: '}',
+}
 
 let init = async () => {
     setGlobals({
@@ -138,6 +142,8 @@ let parseAndBindDom = (element, scope) => {
     for (let child of element.children) // component elements have no children. they are bound in their init method
         parseAndBindDom(child, scope)
 
+    bindTemplateExpressions(element, scope)
+
     if (element.isComponent)
         componentInitQueue.push(element)
 }
@@ -188,7 +194,7 @@ let parseAndBindAttribute = (name, element, scope) => {
 
 // FIX: using :if with :for in the same element adds empty parent element on re-render
 //   - :for removes elements appended by :if, so current element is not found because it's not connected. and vice-versa
-//   - maybe extract all special attributes first and then render the elements with all info
+//   - maybe extract all special attributes first and then render the elements with all info. merge bind logic
 // TODO: test in custom elements with multiple children
 let bindIfAttr = (element, scope) => {
     console.debug('bindIfAttr', element.tagName, { element, scope })
@@ -279,6 +285,35 @@ let bindModelAttr = (element, scope) => {
     // TODO: set state value. handle object state and primitive state (.val)
     // TODO: use addEventListener (guarantee run once)
     // element.oninput = (e) => 
+}
+
+let bindTemplateExpressions = (element, scope) => {
+    for (let n of element.childNodes) {
+        if (n instanceof Text) {
+            let templates = findTemplateExpressions(n.textContent)
+                .map(exp => ({ exp, eval: getEvaluator(exp.slice(1, -1), scope) }))
+            if (templates.length) {
+                let originalText = n.textContent
+                bind(() => {
+                    let newText = originalText
+                    templates.forEach((t) => newText = newText.replace(t.exp, t.eval()))
+                    n.textContent = newText
+                    return n
+                })
+            }
+        }
+    }
+}
+
+let findTemplateExpressions = (text) => {
+    let start, count = 0, expressions = []
+    for (let i = 0; i < text.length; i++) {
+        if (text[i] === TEMPLATE_DELIMITERS.open && count++ === 0)
+            start = i
+        else if (text[i] === TEMPLATE_DELIMITERS.close && --count === 0)
+            expressions.push(text.slice(start, i + 1))
+    }
+    return expressions
 }
 
 let getEvaluator = (expr, scope) => {
