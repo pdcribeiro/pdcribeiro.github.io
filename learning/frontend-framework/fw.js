@@ -127,7 +127,6 @@ let parseAndImportScript = async (script) => {
 
 let componentInitQueue = new AsyncQueue({ handler: cmp => cmp.init() })
 
-// TODO: get it working without custom components first. then with :if. then with custom components
 // TODO parse and bind innerText (get childNodes, filter text nodes, parse, bind)
 // note: careful when using document fragments. if they were already appended, they'll be empty
 let parseAndBindDom = (element, scope) => {
@@ -187,7 +186,9 @@ let parseAndBindAttribute = (name, element, scope) => {
     }
 }
 
-// FIX: bind attributes in bind call. check how to handle custom component shadow root children
+// FIX: using :if with :for in the same element adds empty parent element on re-render
+//   - :for removes elements appended by :if, so current element is not found because it's not connected. and vice-versa
+//   - maybe extract all special attributes first and then render the elements with all info
 // TODO: test in custom elements with multiple children
 let bindIfAttr = (element, scope) => {
     console.debug('bindIfAttr', element.tagName, { element, scope })
@@ -225,7 +226,7 @@ let bindIfAttr = (element, scope) => {
             parseAndBindDom(active, scope)
         }
         return document // prevent garbage collection of binding
-    }, anchor))
+    }))
 }
 
 let extractAttr = (name, el) => {
@@ -234,8 +235,6 @@ let extractAttr = (name, el) => {
     return val
 }
 
-// FIX: bind attributes in bind call. check how to handle custom component shadow root children
-// FIX: reading scope in connectedCallback won't work for non-component elements. need to read it in parseAndBindAttribute. but will component scripts have already loaded by then?
 // LATER: handle destructure. idea: pass ...rest param to evaluator
 // LATER: optimize re-render
 // LATER?: add forScope to current element

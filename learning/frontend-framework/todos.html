@@ -49,20 +49,21 @@
         // $derive(() => console.log('parent task', task.val))
     </script>
 
-    <!-- <header>
+    <header>
         <h1>Task Tracker</h1>
-    </header> -->
+    </header>
 
     <div style="display: flex">
         <main style="flex: 1">
-            <!-- <input type="text" :model="newTask" placeholder="New task">
+            <input type="text" :value="newTask" :model="newTask" placeholder="New task"
+                @input="e => (newTask.val = e.target.value)">
             <button @click="createTask">Add task</button>
 
             <div>
                 <button @click="filter.val = 'all'">All</button>
                 <button @click="filter.val = 'active'">Active</button>
                 <button @click="filter.val = 'completed'">Completed</button>
-            </div> -->
+            </div>
 
             <ul>
                 <li :if="filtered.val.length" :for="task in filtered.val">
@@ -72,13 +73,13 @@
             </ul>
         </main>
 
-        <!-- <aside>
+        <aside>
             <div>
                 <p>Total tasks: {tasksByFilter.all.length}</p>
                 <p>Active tasks: {tasksByFilter.active.length}</p>
                 <p>Completed tasks: {tasksByFilter.completed.length}</p>
             </div>
-        </aside> -->
+        </aside>
     </div>
 </template>
 
@@ -92,7 +93,7 @@
 
     <input type="checkbox" :checked="task.done" @input="$emit('toggle', task.id)">
     <input type="text" :value="task.title">
-    <!-- <span>{task.title}</span> -->
+    <span>{task.title}</span>
     <delete-button @click="$emit('delete', task.id)"></delete-button>
 </template>
 
