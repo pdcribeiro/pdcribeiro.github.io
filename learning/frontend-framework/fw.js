@@ -171,7 +171,7 @@ let parseAndBindAttribute = (name, element, scope) => {
             bind(() => {
                 let result = evaluate()
                 if (result)
-                    element.setAttribute(rawName, result)
+                    element.setAttribute(rawName, result.isState ? result.val : result)
                 else
                     element.removeAttribute(rawName)
                 return element
