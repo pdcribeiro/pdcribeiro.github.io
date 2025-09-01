@@ -155,8 +155,9 @@ let parseAndBindDom = (element, scope) => {
         componentInitQueue.push(element)
 }
 
-// let boundAttributeRe = /^(:|@)\w+$/
+// let boundAttributeRe = /^(:|@)\w/
 
+// FIX: non bound attributes are not set in component _props
 // FIX: when we set a bounded attribute to a state proxy on a component element (in props proxy), we need to extract the raw value
 // FIX: when we set a bounded attribute on a non-component element, the `for (let { name } of element.attributes)` then finds and processes it again
 // TODO: read vue docs and add missing essential functionality (https://vuejs.org/guide/essentials/template-syntax.html#attribute-bindings)
@@ -164,15 +165,15 @@ let parseAndBindAttribute = (name, element, scope) => {
     console.debug('parseAndBindAttribute', name, { element, scope })
 
     switch (name) {
-        case ':if': return bindIfAttr(element, scope)
-        case ':for': return bindForAttr(element, scope)
-        case ':model': return bindModelAttr(element, scope)
+        case ATTRIBUTES.if: return bindIfAttr(element, scope)
+        case ATTRIBUTES.for: return bindForAttr(element, scope)
+        case ATTRIBUTES.model: return bindModelAttr(element, scope)
     }
     let value = element.getAttribute(name)
     if (name.startsWith(':'))
-        bindAttribute(name, value, element, scope)
+        bindAttribute(name.slice(1), value, element, scope)
     else if (name.startsWith('@'))
-        bindEventListenerAttr(name, value, element, scope)
+        bindEventListenerAttr(name.slice(1), value, element, scope)
 }
 
 // FIX: using :if with :for in the same element adds empty parent element on re-render
@@ -271,17 +272,16 @@ let bindModelAttr = (element, scope) => {
 }
 
 let bindAttribute = (name, value, element, scope) => {
-    let rawName = name.startsWith(':') ? name.slice(1) : name
-    let evaluate = getEvaluator(value || rawName, scope)
+    let evaluate = getEvaluator(value || name, scope)
     bind(() => {
         let result = evaluate()
         let newVal = result.isState ? result.val : result
         if (result)
-            element.setAttribute(rawName, newVal)
+            element.setAttribute(name, newVal)
         else
-            element.removeAttribute(rawName)
+            element.removeAttribute(name)
         if (element.isComponent)
-            element._props[rawName] = newVal
+            element._props[name] = newVal
         return element
     })
 }
@@ -293,26 +293,25 @@ let bindEventListenerAttr = (name, value, element, scope) => {
     })
     let listener = (event) => {
         let result = evaluate()
-        if (result instanceof Function) result(event)
+        result instanceof Function && result(event)
     }
-    let eventType = name.slice(1)
-    element.addEventListener(eventType, listener) // TODO: bind?
+    element.addEventListener(name, listener) // TODO: bind?
 }
 
 let bindTemplateExpressions = (element, scope) => {
-    for (let n of element.childNodes) {
-        if (n instanceof Text) {
-            let templates = findTemplateExpressions(n.textContent)
-                .map(exp => ({ exp, eval: getEvaluator(exp.slice(1, -1), scope) }))
-            if (templates.length) {
-                let originalText = n.textContent
-                bind(() => {
-                    let newText = originalText
-                    templates.forEach((t) => newText = newText.replace(t.exp, t.eval()))
-                    n.textContent = newText
-                    return n
-                })
-            }
+    for (let node of element.childNodes) {
+        if (!(node instanceof Text))
+            continue
+        let originalText = node.textContent
+        let templates = findTemplateExpressions(node.textContent)
+            .map(exp => ({ exp, eval: getEvaluator(exp.slice(1, -1), scope) }))
+        if (templates.length) {
+            bind(() => {
+                let newText = originalText
+                templates.forEach((t) => newText = newText.replace(t.exp, t.eval()))
+                node.textContent = newText
+                return node
+            })
         }
     }
 }
@@ -334,30 +333,12 @@ let getEvaluator = (expr, scope) => {
     let body = expr.includes(';') ? expr : `return ${expr}`
     let params = Object.keys(scope)
     let args = Object.values(scope)
-    let evaluate
-    let fallback = () => expr
-    try {
-        evaluate = new Function(...params, body)
-    } catch (e) {
-        handleEvaluatorError(e, { expr, scope })
-        evaluate = fallback
-    }
+    let evaluate = new Function(...params, body)
+
     return () => {
         console.debug('evaluate', { expr, scope })
-
-        try {
-            return evaluate(...args)
-        }
-        catch (e) {
-            handleEvaluatorError(e, { expr, scope })
-            return fallback()
-        }
+        return evaluate(...args)
     }
-}
-
-let handleEvaluatorError = (e, args) => {
-    console.error('evaluator error', args)
-    console.error(e)
 }
 
 init()
