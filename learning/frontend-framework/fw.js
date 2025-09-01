@@ -168,38 +168,11 @@ let parseAndBindAttribute = (name, element, scope) => {
         case ':for': return bindForAttr(element, scope)
         case ':model': return bindModelAttr(element, scope)
     }
-
-    let rawName = name.startsWith(':') ? name.slice(1) : name
     let value = element.getAttribute(name)
-    if (name.startsWith(':')) {
-        let evaluate = getEvaluator(value || rawName, scope)
-        if (element.isComponent)
-            bind(() => {
-                let result = evaluate()
-                element._props[rawName] = result.isState ? result.val : result
-                return element
-            })
-        else
-            bind(() => {
-                let result = evaluate()
-                if (result)
-                    element.setAttribute(rawName, result.isState ? result.val : result)
-                else
-                    element.removeAttribute(rawName)
-                return element
-            })
-    } else if (name.startsWith('@')) {
-        let eventType = name.slice(1)
-        let evaluate = getEvaluator(value, {
-            ...scope,
-            $emit: emit.bind(element),
-        })
-        let listener = (event) => {
-            let result = evaluate()
-            if (result instanceof Function) result(event)
-        }
-        element.addEventListener(eventType, listener) // TODO: bind?
-    }
+    if (name.startsWith(':'))
+        bindAttribute(name, value, element, scope)
+    else if (name.startsWith('@'))
+        bindEventListenerAttr(name, value, element, scope)
 }
 
 // FIX: using :if with :for in the same element adds empty parent element on re-render
@@ -295,6 +268,39 @@ let bindModelAttr = (element, scope) => {
     // TODO: set state value. handle object state and primitive state (.val)
     // TODO: use addEventListener (guarantee run once)
     // element.oninput = (e) => 
+}
+
+let bindAttribute = (name, value, element, scope) => {
+    let rawName = name.startsWith(':') ? name.slice(1) : name
+    let evaluate = getEvaluator(value || rawName, scope)
+    if (element.isComponent)
+        bind(() => {
+            let result = evaluate()
+            element._props[rawName] = result.isState ? result.val : result
+            return element
+        })
+    else
+        bind(() => {
+            let result = evaluate()
+            if (result)
+                element.setAttribute(rawName, result.isState ? result.val : result)
+            else
+                element.removeAttribute(rawName)
+            return element
+        })
+}
+
+let bindEventListenerAttr = (name, value, element, scope) => {
+    let evaluate = getEvaluator(value, {
+        ...scope,
+        $emit: emit.bind(element),
+    })
+    let listener = (event) => {
+        let result = evaluate()
+        if (result instanceof Function) result(event)
+    }
+    let eventType = name.slice(1)
+    element.addEventListener(eventType, listener) // TODO: bind?
 }
 
 let bindTemplateExpressions = (element, scope) => {
