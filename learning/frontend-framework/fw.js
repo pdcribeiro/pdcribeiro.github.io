@@ -273,21 +273,17 @@ let bindModelAttr = (element, scope) => {
 let bindAttribute = (name, value, element, scope) => {
     let rawName = name.startsWith(':') ? name.slice(1) : name
     let evaluate = getEvaluator(value || rawName, scope)
-    if (element.isComponent)
-        bind(() => {
-            let result = evaluate()
-            element._props[rawName] = result.isState ? result.val : result
-            return element
-        })
-    else
-        bind(() => {
-            let result = evaluate()
-            if (result)
-                element.setAttribute(rawName, result.isState ? result.val : result)
-            else
-                element.removeAttribute(rawName)
-            return element
-        })
+    bind(() => {
+        let result = evaluate()
+        let newVal = result.isState ? result.val : result
+        if (result)
+            element.setAttribute(rawName, newVal)
+        else
+            element.removeAttribute(rawName)
+        if (element.isComponent)
+            element._props[rawName] = newVal
+        return element
+    })
 }
 
 let bindEventListenerAttr = (name, value, element, scope) => {
