@@ -58,7 +58,7 @@
 
     <div style="display: flex">
         <main style="flex: 1">
-            <!-- FIX: not clearing input. seems like binding both value and input listener breaks it -->
+            <!-- FIX not clearing input. seems like binding both value and input listener breaks it -->
             <input type="text" :model="newTask" placeholder="New task"
                 @input="e => (console.log('input first'), (newTask.val = e.target.value))">
             <button @click="addTask">Add task</button>
@@ -71,12 +71,14 @@
                 <button @click="filter.val = 'completed'">Completed</button>
             </div>
 
-            <ul>
-                <li :if="filtered.val.length" :for="task in filtered.val">
+            <ul :if="filtered.val.length <= 5">
+                <li :for="task in filtered.val">
                     <task-item :task @toggle="toggleTask(task.id)" @delete="deleteTask(task.id)"></task-item>
                 </li>
-                <li :else>No tasks</li>
+                <!-- <li :else>No tasks</li> -->
             </ul>
+            <p :elsif="filtered.val.length">Take it easy</p>
+            <p :else>No tasks</p>
         </main>
 
         <aside>

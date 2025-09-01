@@ -1,5 +1,6 @@
 /**
  * WIP
+ * - try again to bind before mounting. use doc frags to avoid parent null error
  * - cleanup
  *
  * TODO
@@ -125,10 +126,20 @@ let parseAndBindDom = (element, scope) => {
     if (element.tagName === 'STYLE')
         return
 
-    for (let { name } of element.attributes)
+    // NOTE either :if or :for allowed
+    let ifAttr = extractAttr(ATTRIBUTES.if, element)
+    let forAttr = extractAttr(ATTRIBUTES.for, element)
+    if (ifAttr) return bindIfAttr(ifAttr, element, scope)
+    else if (forAttr) return bindForAttr(forAttr, element, scope)
+
+    if (extractAttr(ATTRIBUTES.elsif, element) ||
+        extractAttr(ATTRIBUTES.else, element) !== null
+    ) return // skip elsif/else elements. they are bound along with if/for elements
+
+    for (let { name } of [...element.attributes]) // spread to prevent catching newly set attributes
         parseAndBindAttribute(name, element, scope)
 
-    for (let child of element.children) // component elements have no children. they are bound in their init method
+    for (let child of [...element.children]) // spread to prevent catching newly appended elements
         parseAndBindDom(child, scope)
 
     bindTemplateExpressions(element, scope)
@@ -137,39 +148,17 @@ let parseAndBindDom = (element, scope) => {
         componentInitQueue.push(element)
 }
 
-// let boundAttributeRe = /^(:|@)\w/
-
-// FIX when we bound an attribute, the parseAndBindDom then finds and processes it again
-// TODO read vue docs and add missing essential functionality (https://vuejs.org/guide/essentials/template-syntax.html#attribute-bindings)
-let parseAndBindAttribute = (name, element, scope) => {
-    console.debug('parseAndBindAttribute', name, { element, scope })
-
-    switch (name) {
-        case ATTRIBUTES.if: return bindIfAttr(element, scope)
-        case ATTRIBUTES.for: return bindForAttr(element, scope)
-        case ATTRIBUTES.model: return bindModelAttr(element, scope)
-    }
-    let value = element.getAttribute(name)
-    if (name.startsWith(':'))
-        bindAttribute(name.slice(1), value, element, scope)
-    else if (name.startsWith('@'))
-        bindEventListenerAttr(name.slice(1), value, element, scope)
-    else if (element instanceof Component)
-        element.setProp(name, value)
+let extractAttr = (name, el) => {
+    let val = el.getAttribute(name)
+    if (val !== null) el.removeAttribute(name)
+    return val
 }
 
-// FIX using :if with :for in the same element adds empty parent element on re-render
-//   - :for removes elements appended by :if, so current element is not found because it's not connected. and vice-versa
-//   - maybe extract all special attributes first and then render the elements with all info. merge bind logic
 // TODO test in custom elements with multiple children
-let bindIfAttr = (element, scope) => {
+// TODO? return anchor from binding function to allow gc when parent element is removed
+let bindIfAttr = (value, element, scope) => {
     console.debug('bindIfAttr', element.tagName, { element, scope })
 
-    let parent = element.parentElement
-    let anchor = new Comment(ATTRIBUTES.if)
-    parent.insertBefore(anchor, element)
-
-    let value = extractAttr(ATTRIBUTES.if, element)
     let el = element
     let branches = [{ exp: value, el }]
     while (el = el.nextElementSibling) {
@@ -179,36 +168,28 @@ let bindIfAttr = (element, scope) => {
         else
             break
     }
-    for (let b of branches) {
-        b.eval = b.exp ? getEvaluator(b.exp, scope) : () => true // elsif : else
-        let { el } = b
-        b.el = el.cloneNode(true)
-        el.remove()
-        for (let c of el.children)
-            c.remove() // remove original children to prevent current parseAndBindDom run from catching them. they'll be rendered with item scope when bind runs the first time
-    }
+    for (let b of branches)
+        b.eval = b.exp ? createEvaluator(b.exp, scope) : () => true // elsif : else
 
-    // run async to prevent current parseAndBindDom from catching added elements
-    setTimeout(() => bind(() => {
+    let list = createListRenderer(...branches.map(b => b.el))
+    let current
+    bind(() => {
         let active = branches.find(b => b.eval())?.el
-        let current = branches.find(b => b.el.isConnected)?.el
         if (active !== current) {
-            current?.remove()
-            parent.insertBefore(active, anchor)
-            parseAndBindDom(active, scope)
+            list.clear()
+            if (active) {
+                let clone = active.cloneNode(true)
+                list.add(clone)
+                parseAndBindDom(clone, scope)
+            }
+            current = active
         }
-        return document // prevent garbage collection of binding
-    }))
+        return document // prevent gc of binding
+    })
 }
 
-let extractAttr = (name, el) => {
-    let val = el.getAttribute(name)
-    if (val !== null) el.removeAttribute(name)
-    return val
-}
-
-let getEvaluator = (expr, scope) => {
-    console.debug('getEvaluator', { expr, scope })
+let createEvaluator = (expr, scope) => {
+    console.debug('createEvaluator', { expr, scope })
 
     let body = expr.includes(';') ? expr : `return ${expr}`
     let params = Object.keys(scope)
@@ -221,39 +202,63 @@ let getEvaluator = (expr, scope) => {
     }
 }
 
+// NOTE must run before element is removed from dom
+let createListRenderer = (...initial) => {
+    let elements = initial
+    let first = elements[0]
+    let parent = first.parentElement
+    let anchor = new Comment('anchor')
+    first.before(anchor)
+    let list = {
+        clear: () => {
+            elements.forEach(el => el.remove())
+            elements = []
+        },
+        add: (el) => {
+            parent.insertBefore(el, anchor)
+            elements.push(el)
+        },
+    }
+    list.clear()
+    return list
+}
+
+// TODO handle :else
+// TODO? return anchor from binding function to allow gc when parent element is removed
 // LATER handle destructure. idea: pass ...rest param to evaluator
 // LATER optimize re-render
-let bindForAttr = (element, scope) => {
+let bindForAttr = (value, element, scope) => {
     console.debug('bindForAttr', element.tagName, { element, scope })
 
-    let parent = element.parentElement
-    let anchor = new Comment(ATTRIBUTES.for)
-    parent.insertBefore(anchor, element)
-
-    let value = extractAttr(ATTRIBUTES.for, element)
-    let [itemExpr, listExpr] = value.split(' in ')
-
-    let itemEl = element.cloneNode(true)
-    element.remove()
-    for (let c of element.children)
-        c.remove() // remove original children to prevent current parseAndBindDom run from catching them. they'll be rendered with item scope when bind runs the first time
-
-    let evaluateList = getEvaluator(listExpr, scope)
-    let current = []
-    // run async to prevent current parseAndBindDom from catching added elements
-    setTimeout(() => bind(() => {
-        let active = evaluateList().map(item => ({
-            el: itemEl.cloneNode(true),
-            scope: { ...scope, [itemExpr]: item },
-        }))
-        current.forEach(item => item.el.remove())
-        for (let item of active) {
-            parent.insertBefore(item.el, anchor)
-            parseAndBindDom(item.el, item.scope)
+    let [itemName, itemsExpr] = value.split(' in ')
+    let evaluateItems = createEvaluator(itemsExpr, scope)
+    let list = createListRenderer(element)
+    bind(() => {
+        let items = evaluateItems()
+        list.clear()
+        for (let item of items) {
+            let clone = element.cloneNode(true)
+            list.add(clone)
+            parseAndBindDom(clone, { ...scope, [itemName]: item })
         }
-        current = active
         return document // prevent garbage collection of binding
-    }))
+    })
+}
+
+// FIX when we bound an attribute, the parseAndBindDom then finds and processes it again
+// TODO read vue docs and add missing essential functionality (https://vuejs.org/guide/essentials/template-syntax.html#attribute-bindings)
+let parseAndBindAttribute = (name, element, scope) => {
+    console.debug('parseAndBindAttribute', name, { element, scope })
+
+    let value = element.getAttribute(name)
+    if (name === ':model')
+        bindModelAttr(element, scope)
+    else if (name.startsWith(':'))
+        bindAttribute(name.slice(1), value, element, scope)
+    else if (name.startsWith('@'))
+        bindEventListenerAttr(name.slice(1), value, element, scope)
+    else if (element instanceof Component)
+        element.setProp(name, value)
 }
 
 let bindModelAttr = (element, scope) => {
@@ -270,7 +275,7 @@ let bindModelAttr = (element, scope) => {
 }
 
 let bindAttribute = (name, value, element, scope) => {
-    let evaluate = getEvaluator(value || name, scope)
+    let evaluate = createEvaluator(value || name, scope)
     bind(() => {
         let result = evaluate()
         let newVal = result.isState ? result.val : result
@@ -285,7 +290,7 @@ let bindAttribute = (name, value, element, scope) => {
 }
 
 let bindEventListenerAttr = (name, value, element, scope) => {
-    let evaluate = getEvaluator(value, {
+    let evaluate = createEvaluator(value, {
         ...scope,
         $emit: emit.bind(element),
     })
@@ -302,7 +307,7 @@ let bindTemplateExpressions = (element, scope) => {
             continue
         let originalText = node.textContent
         let templates = findTemplateExpressions(node.textContent)
-            .map(exp => ({ exp, eval: getEvaluator(exp.slice(1, -1), scope) }))
+            .map(exp => ({ exp, eval: createEvaluator(exp.slice(1, -1), scope) }))
         if (templates.length) {
             bind(() => {
                 let newText = originalText
