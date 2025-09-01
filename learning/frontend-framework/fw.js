@@ -176,7 +176,14 @@ let parseAndBindAttribute = (name, element, scope) => {
                     element.removeAttribute(rawName)
                 return element
             })
-        // } else if (name.startsWith('@')) {
+    } else if (name.startsWith('@')) {
+        let eventType = name.slice(1)
+        let evaluate = getEvaluator(value, scope)
+        let listener = (event) => {
+            let result = evaluate()
+            if (result instanceof Function) result(event)
+        }
+        element.addEventListener(eventType, listener) // TODO: bind?
     }
 }
 
