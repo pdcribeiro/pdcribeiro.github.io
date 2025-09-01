@@ -1,13 +1,17 @@
-/*
-    wip:
-    - parseAndBindAttribute
-
-    features:
-    - allow defining component in html file (optional: without surrounding template tag) and importing it into another html/component file
-*/
+/**
+ * WIP
+ * - cleanup
+ *
+ * TODO
+ * - write tests
+ *
+ * LATER
+ * - allow defining component in html file and importing it into another html / component file
+ */
 
 import { AsyncQueue } from '/lib/queue.js'
 import { kebab } from '/lib/string.js'
+import { emit } from './events.js'
 import { state, derive, bind } from './state.js'
 
 let ATTRIBUTES = {
@@ -17,10 +21,7 @@ let ATTRIBUTES = {
     for: ':for',
     model: ':model',
 }
-let TEMPLATE_DELIMITERS = {
-    open: '{',
-    close: '}',
-}
+let TEMPLATE_DELIMITERS = '{}'
 
 let init = async () => {
     setGlobals({
@@ -29,59 +30,52 @@ let init = async () => {
         $emit: emit,
     })
     loadAllComponents()
-    let app = extractAppContent()
-    let script = extractScript(app)
-    let scope = await parseAndImportScript(script)
-    document.body.append(app)
-    parseAndBindDom(document.body, scope) // must happen after appendChild. doesn't parse custom elements
-    // TODO: maybe parseAndBindDom should happen before app mounts. can we make it work? (eg. parseAndBindDom(app, scope)). check logs before and after changing
+    let content = extractAppContent()
+    let script = extractScript(content)
+    let scope = await runScriptAndGetScope(script)
+    document.body.append(content)
+    parseAndBindDom(document.body, scope)
 }
 
 let setGlobals = (globals) => Object.assign(window, globals)
 
-let eventOptions = { bubbles: true, cancelable: true, composed: true }
+let loadAllComponents = () => document.querySelectorAll('template[component]').forEach(loadComponent)
 
-let emit = function (type, detail) { this.dispatchEvent(new CustomEvent(type, { ...eventOptions, detail })) }
-
-let loadAllComponents = () =>
-    document.querySelectorAll('template[component]').forEach(loadComponent)
-
-let loadedComponents = new Set()
-
-// TODO: optimize. move heavy stuff out of constructor (or cache it). components are created on first render and can also be cloned a bunch of times
-// TODO?: prevent first render?
+// TODO optimize. move heavy stuff out of constructor (or cache it)
+//   - components are created on first render and can also be cloned a bunch of times
+// TODO? prevent first render?
 let loadComponent = (template) => {
-    if (loadedComponents.has(template)) return
-
     let name = template.getAttribute('component')
-    let content = extractTemplateContent(template)
-    let script = extractScript(content)
-
-    customElements.define(kebab(name), class extends HTMLElement {
-        isComponent = true
-
-        constructor() {
-            console.debug('constructor', name)
-            super()
-
-            this._props = state({})
-            this.attachShadow({ mode: 'open' }).appendChild(content.cloneNode(true))
-        }
-        async init() {
-            console.debug('init', name)
-
-            // TODO: this async call makes it so document is bound before components, but is it realiable?
-            let exports = await runWithGlobalsAsync(() => parseAndImportScript(script), {
-                $props: this._props,
-                $emit: emit.bind(this),
-            })
-
-            for (let c of this.shadowRoot.children)
-                parseAndBindDom(c, exports)
-        }
+    customElements.define(kebab(name), class extends Component {
+        static content = extractTemplateContent(template)
+        static script = extractScript(this.content)
     })
+}
 
-    loadedComponents.add(template)
+class Component extends HTMLElement {
+    static content
+    static script
+
+    constructor() {
+        super()
+        console.debug('constructor', this.tagName)
+        this._props = state({})
+        this.attachShadow({ mode: 'open' })
+            .appendChild(this.constructor.content.cloneNode(true))
+    }
+    setProp(name, value) {
+        this._props[name] = value
+    }
+    async init() {
+        console.debug('init', this.tagName)
+        let getScope = () => runScriptAndGetScope(this.constructor.script)
+        let scope = await runWithGlobalsAsync(getScope, {
+            $props: this._props,
+            $emit: emit.bind(this),
+        })
+        for (let c of this.shadowRoot.children)
+            parseAndBindDom(c, scope)
+    }
 }
 
 let extractTemplateContent = (template) => {
@@ -107,36 +101,29 @@ let runWithGlobalsAsync = async (callback, globals) => {
 let declarationRe = /^\s*(var|let|const|function) ([{\[]\s+)?(\w+)(\s+[}\]])?[ =(]/
 let allDeclarationsRe = new RegExp(declarationRe, 'gm')
 
-// note: must import as module to allow imports inside script code
-// note: must set globals (eg. $props) before calling this
-let parseAndImportScript = async (script) => {
-    console.debug('parseAndImportScript', { script })
+// NOTE must run set globals (eg. $props) before calling this
+// NOTE must import as module to allow imports inside script code
+let runScriptAndGetScope = async (script) =>
+    script ? await import(createImportUrl(parseScript(script))) : {}
 
-    if (!script) return {}
-
-    // parse and export declarations
+// LATER wrap argument of $derive calls in arrow function
+let parseScript = (script) => {
     let code = script.textContent
     let declarations = code.match(allDeclarationsRe)?.map(m => m.match(declarationRe)[3]) ?? []
-    let codeWithExports = code + '\n' + `export { ${declarations.join(', ')} }`
-
-    // LATER wrap argument of $derive calls in arrow function
-
-    // import rewritten script tags
-    let blob = new Blob([codeWithExports], { type: 'application/javascript' })
-    let url = URL.createObjectURL(blob)
-    let exports = await import(url)
-
-    return exports
+    return code + '\n' + `export { ${declarations.join(', ')} }`
 }
+
+let createImportUrl = (code) => URL.createObjectURL(
+    new Blob([code], { type: 'application/javascript' })
+)
 
 let componentInitQueue = new AsyncQueue({ handler: cmp => cmp.init() })
 
-// TODO parse and bind innerText (get childNodes, filter text nodes, parse, bind)
-// note: careful when using document fragments. if they were already appended, they'll be empty
 let parseAndBindDom = (element, scope) => {
-    console.debug('parseAndBindDom', element.tagName, { element, isComponent: !!element.isComponent, task: scope.task, scope })
+    console.debug('parseAndBindDom', element.tagName, { element, isComponent: element instanceof Component, task: scope.task, scope })
 
-    if (element.tagName === 'STYLE') return
+    if (element.tagName === 'STYLE')
+        return
 
     for (let { name } of element.attributes)
         parseAndBindAttribute(name, element, scope)
@@ -146,16 +133,14 @@ let parseAndBindDom = (element, scope) => {
 
     bindTemplateExpressions(element, scope)
 
-    if (element.isComponent)
+    if (element instanceof Component)
         componentInitQueue.push(element)
 }
 
 // let boundAttributeRe = /^(:|@)\w/
 
-// FIX: non bound attributes are not set in component _props
-// FIX: when we set a bounded attribute to a state proxy on a component element (in props proxy), we need to extract the raw value
-// FIX: when we set a bounded attribute on a non-component element, the `for (let { name } of element.attributes)` then finds and processes it again
-// TODO: read vue docs and add missing essential functionality (https://vuejs.org/guide/essentials/template-syntax.html#attribute-bindings)
+// FIX when we bound an attribute, the parseAndBindDom then finds and processes it again
+// TODO read vue docs and add missing essential functionality (https://vuejs.org/guide/essentials/template-syntax.html#attribute-bindings)
 let parseAndBindAttribute = (name, element, scope) => {
     console.debug('parseAndBindAttribute', name, { element, scope })
 
@@ -169,12 +154,14 @@ let parseAndBindAttribute = (name, element, scope) => {
         bindAttribute(name.slice(1), value, element, scope)
     else if (name.startsWith('@'))
         bindEventListenerAttr(name.slice(1), value, element, scope)
+    else if (element instanceof Component)
+        element.setProp(name, value)
 }
 
-// FIX: using :if with :for in the same element adds empty parent element on re-render
+// FIX using :if with :for in the same element adds empty parent element on re-render
 //   - :for removes elements appended by :if, so current element is not found because it's not connected. and vice-versa
 //   - maybe extract all special attributes first and then render the elements with all info. merge bind logic
-// TODO: test in custom elements with multiple children
+// TODO test in custom elements with multiple children
 let bindIfAttr = (element, scope) => {
     console.debug('bindIfAttr', element.tagName, { element, scope })
 
@@ -201,7 +188,7 @@ let bindIfAttr = (element, scope) => {
             c.remove() // remove original children to prevent current parseAndBindDom run from catching them. they'll be rendered with item scope when bind runs the first time
     }
 
-    // bind async to prevent current parseAndBindDom from catching added elements
+    // run async to prevent current parseAndBindDom from catching added elements
     setTimeout(() => bind(() => {
         let active = branches.find(b => b.eval())?.el
         let current = branches.find(b => b.el.isConnected)?.el
@@ -234,9 +221,8 @@ let getEvaluator = (expr, scope) => {
     }
 }
 
-// LATER: handle destructure. idea: pass ...rest param to evaluator
-// LATER: optimize re-render
-// LATER?: add forScope to current element
+// LATER handle destructure. idea: pass ...rest param to evaluator
+// LATER optimize re-render
 let bindForAttr = (element, scope) => {
     console.debug('bindForAttr', element.tagName, { element, scope })
 
@@ -254,7 +240,7 @@ let bindForAttr = (element, scope) => {
 
     let evaluateList = getEvaluator(listExpr, scope)
     let current = []
-    // bind async to prevent current parseAndBindDom from catching added elements
+    // run async to prevent current parseAndBindDom from catching added elements
     setTimeout(() => bind(() => {
         let active = evaluateList().map(item => ({
             el: itemEl.cloneNode(true),
@@ -274,9 +260,12 @@ let bindModelAttr = (element, scope) => {
     console.debug('bindModelAttr', element.tagName, { element, scope })
 
     // let value = extractAttr(ATTRIBUTES.model, element)
+    // bindAttribute('value', value, element, scope)
+
+    // let value = extractAttr(ATTRIBUTES.model, element)
     // bind(() => element.value = evaluate(value), element)
-    // TODO: set state value. handle object state and primitive state (.val)
-    // TODO: use addEventListener (guarantee run once)
+    // TODO set state value. handle object state and primitive state (.val)
+    // TODO use addEventListener (guarantee run once)
     // element.oninput = (e) => 
 }
 
@@ -285,12 +274,12 @@ let bindAttribute = (name, value, element, scope) => {
     bind(() => {
         let result = evaluate()
         let newVal = result.isState ? result.val : result
-        if (result)
+        if (result && typeof result !== 'object')
             element.setAttribute(name, newVal)
         else
             element.removeAttribute(name)
-        if (element.isComponent)
-            element._props[name] = newVal
+        if (element instanceof Component)
+            element.setProp(name, newVal)
         return element
     })
 }
@@ -304,7 +293,7 @@ let bindEventListenerAttr = (name, value, element, scope) => {
         let result = evaluate()
         result instanceof Function && result(event)
     }
-    element.addEventListener(name, listener) // TODO: bind?
+    element.addEventListener(name, listener) // TODO bind?
 }
 
 let bindTemplateExpressions = (element, scope) => {
@@ -326,19 +315,17 @@ let bindTemplateExpressions = (element, scope) => {
 }
 
 let findTemplateExpressions = (text) => {
+    let [openChar, closeChar] = TEMPLATE_DELIMITERS
     let start, count = 0, expressions = []
     for (let i = 0; i < text.length; i++) {
-        if (text[i] === TEMPLATE_DELIMITERS.open && count++ === 0)
+        if (text[i] === openChar && count++ === 0)
             start = i
-        else if (text[i] === TEMPLATE_DELIMITERS.close && --count === 0)
+        else if (text[i] === closeChar && --count === 0)
             expressions.push(text.slice(start, i + 1))
     }
     return expressions
 }
 
-let extractAppContent = () => {
-    let template = document.querySelector('template[app]')
-    return extractTemplateContent(template)
-}
+let extractAppContent = () => extractTemplateContent(document.querySelector('template[app]'))
 
 init()
