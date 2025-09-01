@@ -331,12 +331,13 @@ let findTemplateExpressions = (text) => {
 let getEvaluator = (expr, scope) => {
     console.debug('getEvaluator', { expr, scope })
 
-    let keys = Object.keys(scope)
-    let values = Object.values(scope)
+    let body = expr.includes(';') ? expr : `return ${expr}`
+    let params = Object.keys(scope)
+    let args = Object.values(scope)
     let evaluate
     let fallback = () => expr
     try {
-        evaluate = new Function(...keys, `return ${expr};`)
+        evaluate = new Function(...params, body)
     } catch (e) {
         handleEvaluatorError(e, { expr, scope })
         evaluate = fallback
@@ -345,7 +346,7 @@ let getEvaluator = (expr, scope) => {
         console.debug('evaluate', { expr, scope })
 
         try {
-            return evaluate(...values)
+            return evaluate(...args)
         }
         catch (e) {
             handleEvaluatorError(e, { expr, scope })

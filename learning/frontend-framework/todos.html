@@ -33,7 +33,7 @@
         let addTask = () => {
             if (newTask.val) {
                 createTask(newTask.val)
-                newTask.val = '' // FIX: not clearing input
+                newTask.val = ''
             }
         }
         let createTask = (title) => {
@@ -58,9 +58,12 @@
 
     <div style="display: flex">
         <main style="flex: 1">
-            <input type="text" :value="newTask" :model="newTask" placeholder="New task"
-                @input="e => (newTask.val = e.target.value)">
+            <!-- FIX: not clearing input. seems like binding both value and input listener breaks it -->
+            <input type="text" :model="newTask" placeholder="New task"
+                @input="e => (console.log('input first'), (newTask.val = e.target.value))">
             <button @click="addTask">Add task</button>
+            <input type="text" :model="newTask"
+                @input="e => (console.log('input second'), (newTask.val = e.target.value))">
 
             <div>
                 <button @click="filter.val = 'all'">All</button>
