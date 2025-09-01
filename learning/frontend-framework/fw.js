@@ -136,6 +136,8 @@ let componentInitQueue = new AsyncQueue({ handler: cmp => cmp.init() })
 let parseAndBindDom = (element, scope) => {
     console.debug('parseAndBindDom', element.tagName, { element, isComponent: !!element.isComponent, task: scope.task, scope })
 
+    if (element.tagName === 'STYLE') return
+
     for (let { name } of element.attributes)
         parseAndBindAttribute(name, element, scope)
 
