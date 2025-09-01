@@ -5,11 +5,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>todos</title>
+    <link rel="stylesheet" href="/third-party/modern-normalize.min.css" />
     <link rel="stylesheet" href="/style/dark.css" />
     <script type="module" src="./fw.js"></script>
 </head>
 
-<body style="margin: auto; max-width: 1280px">
+<body style="padding: 1rem 4rem; margin: auto; max-width: 853px; height: 100dvh">
 </body>
 
 <template app>
@@ -19,7 +20,7 @@
         let newTask = $state('')
         let filter = $state('all')
         let tasks = $state([
-            { title: 'first task', done: true }, { title: 'second task', done: false },
+            { id: 0, title: 'first task', done: true }, { id: 1, title: 'second task', done: false },
         ])
 
         let tasksByFilter = $derive(() => ({
@@ -29,6 +30,12 @@
         }))
         let filtered = $derive(() => tasksByFilter[filter.val])
 
+        let addTask = () => {
+            if (newTask.val) {
+                createTask(newTask.val)
+                newTask.val = '' // FIX: not clearing input
+            }
+        }
         let createTask = (title) => {
             tasks.val = [...tasks.val, { title, done: false, id: tasks.val.length }]
         }
@@ -40,13 +47,9 @@
         }
 
         // setInterval(() => {
-        //     createTask(`task ${tasks.val.length + 1}`)
+        //     console.log('STATE', newTask._bindings)
+        //     // createTask(`task ${tasks.val.length + 1}`)
         // }, 2000)
-        // $derive(() => console.log('tasks', tasks.val.length))
-        // $derive(() => console.log({ filter: filter.val, filtered: filtered.val }))
-
-        // let task = $derive(() => tasks.val[0]) // FIX undefined
-        // $derive(() => console.log('parent task', task.val))
     </script>
 
     <header>
@@ -57,7 +60,7 @@
         <main style="flex: 1">
             <input type="text" :value="newTask" :model="newTask" placeholder="New task"
                 @input="e => (newTask.val = e.target.value)">
-            <button @click="(createTask(newTask.val), newTask.val = '')">Add task</button>
+            <button @click="addTask">Add task</button>
 
             <div>
                 <button @click="filter.val = 'all'">All</button>
@@ -67,7 +70,7 @@
 
             <ul>
                 <li :if="filtered.val.length" :for="task in filtered.val">
-                    <task-item :task @toggle="toggleTask" @delete="deleteTask"></task-item>
+                    <task-item :task @toggle="toggleTask(task.id)" @delete="deleteTask(task.id)"></task-item>
                 </li>
                 <li :else>No tasks</li>
             </ul>
@@ -85,19 +88,16 @@
 
 <template component="TaskItem">
     <script>
-        console.debug('script', { isESModule: typeof import.meta !== "undefined" }) // DEV
-
         let { task } = $props
-        $derive(() => console.log('component task.title', { task: $props.task.title }))
     </script>
 
-    <input type="checkbox" :checked="task.done" @input="$emit('toggle', task.id)">
+    <input type="checkbox" :checked="task.done" @input="$emit('toggle')">
     <span>{task.title}</span>
-    <delete-button @click="$emit('delete', task.id)"></delete-button>
+    <delete-button @click="$emit('delete')"></delete-button>
 </template>
 
 <template component="DeleteButton">
-    <button @click="confirm('Are you sure?') && $emit('click')">x</button>
+    <button @click="e => confirm('Are you sure?') || e.stopPropagation()">x</button>
 
     <style>
         button {

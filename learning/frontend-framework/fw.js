@@ -26,7 +26,7 @@ let init = async () => {
     setGlobals({
         $state: state,
         $derive: derive,
-        $emit: () => { },
+        $emit: emit,
     })
     loadAllComponents()
     let app = extractAppContent()
@@ -36,6 +36,10 @@ let init = async () => {
     parseAndBindDom(document.body, scope) // must happen after appendChild. doesn't parse custom elements
     // TODO: maybe parseAndBindDom should happen before app mounts. can we make it work? (eg. parseAndBindDom(app, scope)). check logs before and after changing
 }
+
+let eventOptions = { bubbles: true, cancelable: true, composed: true }
+
+let emit = function (type, detail) { this.dispatchEvent(new CustomEvent(type, { ...eventOptions, detail })) }
 
 let setGlobals = (globals) => Object.assign(window, globals)
 
@@ -86,6 +90,7 @@ let loadComponent = (template) => {
             // TODO: this async call makes it so document is bound before components, but is it realiable?
             let exports = await runWithGlobalsAsync(() => parseAndImportScript(script), {
                 $props: this._props,
+                $emit: emit.bind(this),
             })
 
             for (let c of this.shadowRoot.children)
@@ -185,7 +190,10 @@ let parseAndBindAttribute = (name, element, scope) => {
             })
     } else if (name.startsWith('@')) {
         let eventType = name.slice(1)
-        let evaluate = getEvaluator(value, scope)
+        let evaluate = getEvaluator(value, {
+            ...scope,
+            $emit: emit.bind(element),
+        })
         let listener = (event) => {
             let result = evaluate()
             if (result instanceof Function) result(event)
