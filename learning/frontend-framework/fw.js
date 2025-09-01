@@ -37,31 +37,14 @@ let init = async () => {
     // TODO: maybe parseAndBindDom should happen before app mounts. can we make it work? (eg. parseAndBindDom(app, scope)). check logs before and after changing
 }
 
+let setGlobals = (globals) => Object.assign(window, globals)
+
 let eventOptions = { bubbles: true, cancelable: true, composed: true }
 
 let emit = function (type, detail) { this.dispatchEvent(new CustomEvent(type, { ...eventOptions, detail })) }
 
-let setGlobals = (globals) => Object.assign(window, globals)
-
 let loadAllComponents = () =>
     document.querySelectorAll('template[component]').forEach(loadComponent)
-
-let extractAppContent = () => {
-    let template = document.querySelector('template[app]')
-    return extractTemplateContent(template)
-}
-
-let extractScript = (root) => {
-    let script = root.querySelector('script')
-    script?.remove()
-    return script
-}
-
-let extractTemplateContent = (template) => {
-    let content = template.content
-    template.remove()
-    return content
-}
 
 let loadedComponents = new Set()
 
@@ -99,6 +82,18 @@ let loadComponent = (template) => {
     })
 
     loadedComponents.add(template)
+}
+
+let extractTemplateContent = (template) => {
+    let content = template.content
+    template.remove()
+    return content
+}
+
+let extractScript = (root) => {
+    let script = root.querySelector('script')
+    script?.remove()
+    return script
 }
 
 let runWithGlobalsAsync = async (callback, globals) => {
@@ -225,6 +220,20 @@ let extractAttr = (name, el) => {
     return val
 }
 
+let getEvaluator = (expr, scope) => {
+    console.debug('getEvaluator', { expr, scope })
+
+    let body = expr.includes(';') ? expr : `return ${expr}`
+    let params = Object.keys(scope)
+    let args = Object.values(scope)
+    let evaluate = new Function(...params, body)
+
+    return () => {
+        console.debug('evaluate', { expr, scope })
+        return evaluate(...args)
+    }
+}
+
 // LATER: handle destructure. idea: pass ...rest param to evaluator
 // LATER: optimize re-render
 // LATER?: add forScope to current element
@@ -327,18 +336,9 @@ let findTemplateExpressions = (text) => {
     return expressions
 }
 
-let getEvaluator = (expr, scope) => {
-    console.debug('getEvaluator', { expr, scope })
-
-    let body = expr.includes(';') ? expr : `return ${expr}`
-    let params = Object.keys(scope)
-    let args = Object.values(scope)
-    let evaluate = new Function(...params, body)
-
-    return () => {
-        console.debug('evaluate', { expr, scope })
-        return evaluate(...args)
-    }
+let extractAppContent = () => {
+    let template = document.querySelector('template[app]')
+    return extractTemplateContent(template)
 }
 
 init()
