@@ -170,10 +170,12 @@ let bindIfAttr = (value, element, scope) => {
         else
             break
     }
-    for (let b of branches)
-        b.eval = b.exp ? createEvaluator(b.exp, scope) : () => true // elsif : else
-
     let list = createListRenderer(...branches.map(b => b.el))
+    for (let b of branches) {
+        b.eval = b.exp ? createEvaluator(b.exp, scope) : () => true // elsif : else
+        b.el = b.el.cloneNode(true)
+    }
+
     let current
     bind(() => {
         let active = branches.find(b => b.eval())?.el
@@ -235,11 +237,12 @@ let bindForAttr = (value, element, scope) => {
     let [itemName, itemsExpr] = value.split(' in ')
     let evaluateItems = createEvaluator(itemsExpr, scope)
     let list = createListRenderer(element)
+    let itemEl = element.cloneNode(true)
     bind(() => {
         let items = evaluateItems()
         list.clear()
         for (let item of items) {
-            let clone = element.cloneNode(true)
+            let clone = itemEl.cloneNode(true)
             list.add(clone)
             parseAndBindDom(clone, { ...scope, [itemName]: item })
         }
