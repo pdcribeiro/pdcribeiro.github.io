@@ -283,7 +283,7 @@ let bindAttribute = (name, value, element, scope) => {
     bind(() => {
         let result = evaluate()
         let newVal = result.isState ? result.val : result
-        if (result && typeof result !== 'object')
+        if (newVal && typeof newVal !== 'object')
             element.setAttribute(name, newVal)
         else
             element.removeAttribute(name)
