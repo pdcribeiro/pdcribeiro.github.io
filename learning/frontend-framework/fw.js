@@ -60,6 +60,7 @@ class Component extends HTMLElement {
     constructor() {
         super()
         console.debug('constructor', this.tagName)
+        this.style.display = 'none'
         this._props = state({})
         this.attachShadow({ mode: 'open' })
             .appendChild(this.constructor.content.cloneNode(true))
@@ -76,6 +77,7 @@ class Component extends HTMLElement {
         })
         for (let c of this.shadowRoot.children)
             parseAndBindDom(c, scope)
+        this.style.display = ''
     }
 }
 
