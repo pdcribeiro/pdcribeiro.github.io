@@ -29,7 +29,6 @@
             completed: tasks.val.filter(t => t.done),
         }))
         let filtered = $derive(() => tasksByFilter[filter.val])
-        $derive(() => console.log(tasksByFilter._raw))
 
         let addTask = () => {
             if (newTask.val) {
@@ -59,12 +58,9 @@
 
     <div style="display: flex">
         <main style="flex: 1">
-            <!-- FIX not clearing input. seems like binding both value and input listener breaks it -->
-            <input type="text" :model="newTask" placeholder="New task"
-                @input="e => (console.log('input first'), (newTask.val = e.target.value))">
+            <!-- FIX not clearing input. seems like binding both value and input listener breaks it. input follows state until we type -->
+            <input type="text" :model="newTask" placeholder="New task">
             <button @click="addTask">Add task</button>
-            <input type="text" :model="newTask"
-                @input="e => (console.log('input second'), (newTask.val = e.target.value))">
 
             <div>
                 <button @click="filter.val = 'all'">All</button>

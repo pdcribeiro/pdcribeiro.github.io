@@ -2,10 +2,11 @@
 // thank you Tao! :)
 
 // TODO: refactor dependencies to avoid handling sets inside map. idea: use map with two keys
+// TODO: use WeakMap instead of Map to avoid mem leaks
 
 let protoOf = Object.getPrototypeOf
 let changedStates, derivedStates, curDeps, curNewDerives, alwaysConnectedDom = { isConnected: 1 }
-let gcCycleInMs = 1000, statesToGc, propSetterCache = {}
+let gcCycleInMs = 1000, statesToGc
 let objProto = protoOf(alwaysConnectedDom), funcProto = protoOf(protoOf), _undefined
 
 let states = new WeakMap()

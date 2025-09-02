@@ -265,44 +265,62 @@ let parseAndBindAttribute = (name, element, scope) => {
         element.setProp(name, value)
 }
 
+// NOTE evaluates expression once to check if needs .val suffix
 let bindModelAttr = (element, scope) => {
     console.debug('bindModelAttr', element.tagName, { element, scope })
 
-    // let value = extractAttr(ATTRIBUTES.model, element)
-    // bindAttribute('value', value, element, scope)
+    let value = extractAttr(ATTRIBUTES.model, element)
+    bindAttribute('value', value, element, scope)
 
-    // let value = extractAttr(ATTRIBUTES.model, element)
-    // bind(() => element.value = evaluate(value), element)
-    // TODO set state value. handle object state and primitive state (.val)
-    // TODO use addEventListener (guarantee run once)
-    // element.oninput = (e) => 
+    let result = createEvaluator(value, scope)()
+    let varExpr = result.isState ? `${value}.val` : value
+    let expr = `(e) => ${varExpr} = e.target.value`
+    bindEventListenerAttr('input', expr, element, scope)
 }
 
+// TODO: check edge cases
 let bindAttribute = (name, value, element, scope) => {
     let evaluate = createEvaluator(value || name, scope)
     bind(() => {
         let result = evaluate()
-        let newVal = result.isState ? result.val : result
-        if (newVal && typeof newVal !== 'object')
-            element.setAttribute(name, newVal)
-        else
-            element.removeAttribute(name)
+        result = result.isState ? result.val : result
+        setAttribute(name, result, element)
         if (element instanceof Component)
-            element.setProp(name, newVal)
+            element.setProp(name, result)
         return element
     })
 }
+
+let propSetterCache = {}
+
+var setAttribute = (name, value, element) => {
+    let cacheKey = element.tagName + ',' + name
+    let propSetter = propSetterCache[cacheKey] ??= getPropDescriptor(element, name)?.set ?? 0
+    let setter = propSetter ? propSetter.bind(element) : element.setAttribute.bind(element, name)
+    setter(value)
+}
+
+var getPropDescriptor = (proto, name) => proto && (
+    Object.getOwnPropertyDescriptor(proto, name) ??
+    getPropDescriptor(Object.getPrototypeOf(proto), name)
+)
 
 let bindEventListenerAttr = (name, value, element, scope) => {
     let evaluate = createEvaluator(value, {
         ...scope,
         $emit: emit.bind(element),
     })
-    let listener = (event) => {
-        let result = evaluate()
-        result instanceof Function && result(event)
-    }
-    element.addEventListener(name, listener) // TODO bind?
+    let previous
+    bind(() => {
+        let listener = (event) => {
+            let result = evaluate()
+            result instanceof Function && result(event)
+        }
+        element.removeEventListener(name, previous)
+        element.addEventListener(name, listener) // TODO bind?
+        previous = listener
+        return element
+    })
 }
 
 let bindTemplateExpressions = (element, scope) => {
