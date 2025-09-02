@@ -29,6 +29,7 @@
             completed: tasks.val.filter(t => t.done),
         }))
         let filtered = $derive(() => tasksByFilter[filter.val])
+        $derive(() => console.log(tasksByFilter._raw))
 
         let addTask = () => {
             if (newTask.val) {
@@ -71,14 +72,17 @@
                 <button @click="filter.val = 'completed'">Completed</button>
             </div>
 
-            <p :if="!filtered.val.length">No tasks</p>
-            <ul :elsif="filtered.val.length <= 5">
+            <ul>
                 <li :for="task in filtered.val">
                     <task-item :task @toggle="toggleTask(task.id)" @delete="deleteTask(task.id)"></task-item>
                 </li>
-                <!-- <li :else>No tasks</li> -->
+                <li :else>No tasks</li>
             </ul>
-            <p :else>Take it easy</p>
+
+            <p :if="!filtered.val.length">What's next?</p>
+            <p :elsif="tasksByFilter.completed.length === tasksByFilter.all.length">Great job!</p>
+            <p :elsif="filtered.val.length <= 5">Keep it going :)</p>
+            <p :else>Take it easy...</p>
         </main>
 
         <aside>

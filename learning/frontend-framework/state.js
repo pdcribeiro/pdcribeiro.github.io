@@ -149,8 +149,6 @@ let derive = (f, derived = state(), dom) => {
     return derived
 }
 
-let update = (dom, newDom) => newDom ? newDom !== dom && dom.replaceWith(newDom) : dom.remove()
-
 let updateDoms = () => {
     let iter = 0, derivedStatesArray = flattenMapOfSets(changedStates).filter(([s, p]) => s._raw[p] !== s._old[p])
     do {
@@ -162,7 +160,7 @@ let updateDoms = () => {
     changedStates = _undefined
     derivedStates = _undefined
     for (let b of new Set(changedStatesArray.flatMap(([s, p]) => s._bindings[p] = keepConnected(s._bindings[p]))))
-        update(b._dom, bind(b.f, b._dom)), b._dom = _undefined
+        bind(b.f, b._dom), b._dom = _undefined
     for (let [s, p] of changedStatesArray) s._old[p] = s._raw[p]
 }
 

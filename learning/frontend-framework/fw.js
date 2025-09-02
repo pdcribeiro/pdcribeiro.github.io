@@ -157,9 +157,10 @@ let extractAttr = (name, el) => {
 }
 
 // TODO test in custom elements with multiple children
-// TODO? return anchor from binding function to allow gc when parent element is removed
 let bindIfAttr = (value, element, scope) => {
     console.debug('bindIfAttr', element.tagName, { element, scope })
+
+    let render = createRenderer(element)
 
     let el = element
     let branches = [{ exp: value, el }]
@@ -170,9 +171,9 @@ let bindIfAttr = (value, element, scope) => {
         else
             break
     }
-    let list = createListRenderer(...branches.map(b => b.el))
     for (let b of branches) {
         b.eval = b.exp ? createEvaluator(b.exp, scope) : () => true // elsif : else
+        b.el.remove()
         b.el = b.el.cloneNode(true)
     }
 
@@ -180,15 +181,16 @@ let bindIfAttr = (value, element, scope) => {
     bind(() => {
         let active = branches.find(b => b.eval())?.el
         if (active !== current) {
-            list.clear()
+            current = active
             if (active) {
                 let clone = active.cloneNode(true)
                 parseAndBindDom(clone, scope)
-                list.add(clone)
-            }
-            current = active
+                render(clone)
+                return clone
+            } else
+                render()
         }
-        return document // prevent gc of binding
+        return document
     })
 }
 
@@ -207,28 +209,20 @@ let createEvaluator = (expr, scope) => {
 }
 
 // NOTE must run before element is removed from dom
-let createListRenderer = (...initial) => {
-    let elements = initial
-    let first = elements[0]
-    let parent = first.parentElement
+let createRenderer = (element) => {
+    let frag = document.createDocumentFragment()
+    let current = []
+    let parent = element.parentNode
     let anchor = new Comment('anchor')
-    first.before(anchor)
-    let list = {
-        clear: () => {
-            elements.forEach(el => el.remove())
-            elements = []
-        },
-        add: (el) => {
-            parent.insertBefore(el, anchor)
-            elements.push(el)
-        },
+    element.before(anchor)
+    return (...elements) => {
+        frag.append(...elements)
+        current.forEach(el => el.remove())
+        parent.insertBefore(frag, anchor)
+        current = elements
     }
-    list.clear()
-    return list
 }
 
-// TODO handle :else
-// TODO? return anchor from binding function to allow gc when parent element is removed
 // LATER handle destructure. idea: pass ...rest param to evaluator
 // LATER optimize re-render
 let bindForAttr = (value, element, scope) => {
@@ -236,17 +230,22 @@ let bindForAttr = (value, element, scope) => {
 
     let [itemName, itemsExpr] = value.split(' in ')
     let evaluateItems = createEvaluator(itemsExpr, scope)
-    let list = createListRenderer(element)
-    let itemEl = element.cloneNode(true)
+    let render = createRenderer(element)
+    let forEl = element.cloneNode(true)
+    let nextEl = element.nextElementSibling
+    let elseEl = nextEl?.hasAttribute(ATTRIBUTES.else) ? (nextEl.remove(), nextEl.cloneNode(true)) : null
+    element.remove()
     bind(() => {
         let items = evaluateItems()
-        list.clear()
-        for (let item of items) {
-            let clone = itemEl.cloneNode(true)
-            parseAndBindDom(clone, { ...scope, [itemName]: item })
-            list.add(clone)
-        }
-        return document // prevent garbage collection of binding
+        let elements = !items.length && elseEl ?
+            [elseEl.cloneNode(true)] :
+            items.map(item => {
+                let clone = forEl.cloneNode(true)
+                parseAndBindDom(clone, { ...scope, [itemName]: item })
+                return clone
+            })
+        render(...elements)
+        return elements[0] ?? document
     })
 }
 
