@@ -73,6 +73,7 @@ class Component extends HTMLElement {
         let getScope = () => runScriptAndGetScope(this.constructor.script)
         let scope = await runWithGlobalsAsync(getScope, {
             $props: this._props,
+            $derive: fn => derive(fn, undefined, this),
             $emit: emit.bind(this),
         })
         for (let c of this.shadowRoot.children)
