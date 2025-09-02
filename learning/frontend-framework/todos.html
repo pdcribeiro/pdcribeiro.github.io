@@ -71,14 +71,14 @@
                 <button @click="filter.val = 'completed'">Completed</button>
             </div>
 
-            <ul :if="filtered.val.length <= 5">
+            <p :if="!filtered.val.length">No tasks</p>
+            <ul :elsif="filtered.val.length <= 5">
                 <li :for="task in filtered.val">
                     <task-item :task @toggle="toggleTask(task.id)" @delete="deleteTask(task.id)"></task-item>
                 </li>
                 <!-- <li :else>No tasks</li> -->
             </ul>
-            <p :elsif="filtered.val.length">Take it easy</p>
-            <p :else>No tasks</p>
+            <p :else>Take it easy</p>
         </main>
 
         <aside>

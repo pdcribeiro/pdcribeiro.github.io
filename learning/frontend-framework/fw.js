@@ -1,6 +1,5 @@
 /**
  * WIP
- * - try again to bind before mounting. use doc frags to avoid parent null error
  * - cleanup
  *
  * TODO
@@ -34,8 +33,9 @@ let init = async () => {
     let content = extractAppContent()
     let script = extractScript(content)
     let scope = await runScriptAndGetScope(script)
+    for (let c of [...content.children])
+        parseAndBindDom(c, scope)
     document.body.append(content)
-    parseAndBindDom(document.body, scope)
 }
 
 let setGlobals = (globals) => Object.assign(window, globals)
@@ -183,8 +183,8 @@ let bindIfAttr = (value, element, scope) => {
             list.clear()
             if (active) {
                 let clone = active.cloneNode(true)
-                list.add(clone)
                 parseAndBindDom(clone, scope)
+                list.add(clone)
             }
             current = active
         }
@@ -243,8 +243,8 @@ let bindForAttr = (value, element, scope) => {
         list.clear()
         for (let item of items) {
             let clone = itemEl.cloneNode(true)
-            list.add(clone)
             parseAndBindDom(clone, { ...scope, [itemName]: item })
+            list.add(clone)
         }
         return document // prevent garbage collection of binding
     })
@@ -336,6 +336,10 @@ let findTemplateExpressions = (text) => {
     return expressions
 }
 
-let extractAppContent = () => extractTemplateContent(document.querySelector('template[app]'))
+let extractAppContent = () => {
+    let template = document.querySelector('template[app]')
+    let content = extractTemplateContent(template)
+    return document.adoptNode(content)
+}
 
 init()
