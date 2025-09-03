@@ -12,6 +12,7 @@
 import { AsyncQueue } from '/lib/queue.js'
 import { kebab } from '/lib/string.js'
 import { emit } from './events.js'
+import { getScript, importScript } from './scripts.js'
 import { state, derive, bind } from './state.js'
 
 let ATTRIBUTES = {
@@ -23,16 +24,17 @@ let ATTRIBUTES = {
 }
 let TEMPLATE_DELIMITERS = '{}'
 
+let globals = {
+    $state: state,
+    $derive: derive,
+}
+
 let init = async () => {
-    setGlobals({
-        $state: state,
-        $derive: derive,
-        $emit: emit,
-    })
+    setGlobals(globals)
     loadAllComponents()
     let content = extractAppContent()
-    let script = extractScript(content)
-    let scope = await runScriptAndGetScope(script)
+    let script = getScript(content)
+    let scope = await importScript(script)
     for (let c of [...content.children])
         parseAndBindDom(c, scope)
     document.body.append(content)
@@ -44,12 +46,11 @@ let loadAllComponents = () => document.querySelectorAll('template[component]').f
 
 // TODO optimize. move heavy stuff out of constructor (or cache it)
 //   - components are created on first render and can also be cloned a bunch of times
-// TODO? prevent first render?
 let loadComponent = (template) => {
     let name = template.getAttribute('component')
     customElements.define(kebab(name), class extends Component {
         static content = extractTemplateContent(template)
-        static script = extractScript(this.content)
+        static script = getScript(this.content)
     })
 }
 
@@ -70,7 +71,7 @@ class Component extends HTMLElement {
     }
     async init() {
         console.debug('init', this.tagName)
-        let getScope = () => runScriptAndGetScope(this.constructor.script)
+        let getScope = () => importScript(this.constructor.script)
         let scope = await runWithGlobalsAsync(getScope, {
             $props: this._props,
             $derive: fn => derive(fn, undefined, this),
@@ -88,12 +89,6 @@ let extractTemplateContent = (template) => {
     return content
 }
 
-let extractScript = (root) => {
-    let script = root.querySelector('script')
-    script?.remove()
-    return script
-}
-
 let runWithGlobalsAsync = async (callback, globals) => {
     let previous = Object.keys(globals).reduce((prev, k) => ({ ...prev, k: window[k] }), {})
     setGlobals(globals)
@@ -101,25 +96,6 @@ let runWithGlobalsAsync = async (callback, globals) => {
     setGlobals(previous)
     return result
 }
-
-let declarationRe = /^\s*(var|let|const|function) ([{\[]\s+)?(\w+)(\s+[}\]])?[ =(]/
-let allDeclarationsRe = new RegExp(declarationRe, 'gm')
-
-// NOTE must run set globals (eg. $props) before calling this
-// NOTE must import as module to allow imports inside script code
-let runScriptAndGetScope = async (script) =>
-    script ? await import(createImportUrl(parseScript(script))) : {}
-
-// LATER wrap argument of $derive calls in arrow function
-let parseScript = (script) => {
-    let code = script.textContent
-    let declarations = code.match(allDeclarationsRe)?.map(m => m.match(declarationRe)[3]) ?? []
-    return code + '\n' + `export { ${declarations.join(', ')} }`
-}
-
-let createImportUrl = (code) => URL.createObjectURL(
-    new Blob([code], { type: 'application/javascript' })
-)
 
 let componentInitQueue = new AsyncQueue({ handler: cmp => cmp.init() })
 
@@ -357,7 +333,10 @@ let findTemplateExpressions = (text) => {
 let extractAppContent = () => {
     let template = document.querySelector('template[app]')
     let content = extractTemplateContent(template)
-    return document.adoptNode(content)
+    document.adoptNode(content)
+    customElements.upgrade(content)
+    return content
+
 }
 
 init()

@@ -18,7 +18,6 @@
     <script>
         console.debug('script', { isESModule: typeof import.meta !== "undefined" }) // DEV
 
-        let newTask = $state('')
         let filter = $state('all')
         let tasks = $state([
             { id: 0, title: 'first task', done: true }, { id: 1, title: 'second task', done: false },
@@ -31,12 +30,6 @@
         }))
         let filtered = $derive(() => tasksByFilter[filter.val])
 
-        let addTask = () => {
-            if (newTask.val) {
-                createTask(newTask.val)
-                newTask.val = ''
-            }
-        }
         let createTask = (title) => {
             tasks.val = [...tasks.val, { title, done: false, id: tasks.val.length }]
         }
@@ -59,16 +52,8 @@
 
     <div style="display: flex">
         <main style="flex: 1">
-            <!-- FIX not clearing input. seems like binding both value and input listener breaks it. input follows state until we type -->
-            <input type="text" :model="newTask" placeholder="New task">
-            <button @click="addTask">Add task</button>
-
-            <div>
-                <button @click="filter.val = 'all'">All</button>
-                <button @click="filter.val = 'active'">Active</button>
-                <button @click="filter.val = 'completed'">Completed</button>
-            </div>
-
+            <task-input @add="e => createTask(e.detail)"></task-input>
+            <task-filters @change="e => filter.val = e.detail"></task-filters>
             <ul>
                 <li :for="task in filtered.val">
                     <task-item :task @toggle="toggleTask(task.id)" @delete="deleteTask(task.id)"></task-item>
@@ -88,6 +73,31 @@
                 <p>Completed tasks: {tasksByFilter.completed.length}</p>
             </div>
         </aside>
+    </div>
+</template>
+
+<template component="TaskInput">
+    <script>
+        let newTask = $state('')
+        let addTask = () => {
+            if (newTask.val) {
+                $emit('add', newTask.val)
+                newTask.val = ''
+            }
+        }
+    </script>
+
+    <input type="text" :model="newTask" placeholder="New task">
+    <button @click="addTask">Add task</button>
+</template>
+
+<template component="TaskFilters">
+    <script>
+        import { FILTERS } from './index.js'
+    </script>
+
+    <div>
+        <button :for="filter in Object.keys(FILTERS)" @click="$emit('change', filter)">{filter}</button>
     </div>
 </template>
 
