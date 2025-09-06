@@ -141,7 +141,7 @@ let bind = (f, dom) => {
 }
 
 // TODO: test _set: check doesn't log: let s = state({a:1}); let d = derive(() => ({a:s.a, b:2})); derive(() => console.log(d.b))
-let derive = (f, derived = state(), dom) => {
+let derive = (f, dom, derived = state()) => {
     let deps = { _getters: new Map(), _setters: new Map() }, listener = { f, s: derived }
     listener._dom = dom ?? curNewDerives?.push(listener) ?? alwaysConnectedDom
     derived._set(runAndCaptureDeps(f, deps))
@@ -155,7 +155,7 @@ let updateDoms = () => {
     do {
         derivedStates = new Map()
         for (let l of new Set(derivedStatesArray.flatMap(([s, p]) => s._listeners[p] = keepConnected(s._listeners[p]))))
-            derive(l.f, l.s, l._dom), l._dom = _undefined
+            derive(l.f, l._dom, l.s), l._dom = _undefined
     } while (++iter < 100 && (derivedStatesArray = flattenMapOfSets(derivedStates)).length)
     let changedStatesArray = flattenMapOfSets(changedStates).filter(([s, p]) => s._raw[p] !== s._old[p])
     changedStates = _undefined
