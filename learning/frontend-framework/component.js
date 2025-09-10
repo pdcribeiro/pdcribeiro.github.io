@@ -1,33 +1,40 @@
-import { parseAndBindChildren } from './binding.js'
+import van from '/lib/ui/web/van-wrapper.js'
 import { emit } from './event.js'
-import { state, derive } from './state.js'
 
 export class Component extends HTMLElement {
-    content
-    scriptFn
+    render
+    #props
 
     constructor() {
         super()
-        console.debug('constructor', this.tagName)
-        this.initProps()
+        console.debug(this.tagName, 'constructor')
+        this.#initProps()
     }
-    initProps() {
-        this._props = state({})
-    }
-    setProp(name, value) {
-        this._props[name] = value
-    }
-    render() {
-        console.debug('render', this.tagName)
-        let content = this.content.cloneNode(true)
-        let scope = this.scriptFn.call(this, {
-            $props: this._props,
-            $state: state,
-            $derive: fn => derive(fn, this),
+    connectedCallback() {
+        van.add(this.attachShadow({ mode: 'open' }), this.render({
+            $props: this.#props,
+            $state: van.state,
+            $derive: van.derive,
             $emit: emit.bind(this),
-        })
-        parseAndBindChildren(content, scope)
-        this.attachShadow({ mode: 'open' })
-            .appendChild(content)
+            $_emit: emit,
+        }))
+    }
+    #initProps() {
+        let proto = Object.getPrototypeOf(this)
+        this.#props = {}
+        Array.from(this.attributes)
+            .filter(({ name }) => !name.startsWith('@') && !Object.getOwnPropertyDescriptor(proto, name))
+            .map(({ name }) => name.startsWith(':') ? name.slice(1) : name)
+            .forEach(name => Object.defineProperty(proto, name, {
+                configurable: true,
+                get() {
+                    return this.#props[name].val
+                },
+                set(value) {
+                    console.debug(this.tagName, 'set prop', name, value)
+                    let prop = this.#props[name] ??= van.state()
+                    prop.val = value
+                },
+            }))
     }
 }

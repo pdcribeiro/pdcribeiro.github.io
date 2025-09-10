@@ -7,8 +7,8 @@
     <title>todos</title>
     <link rel="stylesheet" href="/third-party/modern-normalize.min.css" />
     <link rel="stylesheet" href="/style/dark.css" />
-    <script type="module" src="./fw.js"></script>
-    <script type="module" src="./fw.user.test.js"></script>
+    <script type="module" src="./van-tpl.js"></script>
+    <script type="module" src="./van-tpl.user.test.js"></script>
 </head>
 
 <body style="padding: 1rem 4rem; margin: auto; max-width: 853px; height: 100dvh">
@@ -28,7 +28,7 @@
             active: tasks.val.filter(t => !t.done),
             completed: tasks.val.filter(t => t.done),
         }))
-        let filtered = $derive(() => tasksByFilter[filter.val])
+        let filtered = $derive(() => tasksByFilter.val[filter.val])
 
         let createTask = (title) => {
             tasks.val = [...tasks.val, { title, done: false, id: tasks.val.length }]
@@ -41,9 +41,8 @@
         }
 
         // setInterval(() => {
-        //     console.log('STATE', newTask._bindings)
-        //     // createTask(`task ${tasks.val.length + 1}`)
-        // }, 2000)
+        // createTask(`task ${tasks.val.length + 1}`)
+        // }, 1000)
     </script>
 
     <header>
@@ -62,15 +61,15 @@
             </ul>
 
             <p :if="!filtered.val.length">What's next?</p>
-            <p :elsif="tasksByFilter.completed.length === tasksByFilter.all.length">Great job!</p>
+            <p :elsif="tasksByFilter.val.completed.length === tasksByFilter.val.all.length">Great job!</p>
             <p :elsif="filtered.val.length <= 5">Keep it going :)</p>
             <p :else>Take it easy...</p>
         </main>
 
         <aside>
             <div>
-                <p>Active tasks: {tasksByFilter.active.length}</p>
-                <p>Completed tasks: {tasksByFilter.completed.length}</p>
+                <p>Active tasks: {tasksByFilter.val.active.length}</p>
+                <p>Completed tasks: {tasksByFilter.val.completed.length}</p>
             </div>
         </aside>
     </div>
@@ -106,8 +105,8 @@
         let { task } = $props
     </script>
 
-    <input type="checkbox" :checked="task.done" @input="$emit('toggle')">
-    <span>{task.title}</span>
+    <input type="checkbox" :checked="task.val.done" @input="$emit('toggle')">
+    <span>{task.val.title}</span>
     <delete-button @click="$emit('delete')"></delete-button>
 </template>
 

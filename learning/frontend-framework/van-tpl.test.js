@@ -9,10 +9,10 @@ test({
 })
 
 let mockScript = (textContent) => {
-    const documentMock = {
+    let documentMock = {
         querySelector: () => templateMock,
     }
-    const templateMock = {
+    let templateMock = {
         content: {
             querySelectorAll: () => [{ textContent }],
         },

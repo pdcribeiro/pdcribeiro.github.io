@@ -1,7 +1,10 @@
 let eventOptions = { bubbles: true, cancelable: true, composed: true }
 
-let emit = function (type, detail) {
+export let emit = function (type, detail) {
     this.dispatchEvent(new CustomEvent(type, { ...eventOptions, detail }))
 }
 
-export { emit }
+export let wrap = (handler) => (e) => {
+    let result = handler(e, emit.bind(e.target))
+    result instanceof Function && result(e)
+}
