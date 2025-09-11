@@ -59,7 +59,7 @@ let addStatesToGc = (state, prop) => statesToGc = addAndScheduleOnFirst(statesTo
     statesToGc = _undefined
 }, gcCycleInMs)
 
-const oldPrefix = '$old_'
+let oldPrefix = '$old_'
 
 // TODO: cleanup deleted props. in updateDoms?
 // TODO: handle: deleteProperty, ownKeys (https://github.com/vanjs-org/van/blob/main/x/src/van-x.js)
