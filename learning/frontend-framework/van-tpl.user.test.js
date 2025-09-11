@@ -177,6 +177,50 @@ let iterativeLogicTests = {
             .has('empty'),
 }
 
+let componentTests = {
+    'renders component': () =>
+        render(`
+            <template app>
+                <foo-bar></foo-bar>
+            </template>
+            <template component="FooBar">
+                <p>foo</p>
+            </template>
+        `)
+            .has('foo'),
+    'renders component with props': () =>
+        render(`
+            <template app>
+                <foo-bar foo="foo"></foo-bar>
+            </template>
+            <template component="FooBar">
+                <script>
+                    let { foo } = $props
+                </script>
+                <p>{foo.val}</p>
+            </template>
+        `)
+            .has('foo'),
+    'binds component props': () =>
+        render(`
+            <template app>
+                <script>
+                    let s = $state(0)
+                    let str = $derive(() => '(' + s.val + ')')
+                    setTimeout(() => s.val++)
+                </script>
+                <foo-bar :foo="str.val"></foo-bar>
+            </template>
+            <template component="FooBar">
+                <script>
+                    let { foo } = $props
+                </script>
+                <p>{foo.val}</p>
+            </template>
+        `)
+            .has('(1)'),
+}
+
 let renderApp = (html) => render(`<template app>${html}</template>`)
 let render = (html) => renderHtml(html + `
     <script type="module" src="./van-tpl.js"></script>
@@ -192,5 +236,6 @@ browserTest({
     ...frameworkTests,
     ...conditionalLogicTests,
     ...iterativeLogicTests,
+    ...componentTests,
     ...taskTrackerTests,
 })
