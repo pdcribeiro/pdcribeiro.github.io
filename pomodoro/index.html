@@ -92,7 +92,7 @@
 
 <script type="module">
     import { beep } from '/lib/audio.js'
-    import { monkeyPatchHelperMethods } from '/lib/helpers.js'
+    import '/lib/helpers.js'
     import { cls } from '/lib/ui/web/utils.js'
     import { registerServiceWorker } from '/lib/service-worker.js'
     import van, { injectTagsIntoWindow, renderAfterLoad, waitPromise } from '/lib/ui/web/van-wrapper.js'
@@ -104,7 +104,6 @@
 
     const primaryButtonStyle = { style: 'font-size: 2.5rem' }
 
-    monkeyPatchHelperMethods()
     injectTagsIntoWindow()
     renderAfterLoad(
         waitPromise(configManager.load(), (config) => app({ config }))
