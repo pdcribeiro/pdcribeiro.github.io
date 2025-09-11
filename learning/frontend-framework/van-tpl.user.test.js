@@ -232,10 +232,10 @@ let taskTrackerTests = {
             .has('Task Tracker'),
 }
 
-browserTest({
-    ...frameworkTests,
-    ...conditionalLogicTests,
-    ...iterativeLogicTests,
-    ...componentTests,
-    ...taskTrackerTests,
-})
+browserTest([
+    frameworkTests,
+    conditionalLogicTests,
+    iterativeLogicTests,
+    componentTests,
+    taskTrackerTests,
+])
