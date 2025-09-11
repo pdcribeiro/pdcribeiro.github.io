@@ -17,7 +17,7 @@ let loadComponent = async (template) => {
     let name = template.getAttribute('component')
     let content = extractTemplateContent(template)
     let render = await createRenderFunction(content)
-    customElements.define(name.kebab(), class extends Component {
+    customElements.define(name.kebabize(), class extends Component {
         render = render
     })
 }
