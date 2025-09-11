@@ -71,6 +71,44 @@ let frameworkTests = {
             .has('(1)'),
 }
 
+let eventTests = {
+    'adds function event listener': () =>
+        renderApp(`
+            <script>
+                let handleClick = (e) => e.target.textContent = 'bar'
+            </script>
+            <button @click="handleClick">foo</button>
+        `)
+            .click('foo')
+            .has('bar'),
+    'adds inline function event listener': () =>
+        renderApp(`
+            <button @click="e => e.target.textContent = 'bar'">foo</button>
+        `)
+            .click('foo')
+            .has('bar'),
+    'adds inline expression event listener': () =>
+        renderApp(`
+            <button @click="$event.target.textContent = 'bar'">foo</button>
+        `)
+            .click('foo')
+            .has('bar'),
+    'emits custom event': () => renderApp(`
+            <p @foo="e => e.target.textContent = 'bar'">
+                <button @click="$emit('foo')">foo</button>
+            </p>
+        `)
+        .click('foo')
+        .has('bar'),
+    'emits custom event with data': () => renderApp(`
+            <p @foo="e => e.target.textContent = e.detail">
+                <button @click="$emit('foo', 'bar')">foo</button>
+            </p>
+        `)
+        .click('foo')
+        .has('bar'),
+}
+
 let conditionalLogicTests = {
     'renders :if true': () =>
         renderApp(`
@@ -219,6 +257,42 @@ let componentTests = {
             </template>
         `)
             .has('(1)'),
+    'receives component event': () =>
+        render(`
+            <template app>
+                <foo-bar @click="e => e.currentTarget.shadowRoot.children[0].textContent = 'bar'"></foo-bar>
+            </template>
+            <template component="FooBar">
+                <button>foo</button>
+            </template>
+        `)
+            .click('foo')
+            .has('bar'),
+    'receives custom component event': () =>
+        render(`
+            <template app>
+                <foo-bar @foo="e => e.currentTarget.shadowRoot.children[0].textContent = 'bar'"></foo-bar>
+            </template>
+            <template component="FooBar">
+                <button @click="$emit('foo')">foo</button>
+            </template>
+        `)
+            .click('foo')
+            .has('bar'),
+    'receives component script event': () =>
+        render(`
+            <template app>
+                <foo-bar @foo="e => e.currentTarget.shadowRoot.children[0].textContent = 'bar'"></foo-bar>
+            </template>
+            <template component="FooBar">
+                <script>
+                    let handleClick = () => $emit('foo')
+                </script>
+                <button @click="handleClick">foo</button>
+            </template>
+        `)
+            .click('foo')
+            .has('bar'),
 }
 
 let renderApp = (html) => render(`<template app>${html}</template>`)
@@ -234,6 +308,7 @@ let taskTrackerTests = {
 
 browserTest([
     frameworkTests,
+    eventTests,
     conditionalLogicTests,
     iterativeLogicTests,
     componentTests,
