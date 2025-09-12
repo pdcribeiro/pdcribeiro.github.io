@@ -7,6 +7,7 @@ import { createRenderFunction } from './parser/index.js'
 let init = async () => {
     await loadAllComponents()
     await loadAndRenderApp()
+    upgradeAllComponents()
 }
 
 let loadAllComponents = () => Promise.all(
@@ -15,23 +16,15 @@ let loadAllComponents = () => Promise.all(
 
 let loadComponent = async (template) => {
     let name = template.getAttribute('component')
-    let content = extractTemplateContent(template)
-    let render = await createRenderFunction(content)
+    let render = await createRenderFunction(template.content)
     customElements.define(name.kebabize(), class extends Component {
         render = render
     })
 }
 
-let extractTemplateContent = (template) => {
-    let content = template.content
-    template.remove()
-    return content
-}
-
 let loadAndRenderApp = async () => {
     let template = document.querySelector('template[app]')
-    let content = extractAppContent(template)
-    let render = await createRenderFunction(content)
+    let render = await createRenderFunction(template.content)
     van.add(document.body, render({
         $state: van.state,
         $derive: van.derive,
@@ -39,11 +32,11 @@ let loadAndRenderApp = async () => {
     }))
 }
 
-let extractAppContent = (template) => {
-    let content = extractTemplateContent(template)
-    document.adoptNode(content)
-    customElements.upgrade(content)
-    return content
-}
+let upgradeAllComponents = () =>
+    [...document.querySelectorAll('template')].forEach(template => {
+        document.adoptNode(template.content)
+        customElements.upgrade(template.content)
+        template.remove()
+    })
 
 init()
