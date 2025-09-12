@@ -11,17 +11,27 @@
     <script type="module" src="./van-tpl.user.test.js"></script>
 </head>
 
-<body style="padding: 1rem 4rem; margin: auto; max-width: 853px; height: 100dvh">
+<body style="padding: 1rem 4rem; margin: auto; max-width: 50rem; height: 100dvh">
 </body>
 
 <template app>
     <script>
         console.debug('script', { isESModule: typeof import.meta !== "undefined" }) // DEV
 
-        let filter = $state('all')
-        let tasks = $state([
+        let loadTasks = () => new Promise(r => setTimeout(() => r([
             { id: 0, title: 'first task', done: true }, { id: 1, title: 'second task', done: false },
-        ])
+        ]), 10))
+    </script>
+
+    <task-tracker :await="loadTasks() as tasks" :tasks></task-tracker>
+    <p :catch="error">Failed to load task tracker. Error: {error}</p>
+</template>
+
+<template component="TaskTracker">
+    <script>
+        let { tasks } = $props
+
+        let filter = $state('all')
 
         let tasksByFilter = $derive(() => ({
             all: tasks.val,

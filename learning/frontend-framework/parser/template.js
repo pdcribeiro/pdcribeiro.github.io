@@ -19,12 +19,12 @@ let attrNames = {
     elsif: ':elsif',
     else: ':else',
     for: ':for',
+    await: ':await',
+    catch: ':catch',
     model: ':model',
 }
-let logicAttrNames = attrNames.pick('if', 'elsif', 'else', 'for').values().toSet()
+let logicAttrNames = attrNames.pick('if', 'elsif', 'else', 'for', 'await', 'catch').values().toSet()
 
-// TODO add :await
-// NOTE either :if or :for allowed
 let extractAndParseLogicAttributes = (el) => {
     let logicAttrs = [...el.attributes].filter(({ name }) => logicAttrNames.has(name)) // keep order
     let wrappers = []
@@ -45,6 +45,14 @@ let extractAndParseLogicAttributes = (el) => {
                 wrappers.push((content) => `,$vanUtils.For(() => ${list}).Each((${item}) =>\n${content.slice(1)})\n`)
                 break
             }
+            case attrNames.await: {
+                let [promise, result] = value.split(' as ')
+                wrappers.push((content) => `,$vanUtils.Await(${promise}).Then((${result}) =>\n${content.slice(1)})\n`)
+                break
+            }
+            case attrNames.catch:
+                wrappers.push((content) => `.Catch((${value}) =>\n${content.slice(1)})`)
+                break
         }
     }
     return wrappers.length ? wrappers.compose() : c => c
