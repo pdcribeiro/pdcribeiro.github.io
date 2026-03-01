@@ -13,7 +13,6 @@ export async function findTricks() {
         .from(TRICKS_TABLE)
         .select()
         .order('updated_at', { ascending: false })
-        .order('created_at', { ascending: false })
     if (error) throw error
     console.debug('[DB] found', data)
     return data
