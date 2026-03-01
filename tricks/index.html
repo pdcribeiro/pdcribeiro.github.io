@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tricks</title>
+    <link rel="stylesheet" href="/third-party/modern-normalize.min.css">
+    <style>
+        /* Layout */
+
+        :has(> header, > main, > footer) {
+            display: flex;
+            flex-direction: column;
+            /* padding: 0.5rem; */
+            height: 100dvh;
+        }
+
+        header {
+            display: flex;
+            /* align-items: center; */
+        }
+
+        main {
+            /* display: flex;
+            flex-direction: column; */
+            flex-grow: 1;
+        }
+
+        footer {
+            display: flex;
+            justify-content: center;
+            /* padding: 0.5rem; */
+        }
+
+        /* Elements */
+
+        h1 {
+            margin: 0.5rem;
+        }
+
+        li {
+            line-height: 1.5rem;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        input,
+        textarea,
+        button {
+            flex-grow: 0;
+            margin: 0.5rem;
+        }
+
+        textarea {
+            flex-grow: 1;
+        }
+
+        button {
+            /* padding: 0.5rem; */
+        }
+    </style>
+</head>
+
+<body>
+</body>
+
+<script type="module">
+    import routing from '/lib/routing.js'
+    import { registerServiceWorker } from '/lib/service-worker.js'
+    import { cls } from '/lib/ui/web/utils.js'
+    import van, { bindInput, injectTagsIntoWindow, renderAfterLoad, waitPromise } from '/lib/ui/web/van-wrapper.js'
+    import { bind, confirmAnd } from '/lib/utils.js'
+    import { createTrick, fetchTrick, findTricks, updateTrick } from './db.js'
+
+    let routes = routing.getPathHelpers({
+        trickList: '/tricks',
+        trickCreate: '/tricks/create',
+        trickView: '/tricks/:param',
+        trickEdit: '/tricks/:param/edit',
+    })
+    let defaultRoute = routes.trickList
+
+    let routedApp = routing.route({
+        [routes.root.getPath()]: routing.redirect(defaultRoute.getPath()),
+        [routes.trickList.getPath()]: TrickListPage,
+        [routes.trickCreate.getPath()]: TrickCreatePage,
+        [routes.trickView.getPath()]: TrickViewPage,
+        [routes.trickEdit.getPath()]: TrickEditPage,
+    })
+
+    injectTagsIntoWindow()
+    renderAfterLoad(app)
+    registerServiceWorker()
+
+    function app() {
+        return div(routedApp()) // div handles nested render function
+    }
+
+    function TrickListPage() {
+        return waitPromise(findTricks(), (tricksData) => div(
+            header(
+                h1('tricks'),
+            ),
+            main(
+                ul(
+                    tricksData.map(t => li(
+                        a({ href: routes.trickView.getPath(t.id) }, t.name)
+                    ))
+                ),
+            ),
+            footer(
+                button({ onclick: routes.trickCreate.visit }, 'new trick')
+            ),
+        ))
+    }
+
+    function TrickCreatePage() {
+        let trickForm = TrickForm({ onsubmit })
+        return div(
+            header(
+                button({ onclick: routes.trickList.visit }, '<'),
+                h1('new trick'),
+            ),
+            main(
+                trickForm,
+            ),
+            footer(
+                button({ onclick: () => trickForm.requestSubmit() }, 'save'),
+            ),
+        )
+
+        async function onsubmit(trickData) {
+            // TODO upload media
+            await createTrick(trickData)
+            defaultRoute.visit()
+        }
+    }
+
+    function TrickForm(props) {
+        return form({ onsubmit },
+            input({ name: 'name', type: 'text', placeholder: 'name', value: props.trickData.name }),
+            input({ name: 'media', type: 'file', accept: 'image/*,video/*', capture: true }),
+            textarea({ name: 'notes', placeholder: 'notes', value: props.trickData.notes }),
+            input({ name: 'tags', type: 'text', placeholder: 'tags', value: props.trickData.tags }),
+        )
+
+        function onsubmit(event) {
+            event.preventDefault()
+            const formData = new FormData(event.target)
+            const trickData = Object.fromEntries(formData.entries())
+            console.log('onsubmit()', trickData)
+            props.onsubmit(trickData)
+        }
+    }
+
+    function TrickViewPage({ param: id }) {
+        return waitPromise(fetchTrick(id), (trickData) => div(
+            header(
+                button({ onclick: routes.trickList.visit }, '<'),
+                h1(trickData.name),
+            ),
+            main(
+                pre(trickData.notes),
+                p(trickData.tags),
+            ),
+            footer(
+                button({ onclick: () => routes.trickEdit.visit(id) }, 'edit'),
+            ),
+        ))
+    }
+
+    function TrickEditPage({ param: id }) {
+        return waitPromise(fetchTrick(id), (trickData) => {
+            let trickForm = TrickForm({ trickData, onsubmit })
+            return div(
+                header(
+                    button({ onclick: () => routes.trickView.visit(id) }, '<'),
+                    h1('edit trick'),
+                ),
+                main(
+                    trickForm,
+                ),
+                footer(
+                    button({ onclick: () => trickForm.requestSubmit() }, 'save'),
+                ),
+            )
+        })
+
+        async function onsubmit(trickData) {
+            // TODO update media
+            await updateTrick(id, trickData)
+            routes.trickView.visit(id)
+        }
+    }
+</script>
+
+</html>
