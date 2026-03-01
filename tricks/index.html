@@ -143,10 +143,10 @@
 
     function TrickForm(props) {
         return form({ onsubmit },
-            input({ name: 'name', type: 'text', placeholder: 'name', value: props.trickData.name }),
+            input({ name: 'name', type: 'text', placeholder: 'name', value: props.trickData?.name ?? '' }),
             input({ name: 'media', type: 'file', accept: 'image/*,video/*', capture: true }),
-            textarea({ name: 'notes', placeholder: 'notes', value: props.trickData.notes }),
-            input({ name: 'tags', type: 'text', placeholder: 'tags', value: props.trickData.tags }),
+            textarea({ name: 'notes', placeholder: 'notes', value: props.trickData?.notes ?? '' }),
+            input({ name: 'tags', type: 'text', placeholder: 'tags', value: props.trickData?.tags ?? '' }),
         )
 
         function onsubmit(event) {
