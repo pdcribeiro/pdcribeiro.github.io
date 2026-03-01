@@ -12,6 +12,8 @@ export async function findTricks() {
     const { data, error } = await supabase
         .from(TRICKS_TABLE)
         .select()
+        .order('updated_at', { ascending: false })
+        .order('created_at', { ascending: false })
     if (error) throw error
     console.debug('[DB] found', data)
     return data
