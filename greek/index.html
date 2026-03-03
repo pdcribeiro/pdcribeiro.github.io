@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>greek</title>
+    <style>
+    </style>
+</head>
+
+<body class="bg-theme">
+</body>
+
+<script type="module">
+    import { registerServiceWorker } from '/lib/service-worker.js'
+    import { cls } from '/lib/ui/web/utils.js'
+    import van, { injectTagsIntoWindow, renderAfterLoad } from '/lib/ui/web/van-wrapper.js'
+    import words from './words.json' with { type: "json" }
+
+    injectTagsIntoWindow()
+    renderAfterLoad(app)
+    registerServiceWorker()
+
+    function app() {
+        return main(
+            'hello greek'
+        )
+    }
+</script>
+
+</html>
