@@ -1,36 +1,46 @@
-TASK T1 audio init
+TASK T2 mic access
 
 GOAL
-AudioContext ready, global clock usable
+mic stream ready, permission flow handled
 
 FILES
 / app.js
 
-STEP 1 create ctx
-- let audioCtx = null
-- fn initAudio():
-  if !audioCtx → audioCtx = new (window.AudioContext||window.webkitAudioContext)({sampleRate:44100})
+STEP 1 constraints
+- const audioConstraints = {
+  audio:{
+    echoCancellation:false,
+    noiseSuppression:false,
+    autoGainControl:false,
+    channelCount:1,
+    sampleRate:44100
+  }
+}
 
-STEP 2 resume on gesture
-- AudioContext starts suspended (iOS)
-- fn unlockAudio():
-  if audioCtx.state !== 'running' → await audioCtx.resume()
+STEP 2 state
+- let micStream = null
 
-STEP 3 bind gesture
-- on first user tap (REC or PLAY):
-  call initAudio()
-  call unlockAudio()
-- ensure runs once (flag)
+STEP 3 request fn
+- async fn getMic():
+  try:
+    micStream = await navigator.mediaDevices.getUserMedia(audioConstraints)
+    return micStream
+  catch(e):
+    micStream = null
+    throw e
 
-STEP 4 clock ref
-- fn now():
-  return audioCtx.currentTime
+STEP 4 UI trigger
+- on REC tap:
+  if !micStream → call getMic()
+  handle promise before recording start
 
-STEP 5 export globals
-- store audioCtx, now in module/global scope
+STEP 5 error handling
+- catch error → show simple message ("mic failed, retry")
+- allow retry on next REC tap
 
 STEP 6 test
-- tap button → audioCtx.state === 'running'
-- console log now() increments
+- first REC → permission prompt
+- allow → micStream active
+- deny → message shown, retry works
 
 DONE
