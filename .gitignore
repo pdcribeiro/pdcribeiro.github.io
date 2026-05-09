@@ -48,6 +48,9 @@
 !root-timer/
 !root-timer/**
 
+!ide-mobile/
+!ide-mobile/**
+
 !/index.html
 
 # Ignore
