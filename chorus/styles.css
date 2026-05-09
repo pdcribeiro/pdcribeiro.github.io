@@ -64,3 +64,20 @@ button:active {
   letter-spacing: 0.1em;
   color: var(--fg);
 }
+
+#status {
+  display: none;
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: var(--fg);
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+#status.visible {
+  display: block;
+}
