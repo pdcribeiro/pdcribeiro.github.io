@@ -53,6 +53,17 @@ button:active {
   color: var(--accent);
 }
 
+#rec.recording {
+  background: var(--accent);
+  color: var(--bg);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
 #ring {
   width: min(240px, 60vw);
   height: min(240px, 60vw);

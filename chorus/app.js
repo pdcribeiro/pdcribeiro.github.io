@@ -7,7 +7,7 @@ window.addEventListener('unhandledrejection', (e) => {
 
 import { ensureAudio } from './audio.js';
 import { getMic, getMicStream, initRecorder, startRec, stopRec, hasMic, hasRecorder, recording } from './recorder.js';
-import { showStatus } from './ui.js';
+import { showStatus, setRecording } from './ui.js';
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -33,8 +33,10 @@ async function onRec() {
 
   if (recording()) {
     stopRec();
+    setRecording(false);
   } else {
     startRec();
+    setRecording(true);
   }
 }
 
