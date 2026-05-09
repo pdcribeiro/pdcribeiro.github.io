@@ -18,6 +18,7 @@ if ('serviceWorker' in navigator) {
 
 let loopT = null;
 let track1Buffer = null;
+let recTimer = null;
 
 initDB().then(async () => {
   const takes = await getAllTakes();
@@ -44,6 +45,8 @@ async function onRec() {
   }
 
   if (recording()) {
+    clearTimeout(recTimer);
+    recTimer = null;
     const result = await stopRec();
     setRecording(false);
     if (result) {
@@ -57,23 +60,21 @@ async function onRec() {
           alert('decode fail');
           return;
         }
-        let T = buf.duration;
+        const T = buf.duration;
         if (T < 0.5) {
           alert('too short');
           return;
         }
-        const capped = T > 30;
-        if (capped) T = 30;
         loopT = T;
         track1Buffer = buf;
         await saveTake(result.blob, { duration: loopT, peak: 0, gain: 1 });
-        if (capped) alert('capped 30s');
         alert('T=' + loopT.toFixed(2) + 's');
       }
     }
   } else {
     startRec();
     setRecording(true);
+    recTimer = setTimeout(onRec, 30_000);
   }
 }
 
