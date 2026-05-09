@@ -13,3 +13,14 @@ export function setRecording(active) {
   recBtn.textContent = active ? 'STOP' : 'REC';
   recBtn.classList.toggle('recording', active);
 }
+
+export function setCountdown(n) {
+  clearTimeout(statusTimer);
+  if (n === null) {
+    statusEl.classList.remove('visible');
+    statusEl.textContent = '';
+  } else {
+    statusEl.textContent = String(n);
+    statusEl.classList.add('visible');
+  }
+}
