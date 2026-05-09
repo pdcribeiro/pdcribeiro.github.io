@@ -64,7 +64,6 @@ function startCountdownUI() {
 
 function onStart() {
   const actualStart = getAudioCtx().currentTime;
-  alert('start delta ms:' + Math.round((actualStart - _recStartTime) * 1000)); // AC1
   startRec();
   recState = 'recording';
   recTimer = setTimeout(onRecStop, (_recStopTime - actualStart) * 1000);
@@ -90,7 +89,6 @@ async function onRecStop() {
       alert('too short');
       return;
     }
-    alert('dur ms:' + Math.round(T * 1000)); // AC2
     await saveTake(result.blob, { duration: T, peak: 0, gain: 1 });
   }
 }
@@ -132,7 +130,6 @@ async function onRec() {
     let nextBoundary = getNextLoopStart(now);
     if (nextBoundary - now < 0.1) { // AC5: drift guard — very late tap
       nextBoundary += T;
-      alert('shifted');
     } else if (nextBoundary - now < DELAY_SEC) { // not enough room for countdown
       nextBoundary += T;
     }
