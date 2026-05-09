@@ -29,8 +29,56 @@ async function ensureAudio() {
   audioInited = true;
   initAudio();
   await unlockAudio();
-  alert('state: ' + audioCtx.state + '\nnow: ' + now());
 }
 
-document.getElementById('rec').addEventListener('click', ensureAudio);
+const audioConstraints = {
+  audio: {
+    echoCancellation: false,
+    noiseSuppression: false,
+    autoGainControl: false,
+    channelCount: 1,
+    sampleRate: 44100
+  }
+};
+
+let micStream = null;
+
+async function getMic() {
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia(audioConstraints);
+    return micStream;
+  } catch (e) {
+    micStream = null;
+    throw e;
+  }
+}
+
+let statusEl = null;
+
+function showStatus(msg) {
+  if (!statusEl) {
+    statusEl = document.createElement('div');
+    statusEl.id = 'status';
+    statusEl.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#eee;padding:12px 20px;border-radius:8px;font-size:1rem;';
+    document.body.appendChild(statusEl);
+  }
+  statusEl.textContent = msg;
+  statusEl.style.display = 'block';
+  clearTimeout(statusEl._t);
+  statusEl._t = setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+}
+
+async function onRec() {
+  await ensureAudio();
+  if (!micStream) {
+    try {
+      await getMic();
+    } catch (e) {
+      showStatus('mic failed, retry');
+      return;
+    }
+  }
+}
+
+document.getElementById('rec').addEventListener('click', onRec);
 document.getElementById('play').addEventListener('click', ensureAudio);
