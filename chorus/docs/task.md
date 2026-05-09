@@ -1,72 +1,49 @@
-TASK T4 storage (IndexedDB)
+TASK T5 track1 loop
 
 GOAL
-persist takes (blobs) + meta. async safe.
+record first take → define loop length T
 
-DB
-- name: "recorderDB"
-- version: 1
-- store: "takes"
-- keyPath: "id" (autoIncrement)
+INPUT
+- blob from MediaRecorder (T3)
+- AudioContext (T1)
 
-SCHEMA (record)
-{
-  id,            // number
-  blob,          // Blob (audio)
-  createdAt,     // timestamp ms
-  duration,      // seconds
-  peak,          // float 0..1
-  gain           // float
-}
+STATE
+- let loopT = null
+- let track1Blob = null
 
-STEP 1 init db
-- open indexedDB("recorderDB",1)
-- onupgradeneeded → createObjectStore("takes",{keyPath:"id",autoIncrement:true})
-- store db ref (singleton)
+STEP 1 stop hook
+- on MediaRecorder.stop:
+  if no existing tracks:
+    assign blob → track1Blob
+    proceed T calc
 
-STEP 2 helpers
-- fn tx(mode) → db.transaction("takes",mode).objectStore("takes")
+STEP 2 decode
+- blob → ArrayBuffer
+- audioCtx.decodeAudioData → AudioBuffer buf
 
-STEP 3 saveTake(blob, meta)
-- build record {blob, createdAt:Date.now(), ...meta}
-- tx("readwrite").add(record)
-- return id (onsuccess)
+STEP 3 compute T
+- T = buf.duration (sec)
+- if T > 30 → T = 30 (truncate later in playback)
+- store loopT
 
-STEP 4 getAllTakes()
-- tx("readonly").getAll()
-- return array ordered by id
+STEP 4 persist
+- save blob + loopT in IndexedDB (store: takes, key=1)
 
-STEP 5 deleteLastTake()
-- getAll → last.id
-- tx("readwrite").delete(last.id)
+STEP 5 memory
+- keep buf in memory (track1Buffer)
 
-STEP 6 clearAll() (dev only)
-- tx("readwrite").clear()
+STEP 6 guard
+- if decode fail → alert("decode fail")
+- if T < 0.5 → alert("too short") + discard
 
-STEP 7 sizeEstimate()
-- getAll → sum blob.size
-- return bytes
-
-STEP 8 chunk (optional guard)
-- if blob.size > ~10MB → skip (future split)
-
-ACs (no console; use alert)
-- on SAVE (temp button):
-  alert("saved id:"+id)
-
-- on LIST (temp button):
-  getAll → alert("takes:"+len)
-
-- on DELETE LAST:
-  after delete → alert("takes:"+newLen)
-
-- on SIZE:
-  alert("bytes:"+totalBytes)
-
+AC (mobile visible)
+- after first record stop:
+  alert("T=" + loopT.toFixed(2) + "s")
+- if >30s input:
+  alert("capped 30s")
 - reload page:
-  LIST shows persisted count >0
-
-- offline mode:
-  SAVE then reload → LIST stable
+  alert("restored T=" + stored loopT)
+- if too short:
+  alert("too short")
 
 DONE
