@@ -32,8 +32,9 @@ async function onRec() {
   }
 
   if (recording()) {
-    stopRec();
+    const result = await stopRec();
     setRecording(false);
+    if (result) alert(`duration: ${result.duration.toFixed(2)}s\nblob: ${result.blob.size} bytes`);
   } else {
     startRec();
     setRecording(true);
