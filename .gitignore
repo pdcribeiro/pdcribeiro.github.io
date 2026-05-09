@@ -51,6 +51,9 @@
 !ide-mobile/
 !ide-mobile/**
 
+!chorus/
+!chorus/**
+
 !/index.html
 
 # Ignore
