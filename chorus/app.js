@@ -8,7 +8,8 @@ window.addEventListener('unhandledrejection', (e) => {
 import { ensureAudio, getAudioCtx } from './audio.js';
 import { getMic, getMicStream, initRecorder, startRec, stopRec, hasMic, hasRecorder, recording } from './recorder.js';
 import { showStatus, setRecording } from './ui.js';
-import { initDB, saveTake, getAllTakes } from './storage.js';
+import { initDB, saveTake } from './storage.js';
+import { startLoop, stopLoop, isLooping } from './playback.js';
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -16,17 +17,10 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-let loopT = null;
-let track1Buffer = null;
 let recTimer = null;
+const playBtn = document.getElementById('play');
 
-initDB().then(async () => {
-  const takes = await getAllTakes();
-  if (takes.length > 0 && takes[0].duration != null) {
-    loopT = takes[0].duration;
-    alert('restored T=' + loopT.toFixed(2) + 's');
-  }
-});
+initDB();
 
 async function onRec() {
   await ensureAudio();
@@ -50,26 +44,21 @@ async function onRec() {
     const result = await stopRec();
     setRecording(false);
     if (result) {
-      const takes = await getAllTakes();
-      if (takes.length === 0) {
-        const arrayBuffer = await result.blob.arrayBuffer();
-        let buf;
-        try {
-          buf = await getAudioCtx().decodeAudioData(arrayBuffer);
-        } catch {
-          alert('decode fail');
-          return;
-        }
-        const T = buf.duration;
-        if (T < 0.5) {
-          alert('too short');
-          return;
-        }
-        loopT = T;
-        track1Buffer = buf;
-        await saveTake(result.blob, { duration: loopT, peak: 0, gain: 1 });
-        alert('T=' + loopT.toFixed(2) + 's');
+      const arrayBuffer = await result.blob.arrayBuffer();
+      let buf;
+      try {
+        buf = await getAudioCtx().decodeAudioData(arrayBuffer);
+      } catch {
+        alert('decode fail');
+        return;
       }
+      const T = buf.duration;
+      if (T < 0.5) {
+        alert('too short');
+        return;
+      }
+      await saveTake(result.blob, { duration: T, peak: 0, gain: 1 });
+      alert('T=' + T.toFixed(2) + 's');
     }
   } else {
     startRec();
@@ -80,7 +69,16 @@ async function onRec() {
 
 async function onPlay() {
   await ensureAudio();
+  if (isLooping()) {
+    stopLoop();
+    playBtn.textContent = 'PLAY';
+  } else {
+    await startLoop();
+    if (isLooping()) {
+      playBtn.textContent = 'STOP';
+    }
+  }
 }
 
 document.getElementById('rec').addEventListener('click', onRec);
-document.getElementById('play').addEventListener('click', onPlay);
+playBtn.addEventListener('click', onPlay);
