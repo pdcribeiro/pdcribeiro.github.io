@@ -53,6 +53,58 @@ async function getMic() {
   }
 }
 
+let mediaRecorder = null;
+let chunks = [];
+let isRecording = false;
+let recT0 = 0;
+let recDuration = 0;
+
+function initRecorder(stream) {
+  const preferred = 'audio/webm;codecs=opus';
+  const mime = MediaRecorder.isTypeSupported(preferred) ? preferred : '';
+  mediaRecorder = new MediaRecorder(stream, mime ? { mimeType: mime } : {});
+
+  mediaRecorder.ondataavailable = (e) => {
+    if (e.data.size > 0) chunks.push(e.data);
+  };
+
+  mediaRecorder.onstart = () => {
+    chunks = [];
+    isRecording = true;
+    recT0 = performance.now();
+  };
+
+  mediaRecorder.onstop = () => {
+    isRecording = false;
+    recDuration = (performance.now() - recT0) / 1000;
+  };
+}
+
+function startRec() {
+  if (isRecording) return;
+  if (!mediaRecorder || mediaRecorder.state === 'recording') return;
+  chunks = [];
+  try {
+    mediaRecorder.start();
+  } catch (e) {
+    showStatus('recorder start failed');
+  }
+}
+
+function stopRec() {
+  if (!isRecording) return;
+  if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
+  try {
+    mediaRecorder.stop();
+  } catch (e) {
+    showStatus('recorder stop failed');
+  }
+}
+
+function getBlob() {
+  return new Blob(chunks, { type: mediaRecorder.mimeType });
+}
+
 let statusEl = null;
 
 function showStatus(msg) {
@@ -77,6 +129,14 @@ async function onRec() {
       showStatus('mic failed, retry');
       return;
     }
+  }
+  if (!mediaRecorder) {
+    initRecorder(micStream);
+  }
+  if (isRecording) {
+    stopRec();
+  } else {
+    startRec();
   }
 }
 
