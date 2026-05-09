@@ -27,6 +27,7 @@
 
 !.gitignore
 !jsconfig.json
+!wrangler.jsonc
 
 # Add apps
 
