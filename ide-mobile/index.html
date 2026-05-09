@@ -88,12 +88,73 @@
       white-space: nowrap;
     }
     .file-item:active { background: #2a2d2e; }
+
+    #error-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .error-toast {
+      background: #5a1d1d;
+      border-bottom: 2px solid #f48771;
+      color: #f1c5bb;
+      font-size: 13px;
+      padding: 10px 12px;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      word-break: break-word;
+    }
+
+    .error-toast-msg { flex: 1; }
+
+    .error-toast-close {
+      background: none;
+      border: none;
+      color: #f48771;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      padding: 0;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
+  <div id="error-overlay"></div>
   <div id="app"></div>
   <script src="https://cdn.jsdelivr.net/npm/vanjs-core@1.5.2/src/van.min.js"></script>
   <script>
+    (function () {
+      const overlay = document.getElementById("error-overlay");
+      function showError(msg) {
+        const toast = document.createElement("div");
+        toast.className = "error-toast";
+        const text = document.createElement("span");
+        text.className = "error-toast-msg";
+        text.textContent = msg;
+        const close = document.createElement("button");
+        close.className = "error-toast-close";
+        close.textContent = "×";
+        close.setAttribute("aria-label", "dismiss");
+        close.onclick = () => overlay.removeChild(toast);
+        toast.appendChild(text);
+        toast.appendChild(close);
+        overlay.appendChild(toast);
+      }
+      window.onerror = (_msg, _src, _line, _col, err) => {
+        showError(err ? err.name + ": " + err.message : String(_msg));
+        return false;
+      };
+      window.addEventListener("unhandledrejection", function (e) {
+        const err = e.reason;
+        showError(err instanceof Error ? err.name + ": " + err.message : String(err));
+      });
+    })();
+
     const { div, h2, input, button, p, span } = van.tags;
 
     const state = {
