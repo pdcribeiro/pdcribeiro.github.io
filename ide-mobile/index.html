@@ -65,10 +65,7 @@
     }
     button:active { background: #1177bb; }
 
-    .error {
-      color: #f48771;
-      font-size: 13px;
-    }
+    .error { color: #f48771; font-size: 13px; }
 
     .file-list {
       display: flex;
@@ -127,108 +124,133 @@
   <div id="error-overlay"></div>
   <div id="app"></div>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/vanjs-org/van/public/van-1.6.0.nomodule.min.js"></script>
+  <script>
+    // error overlay — plain DOM so it works even if van.js fails to load
+
+    function formatError(err) {
+      return err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+    }
+
     (function () {
       const overlay = document.getElementById("error-overlay");
+
       function showError(msg) {
-        const toast = document.createElement("div");
-        toast.className = "error-toast";
         const text = document.createElement("span");
         text.className = "error-toast-msg";
         text.textContent = msg;
+
         const close = document.createElement("button");
         close.className = "error-toast-close";
         close.textContent = "×";
         close.setAttribute("aria-label", "dismiss");
-        close.onclick = () => overlay.removeChild(toast);
-        toast.appendChild(text);
-        toast.appendChild(close);
+
+        const toast = document.createElement("div");
+        toast.className = "error-toast";
+        toast.append(text, close);
+        close.onclick = () => toast.remove();
         overlay.appendChild(toast);
       }
+
       window.onerror = (_msg, _src, _line, _col, err) => {
-        showError(err ? err.name + ": " + err.message : String(_msg));
+        showError(formatError(err || _msg));
         return false;
       };
-      window.addEventListener("unhandledrejection", function (e) {
-        const err = e.reason;
-        showError(err instanceof Error ? err.name + ": " + err.message : String(err));
-      });
+      window.addEventListener("unhandledrejection", e => showError(formatError(e.reason)));
     })();
+
+    // state
 
     const { div, h2, input, button, p, span } = van.tags;
 
+    function persist(key) {
+      const s = van.state(localStorage.getItem(key) || "");
+      s.save = val => { s.val = val; localStorage.setItem(key, val); };
+      return s;
+    }
+
     const state = {
-      token: van.state(localStorage.getItem("token") || ""),
-      repo:  van.state(localStorage.getItem("repo")  || ""),
+      token: persist("token"),
+      repo:  persist("repo"),
       tree:  van.state([]),
       error: van.state(""),
     };
 
-    function saveToken(val) {
-      state.token.val = val;
-      localStorage.setItem("token", val);
-    }
+    // api
 
-    function saveRepo(val) {
-      state.repo.val = val;
-      localStorage.setItem("repo", val);
+    async function fetchTree(owner, repo) {
+      const res = await fetch(
+        `https://api.github.com/repos/${owner}/${repo}/git/trees/main?recursive=1`,
+        { headers: { Authorization: `Bearer ${state.token.val}` } }
+      );
+      if (res.status === 401) throw new Error("invalid token");
+      if (res.status === 404) throw new Error("repo not found");
+      if (!res.ok) throw new Error(`error ${res.status}`);
+      const data = await res.json();
+      return (data.tree || [])
+        .filter(n => n.type === "blob")
+        .map(n => ({ path: n.path, sha: n.sha }));
     }
 
     async function loadTree() {
       state.error.val = "";
       state.tree.val = [];
-      const parts = state.repo.val.trim().split("/");
-      if (parts.length !== 2 || !parts[0] || !parts[1]) {
+      const [owner, name, ...rest] = state.repo.val.trim().split("/");
+      if (!owner || !name || rest.length) {
         state.error.val = "repo must be owner/name";
         return;
       }
-      const [owner, name] = parts;
       try {
-        const res = await fetch(
-          `https://api.github.com/repos/${owner}/${name}/git/trees/main?recursive=1`,
-          { headers: { Authorization: `Bearer ${state.token.val}` } }
-        );
-        if (res.status === 401) { state.error.val = "invalid token"; return; }
-        if (res.status === 404) { state.error.val = "repo not found"; return; }
-        if (!res.ok) { state.error.val = `error ${res.status}`; return; }
-        const data = await res.json();
-        state.tree.val = (data.tree || [])
-          .filter(n => n.type === "blob")
-          .map(n => ({ path: n.path, sha: n.sha }));
-      } catch {
-        state.error.val = "network error";
+        state.tree.val = await fetchTree(owner, name);
+      } catch (e) {
+        state.error.val = e.message;
       }
     }
 
-    const tokenInput = input({ type: "password", placeholder: "GitHub fine-grained PAT", value: state.token.val });
-    const repoInput  = input({ type: "text",     placeholder: "owner/name",               value: state.repo.val });
+    // components
 
-    van.add(document.getElementById("app"),
-      div({ class: "section" },
-        h2({ class: "section-title" }, "Auth"),
+    function Section(title, ...children) {
+      return div({ class: "section" },
+        h2({ class: "section-title" }, title),
+        ...children
+      );
+    }
+
+    function AuthSection() {
+      const tokenInput = input({ type: "password", placeholder: "GitHub fine-grained PAT", value: state.token.val });
+      return Section("Auth",
         div({ class: "row" },
           tokenInput,
-          button({ onclick: () => saveToken(tokenInput.value) }, "Save")
+          button({ onclick: () => state.token.save(tokenInput.value) }, "Save")
         )
-      ),
-      div({ class: "section" },
-        h2({ class: "section-title" }, "Repo"),
+      );
+    }
+
+    function RepoSection() {
+      const repoInput = input({ type: "text", placeholder: "owner/name", value: state.repo.val });
+      return Section("Repo",
         div({ class: "row" },
           repoInput,
-          button({ onclick: () => { saveRepo(repoInput.value); loadTree(); } }, "Load")
+          button({ onclick: () => { state.repo.save(repoInput.value); loadTree(); } }, "Load")
         ),
         () => state.error.val ? p({ class: "error" }, state.error.val) : span()
-      ),
-      () => {
+      );
+    }
+
+    function FileList() {
+      return () => {
         const tree = state.tree.val;
         if (!tree.length) return span();
-        return div({ class: "section" },
-          h2({ class: "section-title" }, `Files (${tree.length})`),
+        return Section(`Files (${tree.length})`,
           div({ class: "file-list" },
             ...tree.map(f => div({ class: "file-item" }, f.path))
           )
         );
-      }
-    );
+      };
+    }
+
+    // mount
+
+    van.add(document.getElementById("app"), AuthSection(), RepoSection(), FileList());
   </script>
 </body>
 </html>
