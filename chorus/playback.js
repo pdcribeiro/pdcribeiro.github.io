@@ -5,6 +5,11 @@ let masterGain = null;
 let _playing = false;
 let scheduleTimer = null;
 let activeSources = [];
+let loopStartTime = 0;
+let loopDuration = 0;
+
+export function getLoopStartTime() { return loopStartTime; }
+export function getLoopDuration() { return loopDuration; }
 
 function getGain() {
   if (!masterGain) {
@@ -61,8 +66,9 @@ export async function startLoop() {
   }
   const { buffers, T } = result;
   _playing = true;
-  alert(`tracks:${buffers.length} len:${T.toFixed(0)}ms`);
   const base = getAudioCtx().currentTime + 0.05;
+  loopStartTime = base;
+  loopDuration = T / 1000;
   scheduleLoop(base, buffers, T);
 }
 
