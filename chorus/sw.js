@@ -1,5 +1,6 @@
 const CACHE = 'chorus-v1';
 const ASSETS = [
+  './',
   'index.html',
   'styles.css',
   'app.js',
@@ -10,10 +11,19 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE).then(cache => cache.addAll(ASSETS))
   );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(self.clients.claim());
 });
 
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request))
+    caches.match(event.request).then(cached => {
+      if (cached) return cached;
+      if (event.request.mode === 'navigate') return caches.match('index.html');
+      return fetch(event.request);
+    })
   );
 });
