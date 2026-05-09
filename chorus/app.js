@@ -1,3 +1,10 @@
+window.onerror = (msg, src, line, col, err) => {
+  alert(`Error: ${msg}\n${src}:${line}:${col}\n${err?.stack ?? ''}`);
+};
+window.addEventListener('unhandledrejection', (e) => {
+  alert(`Unhandled rejection: ${e.reason?.stack ?? e.reason}`);
+});
+
 import { ensureAudio } from './audio.js';
 import { getMic, getMicStream, initRecorder, startRec, stopRec, hasMic, hasRecorder, recording } from './recorder.js';
 import { showStatus } from './ui.js';
