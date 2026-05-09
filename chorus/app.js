@@ -29,6 +29,7 @@ async function ensureAudio() {
   audioInited = true;
   initAudio();
   await unlockAudio();
+  alert('state: ' + audioCtx.state + '\nnow: ' + now());
 }
 
 document.getElementById('rec').addEventListener('click', ensureAudio);
