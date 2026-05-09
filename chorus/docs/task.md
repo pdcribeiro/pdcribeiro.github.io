@@ -1,46 +1,57 @@
-TASK T2 mic access
+TASK T3 recording core
 
 GOAL
-mic stream ready, permission flow handled
+capture mic → blobs via MediaRecorder
 
-FILES
-/ app.js
+PREREQ
+- T1 AudioContext ready
+- T2 mic stream acquired
 
-STEP 1 constraints
-- const audioConstraints = {
-  audio:{
-    echoCancellation:false,
-    noiseSuppression:false,
-    autoGainControl:false,
-    channelCount:1,
-    sampleRate:44100
-  }
-}
+STATE
+let mediaRecorder
+let chunks = []
+let isRecording = false
 
-STEP 2 state
-- let micStream = null
+STEP 1 init recorder
+- input: MediaStream (mic)
+- mime = 'audio/webm;codecs=opus' (fallback if unsupported)
+- mediaRecorder = new MediaRecorder(stream,{mimeType:mime})
 
-STEP 3 request fn
-- async fn getMic():
-  try:
-    micStream = await navigator.mediaDevices.getUserMedia(audioConstraints)
-    return micStream
-  catch(e):
-    micStream = null
-    throw e
+STEP 2 events
+- ondataavailable(e):
+  if e.data.size>0 → chunks.push(e.data)
+- onstart:
+  chunks = []
+  isRecording = true
+- onstop:
+  isRecording = false
 
-STEP 4 UI trigger
-- on REC tap:
-  if !micStream → call getMic()
-  handle promise before recording start
+STEP 3 start fn
+fn startRec():
+  if isRecording → return
+  chunks = []
+  mediaRecorder.start()
 
-STEP 5 error handling
-- catch error → show simple message ("mic failed, retry")
-- allow retry on next REC tap
+STEP 4 stop fn
+fn stopRec():
+  if !isRecording → return
+  mediaRecorder.stop()
 
-STEP 6 test
-- first REC → permission prompt
-- allow → micStream active
-- deny → message shown, retry works
+STEP 5 blob assemble
+fn getBlob():
+  return new Blob(chunks,{type:mediaRecorder.mimeType})
+
+STEP 6 duration measure
+- record t0 = performance.now() on start
+- on stop → duration = (now - t0)/1000
+
+STEP 7 guards
+- handle mediaRecorder.state ('inactive','recording')
+- try/catch start/stop
+
+STEP 8 test
+- startRec → speak → stopRec
+- getBlob size >0
+- duration sane
 
 DONE
