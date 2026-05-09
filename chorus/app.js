@@ -127,21 +127,23 @@ async function onRec() {
   setRecording(true);
 
   if (isLooping()) {
-    // n>1: align recording start to next loop boundary + countdown
+    // n>1: recording starts exactly at loop boundary, countdown leads into it
     const T = getLoopDuration();
     let nextBoundary = getNextLoopStart(now);
-    if (nextBoundary - now < 0.1) { // AC5: drift guard
+    if (nextBoundary - now < 0.1) { // AC5: drift guard — very late tap
       nextBoundary += T;
       alert('shifted');
+    } else if (nextBoundary - now < DELAY_SEC) { // not enough room for countdown
+      nextBoundary += T;
     }
-    _recStartTime = nextBoundary + DELAY_SEC;
-    _recStopTime = _recStartTime + T;
+    _recStartTime = nextBoundary;
+    _recStopTime = nextBoundary + T;
 
-    // show countdown only during final DELAY_SEC before recording
+    // countdown ends at boundary, so start it DELAY_SEC before
     setTimeout(() => {
       if (recState !== 'countdown') return;
       startCountdownUI();
-    }, (nextBoundary - now) * 1000);
+    }, (nextBoundary - DELAY_SEC - now) * 1000);
   } else {
     // n=1: simple countdown from now, user stops manually (30s safety)
     _recStartTime = now + DELAY_SEC;
