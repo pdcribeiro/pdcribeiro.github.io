@@ -1,9 +1,12 @@
-const CACHE = 'chorus-v1';
+const CACHE = 'chorus-v2';
 const ASSETS = [
   './',
   'index.html',
   'styles.css',
   'app.js',
+  'audio.js',
+  'recorder.js',
+  'ui.js',
   'manifest.json',
 ];
 
