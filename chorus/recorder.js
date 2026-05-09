@@ -11,7 +11,6 @@ const MIC_CONSTRAINTS = {
 let micStream = null;
 let mediaRecorder = null;
 let chunks = [];
-let isRecording = false;
 
 export async function getMic() {
   try {
@@ -34,22 +33,17 @@ export function initRecorder(stream) {
 
   mediaRecorder.onstart = () => {
     chunks = [];
-    isRecording = true;
-  };
-
-  mediaRecorder.onstop = () => {
-    isRecording = false;
   };
 }
 
 export function startRec() {
-  if (isRecording || !mediaRecorder || mediaRecorder.state === 'recording') return;
+  if (!mediaRecorder || mediaRecorder.state === 'recording') return;
   chunks = [];
   mediaRecorder.start();
 }
 
 export function stopRec() {
-  if (!isRecording || !mediaRecorder || mediaRecorder.state !== 'recording') return;
+  if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
   mediaRecorder.stop();
 }
 
@@ -70,5 +64,5 @@ export function hasRecorder() {
 }
 
 export function recording() {
-  return isRecording;
+  return mediaRecorder?.state === 'recording';
 }
