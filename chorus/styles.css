@@ -48,6 +48,11 @@ button:active {
   background: var(--btn-active);
 }
 
+button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 #rec {
   border-color: var(--accent);
   color: var(--accent);
@@ -99,10 +104,6 @@ button:active {
   gap: 12px;
   width: 100%;
   max-width: 320px;
-}
-
-#nudge[hidden] {
-  display: none;
 }
 
 #nudge button {
