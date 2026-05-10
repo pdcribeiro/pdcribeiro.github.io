@@ -118,11 +118,13 @@ async function onRec() {
   setRecording(true);
 
   if (trackLength) {
-    // Pre-schedule playback to start exactly when countdown ends.
-    // Scheduling 3 s in advance gives Web Audio precise timing with no extra delay.
-    const startAt = getAudioCtx().currentTime + DELAY_SEC;
+    // Schedule monitoring playback outputLatency seconds early so the singer
+    // hears audio exactly when recording starts, not outputLatency ms later.
+    const ctx = getAudioCtx();
+    const outputLatency = ctx.outputLatency ?? ctx.baseLatency ?? 0;
+    const startAt = ctx.currentTime + DELAY_SEC;
     preload();
-    playOnce(trackLength, null, startAt); // resolves before startAt; not awaited
+    playOnce(trackLength, null, startAt - outputLatency);
   }
 
   startCountdownUI(() => {
