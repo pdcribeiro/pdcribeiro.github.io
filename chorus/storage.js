@@ -28,18 +28,19 @@ export function saveTake(blob, meta) {
   });
 }
 
-export function updateTakeOffset(id, offset) {
+export function updateLastTakeOffset(offset) {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction('takes', 'readwrite');
     const store = transaction.objectStore('takes');
-    const req = store.get(id);
+    const req = store.openCursor(null, 'prev');
     req.onsuccess = (e) => {
-      const record = e.target.result;
-      if (!record) return reject(new Error('take not found'));
+      const cursor = e.target.result;
+      if (!cursor) return resolve();
+      const record = cursor.value;
       record.offset = offset;
-      const putReq = store.put(record);
-      putReq.onsuccess = () => resolve();
-      putReq.onerror = (ev) => reject(ev.target.error);
+      const upd = cursor.update(record);
+      upd.onsuccess = () => resolve();
+      upd.onerror = (ev) => reject(ev.target.error);
     };
     req.onerror = (e) => reject(e.target.error);
   });

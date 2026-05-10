@@ -7,8 +7,8 @@ window.addEventListener('unhandledrejection', (e) => {
 
 import { ensureAudio, getAudioCtx } from './audio.js';
 import { getMic, getMicStream, initRecorder, startRec, stopRec, hasMic, hasRecorder } from './recorder.js';
-import { showStatus, setRecording, setCountdown, showNudgeUI, hideNudgeUI, setNudgeLabel } from './ui.js';
-import { initDB, saveTake, updateTakeOffset } from './storage.js';
+import { showStatus, setRecording, setCountdown, setNudgeLabel } from './ui.js';
+import { initDB, saveTake, updateLastTakeOffset } from './storage.js';
 import { preload, playOnce, stopPlayback, isPlaying } from './playback.js';
 
 if ('serviceWorker' in navigator) {
@@ -20,15 +20,23 @@ const NUDGE_STEP = 0.02;
 const playBtn = document.getElementById('play');
 
 let trackLength = null; // seconds; set when first track stops
+let takeCount = 0;
+let nudgeOffset = 0;
 let recState = 'idle';  // 'idle' | 'countdown' | 'recording'
 let countdownInterval = null;
 let startTimeout = null;
 let stopTimeout = null;
-let nudgeId = null;
-let nudgeOffset = 0;
-let nudgeIdleTimer = null;
 
 initDB();
+
+function updateControls() {
+  const idle = recState === 'idle';
+  document.getElementById('play').disabled = takeCount < 1 || !idle;
+  document.getElementById('nudge-earlier').disabled = takeCount < 2 || !idle;
+  document.getElementById('nudge-later').disabled = takeCount < 2 || !idle;
+}
+
+updateControls();
 
 function clearTimers() {
   clearInterval(countdownInterval);
@@ -45,21 +53,7 @@ function cancelCountdown() {
   setRecording(false);
   setCountdown(null);
   stopPlayback();
-}
-
-async function confirmNudge() {
-  if (nudgeId === null) return;
-  clearTimeout(nudgeIdleTimer);
-  nudgeIdleTimer = null;
-  await updateTakeOffset(nudgeId, nudgeOffset);
-  nudgeId = null;
-  nudgeOffset = 0;
-  hideNudgeUI();
-}
-
-function resetNudgeIdle() {
-  clearTimeout(nudgeIdleTimer);
-  nudgeIdleTimer = setTimeout(confirmNudge, 10000);
+  updateControls();
 }
 
 async function finishRecording() {
@@ -69,32 +63,28 @@ async function finishRecording() {
   setRecording(false);
   setCountdown(null);
   stopPlayback();
-  if (!result) return;
+  if (!result) { updateControls(); return; }
 
   let buf;
   try {
     buf = await getAudioCtx().decodeAudioData(await result.blob.arrayBuffer());
   } catch {
     showStatus('decode fail');
+    updateControls();
     return;
   }
   const T = buf.duration;
   if (T < 0.5) {
     showStatus('too short');
+    updateControls();
     return;
   }
-  const isOverdub = trackLength !== null;
-  if (!trackLength) {
-    trackLength = T;
-  }
-  const id = await saveTake(result.blob, { duration: trackLength, peak: 0, gain: 1, offset: 0 });
+  if (!trackLength) trackLength = T;
+  await saveTake(result.blob, { duration: trackLength, peak: 0, gain: 1, offset: nudgeOffset });
+  takeCount++;
+  setNudgeLabel(nudgeOffset);
   showStatus(`saved (${trackLength.toFixed(1)}s)`);
-  if (isOverdub) {
-    nudgeId = id;
-    nudgeOffset = 0;
-    showNudgeUI(0);
-    resetNudgeIdle();
-  }
+  updateControls();
 }
 
 function startCountdownUI(onDone) {
@@ -117,10 +107,6 @@ function startCountdownUI(onDone) {
 }
 
 async function onRec() {
-  if (nudgeId !== null) {
-    await confirmNudge();
-  }
-
   if (recState === 'countdown') {
     cancelCountdown();
     return;
@@ -146,6 +132,7 @@ async function onRec() {
 
   recState = 'countdown';
   setRecording(true);
+  updateControls();
 
   if (trackLength) {
     // Schedule monitoring playback outputLatency seconds early so the singer
@@ -186,10 +173,9 @@ async function onPlay() {
   }
 
   playBtn.textContent = 'STOP';
-  const nudgeOverride = nudgeId !== null ? { id: nudgeId, offset: nudgeOffset } : null;
   const ok = await playOnce(trackLength, () => {
     playBtn.textContent = 'PLAY';
-  }, undefined, nudgeOverride);
+  });
   if (!ok) {
     playBtn.textContent = 'PLAY';
     showStatus('no audio');
@@ -200,15 +186,13 @@ document.getElementById('rec').addEventListener('click', onRec);
 playBtn.addEventListener('click', onPlay);
 
 document.getElementById('nudge-earlier').addEventListener('click', () => {
-  if (nudgeId === null) return;
   nudgeOffset = Math.max(-1, nudgeOffset - NUDGE_STEP);
   setNudgeLabel(nudgeOffset);
-  resetNudgeIdle();
+  updateLastTakeOffset(nudgeOffset);
 });
 
 document.getElementById('nudge-later').addEventListener('click', () => {
-  if (nudgeId === null) return;
   nudgeOffset = Math.min(1, nudgeOffset + NUDGE_STEP);
   setNudgeLabel(nudgeOffset);
-  resetNudgeIdle();
+  updateLastTakeOffset(nudgeOffset);
 });
