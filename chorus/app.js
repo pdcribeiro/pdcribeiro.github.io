@@ -7,8 +7,8 @@ window.addEventListener('unhandledrejection', (e) => {
 
 import { ensureAudio, getAudioCtx } from './audio.js';
 import { getMic, getMicStream, initRecorder, startRec, stopRec, hasMic, hasRecorder } from './recorder.js';
-import { showStatus, setRecording, setCountdown } from './ui.js';
-import { initDB, saveTake } from './storage.js';
+import { showStatus, setRecording, setCountdown, showNudgeUI, hideNudgeUI, setNudgeLabel } from './ui.js';
+import { initDB, saveTake, updateTakeOffset } from './storage.js';
 import { preload, playOnce, stopPlayback, isPlaying } from './playback.js';
 
 if ('serviceWorker' in navigator) {
@@ -16,6 +16,7 @@ if ('serviceWorker' in navigator) {
 }
 
 const DELAY_SEC = 3;
+const NUDGE_STEP = 0.02;
 const playBtn = document.getElementById('play');
 
 let trackLength = null; // seconds; set when first track stops
@@ -23,6 +24,9 @@ let recState = 'idle';  // 'idle' | 'countdown' | 'recording'
 let countdownInterval = null;
 let startTimeout = null;
 let stopTimeout = null;
+let nudgeId = null;
+let nudgeOffset = 0;
+let nudgeIdleTimer = null;
 
 initDB();
 
@@ -41,6 +45,21 @@ function cancelCountdown() {
   setRecording(false);
   setCountdown(null);
   stopPlayback();
+}
+
+async function confirmNudge() {
+  if (nudgeId === null) return;
+  clearTimeout(nudgeIdleTimer);
+  nudgeIdleTimer = null;
+  await updateTakeOffset(nudgeId, nudgeOffset);
+  nudgeId = null;
+  nudgeOffset = 0;
+  hideNudgeUI();
+}
+
+function resetNudgeIdle() {
+  clearTimeout(nudgeIdleTimer);
+  nudgeIdleTimer = setTimeout(confirmNudge, 10000);
 }
 
 async function finishRecording() {
@@ -64,11 +83,18 @@ async function finishRecording() {
     showStatus('too short');
     return;
   }
+  const isOverdub = trackLength !== null;
   if (!trackLength) {
     trackLength = T;
   }
-  await saveTake(result.blob, { duration: trackLength, peak: 0, gain: 1 });
+  const id = await saveTake(result.blob, { duration: trackLength, peak: 0, gain: 1, offset: 0 });
   showStatus(`saved (${trackLength.toFixed(1)}s)`);
+  if (isOverdub) {
+    nudgeId = id;
+    nudgeOffset = 0;
+    showNudgeUI(0);
+    resetNudgeIdle();
+  }
 }
 
 function startCountdownUI(onDone) {
@@ -91,6 +117,10 @@ function startCountdownUI(onDone) {
 }
 
 async function onRec() {
+  if (nudgeId !== null) {
+    await confirmNudge();
+  }
+
   if (recState === 'countdown') {
     cancelCountdown();
     return;
@@ -156,9 +186,10 @@ async function onPlay() {
   }
 
   playBtn.textContent = 'STOP';
+  const nudgeOverride = nudgeId !== null ? { id: nudgeId, offset: nudgeOffset } : null;
   const ok = await playOnce(trackLength, () => {
     playBtn.textContent = 'PLAY';
-  });
+  }, undefined, nudgeOverride);
   if (!ok) {
     playBtn.textContent = 'PLAY';
     showStatus('no audio');
@@ -167,3 +198,17 @@ async function onPlay() {
 
 document.getElementById('rec').addEventListener('click', onRec);
 playBtn.addEventListener('click', onPlay);
+
+document.getElementById('nudge-earlier').addEventListener('click', () => {
+  if (nudgeId === null) return;
+  nudgeOffset = Math.max(-1, nudgeOffset - NUDGE_STEP);
+  setNudgeLabel(nudgeOffset);
+  resetNudgeIdle();
+});
+
+document.getElementById('nudge-later').addEventListener('click', () => {
+  if (nudgeId === null) return;
+  nudgeOffset = Math.min(1, nudgeOffset + NUDGE_STEP);
+  setNudgeLabel(nudgeOffset);
+  resetNudgeIdle();
+});
