@@ -13,7 +13,6 @@ export async function unlockAudio() {
 }
 
 export async function ensureAudio() {
-  if (audioCtx) return;
   initAudio();
   await unlockAudio();
 }
