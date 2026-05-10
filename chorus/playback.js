@@ -1,20 +1,10 @@
 import { getAudioCtx } from './audio.js';
 import { getAllTakes } from './storage.js';
 
-let masterGain = null;
-let activeSources = [];
+let _graph = null;
 let _playing = false;
 let _preloaded = null;
 let _cancelToken = 0;
-
-function getGain() {
-  if (!masterGain) {
-    const ctx = getAudioCtx();
-    masterGain = ctx.createGain();
-    masterGain.connect(ctx.destination);
-  }
-  return masterGain;
-}
 
 async function loadBuffers() {
   const takes = await getAllTakes();
@@ -28,12 +18,60 @@ async function loadBuffers() {
   ));
 }
 
+function createNodes(buffers, ctx) {
+  const masterGain = ctx.createGain();
+  const limiter = ctx.createDynamicsCompressor();
+  limiter.threshold.value = -6;
+  limiter.knee.value = 12;
+  limiter.ratio.value = 10;
+  limiter.attack.value = 0.003;
+  limiter.release.value = 0.25;
+  masterGain.connect(limiter);
+  limiter.connect(ctx.destination);
+
+  const nodes = buffers.map(({ buffer, offset, gain }) => {
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    src.loop = true;
+    const g = ctx.createGain();
+    g.gain.value = gain;
+    src.connect(g);
+    g.connect(masterGain);
+    return { src, g, offset };
+  });
+
+  return { nodes, masterGain, limiter };
+}
+
+function startGraph(graph, startTime, bufferOffset = 0) {
+  const ctx = getAudioCtx();
+  for (const { src, offset } of graph.nodes) {
+    const t = startTime + (offset ?? 0);
+    const now = ctx.currentTime;
+    if (t < now) {
+      src.start(now, (now - t) + bufferOffset);
+    } else {
+      src.start(t, bufferOffset);
+    }
+  }
+}
+
+function stopGraph(graph) {
+  if (!graph) return;
+  for (const { src, g } of graph.nodes) {
+    try { src.stop(); } catch {}
+    try { src.disconnect(); } catch {}
+    try { g.disconnect(); } catch {}
+  }
+  try { graph.masterGain.disconnect(); } catch {}
+  try { graph.limiter.disconnect(); } catch {}
+}
+
 export function preload() {
   _preloaded = loadBuffers();
 }
 
-// when: optional absolute AudioContext time to start; computed after load if omitted
-export async function playOnce(T, onEnd, when) {
+export async function startPlayback(when) {
   stopPlayback();
   const token = _cancelToken;
   const buffers = await (_preloaded ?? loadBuffers());
@@ -42,46 +80,17 @@ export async function playOnce(T, onEnd, when) {
 
   const ctx = getAudioCtx();
   const t = when ?? ctx.currentTime + 0.05;
+  _graph = createNodes(buffers, ctx);
+  startGraph(_graph, t);
   _playing = true;
-  let remaining = buffers.length;
-
-  for (const { buffer, offset, gain } of buffers) {
-    const src = ctx.createBufferSource();
-    src.buffer = buffer;
-    src.loop = false;
-    const trackGain = ctx.createGain();
-    trackGain.gain.value = gain;
-    src.connect(trackGain);
-    trackGain.connect(getGain());
-    const absoluteStart = t + offset;
-    const now = ctx.currentTime;
-    if (absoluteStart < now) {
-      src.start(now, now - absoluteStart);
-    } else {
-      src.start(absoluteStart);
-    }
-    src.stop(t + T);
-    activeSources.push(src);
-    src.onended = () => {
-      const i = activeSources.indexOf(src);
-      if (i !== -1) activeSources.splice(i, 1);
-      remaining--;
-      if (remaining === 0 && _playing) {
-        _playing = false;
-        onEnd?.();
-      }
-    };
-  }
   return true;
 }
 
 export function stopPlayback() {
   _playing = false;
   _cancelToken++;
-  for (const src of activeSources) {
-    try { src.stop(); } catch {}
-  }
-  activeSources = [];
+  stopGraph(_graph);
+  _graph = null;
 }
 
 export function isPlaying() {

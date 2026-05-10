@@ -9,7 +9,7 @@ import { ensureAudio, getAudioCtx, measurePeak, computeGain } from './audio.js';
 import { getMic, getMicStream, initRecorder, startRec, stopRec, hasMic, hasRecorder } from './recorder.js';
 import { showStatus, setRecording, setCountdown, setNudgeLabel, updateCount } from './ui.js';
 import { initDB, getAllTakes, saveTake, updateLastTakeOffset } from './storage.js';
-import { preload, playOnce, stopPlayback, isPlaying } from './playback.js';
+import { preload, startPlayback, stopPlayback, isPlaying } from './playback.js';
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
@@ -159,7 +159,7 @@ async function onRec() {
     const outputLatency = ctx.outputLatency ?? ctx.baseLatency ?? 0;
     const startAt = ctx.currentTime + DELAY_SEC;
     preload();
-    playOnce(trackLength, null, startAt - outputLatency);
+    startPlayback(startAt - outputLatency);
   }
 
   startCountdownUI(() => {
@@ -191,9 +191,7 @@ async function onPlay() {
   }
 
   playBtn.textContent = 'STOP';
-  const ok = await playOnce(trackLength, () => {
-    playBtn.textContent = 'PLAY';
-  });
+  const ok = await startPlayback();
   if (!ok) {
     playBtn.textContent = 'PLAY';
     showStatus('no audio');
