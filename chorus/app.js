@@ -9,7 +9,7 @@ import { ensureAudio, getAudioCtx } from './audio.js';
 import { getMic, getMicStream, initRecorder, startRec, stopRec, hasMic, hasRecorder } from './recorder.js';
 import { showStatus, setRecording, setCountdown } from './ui.js';
 import { initDB, saveTake } from './storage.js';
-import { playOnce, stopPlayback, isPlaying } from './playback.js';
+import { preload, playOnce, stopPlayback, isPlaying } from './playback.js';
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
@@ -117,15 +117,15 @@ async function onRec() {
   recState = 'countdown';
   setRecording(true);
 
+  if (trackLength) preload(); // load buffers during countdown so playback starts immediately
+
   startCountdownUI(() => {
-    const ctx = getAudioCtx();
-    const when = ctx.currentTime + 0.05;
     recState = 'recording';
     startRec();
 
     if (trackLength) {
       // Track 2+: play previous tracks in sync, auto-stop after trackLength
-      playOnce(when, trackLength);
+      playOnce(trackLength);
       stopTimeout = setTimeout(async () => {
         stopTimeout = null;
         await finishRecording();
@@ -149,9 +149,8 @@ async function onPlay() {
     return;
   }
 
-  const ctx = getAudioCtx();
   playBtn.textContent = 'STOP';
-  const ok = await playOnce(ctx.currentTime + 0.05, trackLength, () => {
+  const ok = await playOnce(trackLength, () => {
     playBtn.textContent = 'PLAY';
   });
   if (!ok) {
