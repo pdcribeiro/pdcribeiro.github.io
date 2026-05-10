@@ -18,20 +18,13 @@ if ('serviceWorker' in navigator) {
 const DELAY_SEC = 3;
 const playBtn = document.getElementById('play');
 
-let loopLength = null;    // seconds; set after first track stops
-let loopStartTime = null; // AudioContext time when track 1 recording started
-let recState = 'idle';    // 'idle' | 'countdown' | 'recording'
+let trackLength = null; // seconds; set when first track stops
+let recState = 'idle';  // 'idle' | 'countdown' | 'recording'
 let countdownInterval = null;
 let startTimeout = null;
 let stopTimeout = null;
 
 initDB();
-
-function getNextLoopStart(now) {
-  const elapsed = now - loopStartTime;
-  const loopsPassed = Math.ceil(elapsed / loopLength);
-  return loopStartTime + loopsPassed * loopLength;
-}
 
 function clearTimers() {
   clearInterval(countdownInterval);
@@ -71,15 +64,15 @@ async function finishRecording() {
     showStatus('too short');
     return;
   }
-  if (!loopLength) {
-    loopLength = T;
+  if (!trackLength) {
+    trackLength = T;
   }
-  await saveTake(result.blob, { duration: loopLength, peak: 0, gain: 1 });
-  showStatus(`saved (${loopLength.toFixed(1)}s)`);
+  await saveTake(result.blob, { duration: trackLength, peak: 0, gain: 1 });
+  showStatus(`saved (${trackLength.toFixed(1)}s)`);
 }
 
-function startCountdownUI(seconds, onDone) {
-  let remaining = Math.ceil(seconds);
+function startCountdownUI(onDone) {
+  let remaining = DELAY_SEC;
   setCountdown(remaining);
   countdownInterval = setInterval(() => {
     remaining--;
@@ -94,7 +87,7 @@ function startCountdownUI(seconds, onDone) {
   startTimeout = setTimeout(() => {
     startTimeout = null;
     onDone();
-  }, seconds * 1000);
+  }, DELAY_SEC * 1000);
 }
 
 async function onRec() {
@@ -103,7 +96,7 @@ async function onRec() {
     return;
   }
   if (recState === 'recording') {
-    if (!loopLength) {
+    if (!trackLength) {
       // First track: manual stop sets length
       await finishRecording();
     }
@@ -121,40 +114,24 @@ async function onRec() {
     initRecorder(getMicStream());
   }
 
-  const ctx = getAudioCtx();
   recState = 'countdown';
   setRecording(true);
 
-  if (!loopLength) {
-    // Track 1: simple countdown, then user stops manually
-    startCountdownUI(DELAY_SEC, () => {
-      loopStartTime = ctx.currentTime;
-      recState = 'recording';
-      startRec();
-    });
-  } else {
-    // Track 2+: align to loop boundary (T8)
-    const now = ctx.currentTime;
-    let nextLoopStart = getNextLoopStart(now);
+  startCountdownUI(() => {
+    const ctx = getAudioCtx();
+    const when = ctx.currentTime + 0.05;
+    recState = 'recording';
+    startRec();
 
-    // Drift guard: need DELAY_SEC of lead time before boundary
-    if (nextLoopStart - now < DELAY_SEC + 0.1) {
-      nextLoopStart += loopLength;
-      showStatus('shifted');
-    }
-
-    const timeToStart = nextLoopStart - now;
-    startCountdownUI(timeToStart, () => {
-      recState = 'recording';
-      startRec();
-      playOnce(nextLoopStart, loopLength);
-
+    if (trackLength) {
+      // Track 2+: play previous tracks in sync, auto-stop after trackLength
+      playOnce(when, trackLength);
       stopTimeout = setTimeout(async () => {
         stopTimeout = null;
         await finishRecording();
-      }, loopLength * 1000);
-    });
-  }
+      }, trackLength * 1000);
+    }
+  });
 }
 
 async function onPlay() {
@@ -167,14 +144,14 @@ async function onPlay() {
     return;
   }
 
-  if (!loopLength) {
+  if (!trackLength) {
     showStatus('no tracks');
     return;
   }
 
   const ctx = getAudioCtx();
   playBtn.textContent = 'STOP';
-  const ok = await playOnce(ctx.currentTime + 0.05, loopLength, () => {
+  const ok = await playOnce(ctx.currentTime + 0.05, trackLength, () => {
     playBtn.textContent = 'PLAY';
   });
   if (!ok) {
