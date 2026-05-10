@@ -24,7 +24,7 @@ async function loadBuffers() {
   return Promise.all(valid.map(t =>
     t.blob.arrayBuffer()
       .then(ab => ctx.decodeAudioData(ab))
-      .then(buffer => ({ buffer, offset: t.offset ?? 0 }))
+      .then(buffer => ({ buffer, offset: t.offset ?? 0, gain: t.gain ?? 1 }))
   ));
 }
 
@@ -45,11 +45,14 @@ export async function playOnce(T, onEnd, when) {
   _playing = true;
   let remaining = buffers.length;
 
-  for (const { buffer, offset } of buffers) {
+  for (const { buffer, offset, gain } of buffers) {
     const src = ctx.createBufferSource();
     src.buffer = buffer;
     src.loop = false;
-    src.connect(getGain());
+    const trackGain = ctx.createGain();
+    trackGain.gain.value = gain;
+    src.connect(trackGain);
+    trackGain.connect(getGain());
     const absoluteStart = t + offset;
     const now = ctx.currentTime;
     if (absoluteStart < now) {

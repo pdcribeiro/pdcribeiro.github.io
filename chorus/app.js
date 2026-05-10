@@ -5,7 +5,7 @@ window.addEventListener('unhandledrejection', (e) => {
   alert(`Unhandled rejection: ${e.reason?.stack ?? e.reason}`);
 });
 
-import { ensureAudio, getAudioCtx } from './audio.js';
+import { ensureAudio, getAudioCtx, measurePeak, computeGain } from './audio.js';
 import { getMic, getMicStream, initRecorder, startRec, stopRec, hasMic, hasRecorder } from './recorder.js';
 import { showStatus, setRecording, setCountdown, setNudgeLabel, updateCount } from './ui.js';
 import { initDB, getAllTakes, saveTake, updateLastTakeOffset } from './storage.js';
@@ -92,7 +92,9 @@ async function finishRecording() {
     return;
   }
   if (!trackLength) trackLength = T;
-  await saveTake(result.blob, { duration: trackLength, peak: 0, gain: 1, offset: nudgeOffset });
+  const peak = measurePeak(buf);
+  const gain = computeGain(peak);
+  await saveTake(result.blob, { duration: trackLength, peak, gain, offset: nudgeOffset });
   takeCount++;
   tracks.push(takeCount);
   updateCount(tracks.length, maxTracks);
