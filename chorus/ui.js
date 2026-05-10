@@ -1,6 +1,7 @@
 const statusEl = document.getElementById('status');
 const recBtn = document.getElementById('rec');
 const nudgeLabelEl = document.getElementById('nudge-label');
+const countEl = document.getElementById('count');
 let statusTimer = null;
 
 export function showStatus(msg) {
@@ -17,6 +18,10 @@ export function setRecording(active) {
 
 export function setNudgeLabel(offsetSec) {
   nudgeLabelEl.textContent = `${Math.round(offsetSec * 1000)} ms`;
+}
+
+export function updateCount(n, max) {
+  countEl.textContent = `${n}/${max}`;
 }
 
 export function setCountdown(n) {

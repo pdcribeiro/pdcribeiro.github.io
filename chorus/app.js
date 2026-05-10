@@ -7,7 +7,7 @@ window.addEventListener('unhandledrejection', (e) => {
 
 import { ensureAudio, getAudioCtx } from './audio.js';
 import { getMic, getMicStream, initRecorder, startRec, stopRec, hasMic, hasRecorder } from './recorder.js';
-import { showStatus, setRecording, setCountdown, setNudgeLabel } from './ui.js';
+import { showStatus, setRecording, setCountdown, setNudgeLabel, updateCount } from './ui.js';
 import { initDB, getAllTakes, saveTake, updateLastTakeOffset } from './storage.js';
 import { preload, playOnce, stopPlayback, isPlaying } from './playback.js';
 
@@ -17,10 +17,12 @@ if ('serviceWorker' in navigator) {
 
 const DELAY_SEC = 3;
 const NUDGE_STEP = 0.02;
+const maxTracks = 4;
 const playBtn = document.getElementById('play');
 
 let trackLength = null; // seconds; set when first track stops
 let takeCount = 0;
+let tracks = [];
 let nudgeOffset = 0;
 let recState = 'idle';  // 'idle' | 'countdown' | 'recording'
 let countdownInterval = null;
@@ -30,14 +32,17 @@ let stopTimeout = null;
 initDB().then(async () => {
   const takes = await getAllTakes();
   takeCount = takes.length;
+  tracks = takes.map((_, i) => i);
   if (takes.length > 0) trackLength = takes[0].duration;
   if (takes.length > 0) nudgeOffset = takes[takes.length - 1].offset ?? 0;
   setNudgeLabel(nudgeOffset);
+  updateCount(tracks.length, maxTracks);
   updateControls();
 });
 
 function updateControls() {
   const idle = recState === 'idle';
+  document.getElementById('rec').disabled = idle && tracks.length >= maxTracks;
   document.getElementById('play').disabled = takeCount < 1 || !idle;
   document.getElementById('nudge-earlier').disabled = takeCount < 2 || !idle;
   document.getElementById('nudge-later').disabled = takeCount < 2 || !idle;
@@ -89,6 +94,8 @@ async function finishRecording() {
   if (!trackLength) trackLength = T;
   await saveTake(result.blob, { duration: trackLength, peak: 0, gain: 1, offset: nudgeOffset });
   takeCount++;
+  tracks.push(takeCount);
+  updateCount(tracks.length, maxTracks);
   setNudgeLabel(nudgeOffset);
   showStatus(`saved (${trackLength.toFixed(1)}s)`);
   updateControls();
@@ -126,6 +133,8 @@ async function onRec() {
     // Track 2+: auto-stops via timer; ignore tap
     return;
   }
+
+  if (tracks.length >= maxTracks) return;
 
   await ensureAudio();
 
