@@ -21,7 +21,11 @@ async function loadBuffers() {
   const valid = takes.filter(t => t.blob?.size > 0);
   if (!valid.length) return null;
   const ctx = getAudioCtx();
-  return Promise.all(valid.map(t => t.blob.arrayBuffer().then(ab => ctx.decodeAudioData(ab))));
+  return Promise.all(valid.map(t =>
+    t.blob.arrayBuffer()
+      .then(ab => ctx.decodeAudioData(ab))
+      .then(buffer => ({ buffer, id: t.id, offset: t.offset ?? 0 }))
+  ));
 }
 
 export function preload() {
@@ -29,7 +33,8 @@ export function preload() {
 }
 
 // when: optional absolute AudioContext time to start; computed after load if omitted
-export async function playOnce(T, onEnd, when) {
+// nudgeOverride: { id, offset } — overrides the stored offset for one take (in-memory nudge)
+export async function playOnce(T, onEnd, when, nudgeOverride = null) {
   stopPlayback();
   const token = _cancelToken;
   const buffers = await (_preloaded ?? loadBuffers());
@@ -41,12 +46,21 @@ export async function playOnce(T, onEnd, when) {
   _playing = true;
   let remaining = buffers.length;
 
-  for (const buffer of buffers) {
+  for (const { buffer, id, offset } of buffers) {
+    const effectiveOffset = (nudgeOverride && nudgeOverride.id === id)
+      ? nudgeOverride.offset
+      : offset;
     const src = ctx.createBufferSource();
     src.buffer = buffer;
     src.loop = false;
     src.connect(getGain());
-    src.start(t);
+    const absoluteStart = t + effectiveOffset;
+    const now = ctx.currentTime;
+    if (absoluteStart < now) {
+      src.start(now, now - absoluteStart);
+    } else {
+      src.start(absoluteStart);
+    }
     src.stop(t + T);
     activeSources.push(src);
     src.onended = () => {
