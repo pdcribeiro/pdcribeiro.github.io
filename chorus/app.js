@@ -8,7 +8,7 @@ window.addEventListener('unhandledrejection', (e) => {
 import { ensureAudio, getAudioCtx } from './audio.js';
 import { getMic, getMicStream, initRecorder, startRec, stopRec, hasMic, hasRecorder } from './recorder.js';
 import { showStatus, setRecording, setCountdown, setNudgeLabel } from './ui.js';
-import { initDB, saveTake, updateLastTakeOffset } from './storage.js';
+import { initDB, getAllTakes, saveTake, updateLastTakeOffset } from './storage.js';
 import { preload, playOnce, stopPlayback, isPlaying } from './playback.js';
 
 if ('serviceWorker' in navigator) {
@@ -27,7 +27,14 @@ let countdownInterval = null;
 let startTimeout = null;
 let stopTimeout = null;
 
-initDB();
+initDB().then(async () => {
+  const takes = await getAllTakes();
+  takeCount = takes.length;
+  if (takes.length > 0) trackLength = takes[0].duration;
+  if (takes.length > 0) nudgeOffset = takes[takes.length - 1].offset ?? 0;
+  setNudgeLabel(nudgeOffset);
+  updateControls();
+});
 
 function updateControls() {
   const idle = recState === 'idle';
