@@ -5,6 +5,7 @@ let masterGain = null;
 let activeSources = [];
 let _playing = false;
 let _preloaded = null;
+let _cancelToken = 0;
 
 function getGain() {
   if (!masterGain) {
@@ -23,21 +24,20 @@ async function loadBuffers() {
   return Promise.all(valid.map(t => t.blob.arrayBuffer().then(ab => ctx.decodeAudioData(ab))));
 }
 
-// Call during countdown so buffers are ready when playback needs to start
 export function preload() {
   _preloaded = loadBuffers();
 }
 
-export async function playOnce(T, onEnd) {
-  if (_playing) stopPlayback();
+// when: optional absolute AudioContext time to start; computed after load if omitted
+export async function playOnce(T, onEnd, when) {
+  stopPlayback();
+  const token = _cancelToken;
   const buffers = await (_preloaded ?? loadBuffers());
   _preloaded = null;
-  if (!buffers) return false;
+  if (_cancelToken !== token || !buffers) return false;
 
   const ctx = getAudioCtx();
-  const gain = getGain();
-  // compute `when` after loading so scheduling is accurate
-  const when = ctx.currentTime + 0.05;
+  const t = when ?? ctx.currentTime + 0.05;
   _playing = true;
   let remaining = buffers.length;
 
@@ -45,9 +45,9 @@ export async function playOnce(T, onEnd) {
     const src = ctx.createBufferSource();
     src.buffer = buffer;
     src.loop = false;
-    src.connect(gain);
-    src.start(when);
-    src.stop(when + T);
+    src.connect(getGain());
+    src.start(t);
+    src.stop(t + T);
     activeSources.push(src);
     src.onended = () => {
       const i = activeSources.indexOf(src);
@@ -64,6 +64,7 @@ export async function playOnce(T, onEnd) {
 
 export function stopPlayback() {
   _playing = false;
+  _cancelToken++;
   for (const src of activeSources) {
     try { src.stop(); } catch {}
   }

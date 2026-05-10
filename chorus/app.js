@@ -117,15 +117,19 @@ async function onRec() {
   recState = 'countdown';
   setRecording(true);
 
-  if (trackLength) preload(); // load buffers during countdown so playback starts immediately
+  if (trackLength) {
+    // Pre-schedule playback to start exactly when countdown ends.
+    // Scheduling 3 s in advance gives Web Audio precise timing with no extra delay.
+    const startAt = getAudioCtx().currentTime + DELAY_SEC;
+    preload();
+    playOnce(trackLength, null, startAt); // resolves before startAt; not awaited
+  }
 
   startCountdownUI(() => {
     recState = 'recording';
-    startRec();
+    startRec(); // fires at ~startAt; playback already scheduled
 
     if (trackLength) {
-      // Track 2+: play previous tracks in sync, auto-stop after trackLength
-      playOnce(trackLength);
       stopTimeout = setTimeout(async () => {
         stopTimeout = null;
         await finishRecording();
