@@ -4,6 +4,7 @@ import { getAllTakes } from './storage.js';
 let masterGain = null;
 let activeSources = [];
 let _playing = false;
+let _preloaded = null;
 
 function getGain() {
   if (!masterGain) {
@@ -22,13 +23,21 @@ async function loadBuffers() {
   return Promise.all(valid.map(t => t.blob.arrayBuffer().then(ab => ctx.decodeAudioData(ab))));
 }
 
-export async function playOnce(when, T, onEnd) {
+// Call during countdown so buffers are ready when playback needs to start
+export function preload() {
+  _preloaded = loadBuffers();
+}
+
+export async function playOnce(T, onEnd) {
   if (_playing) stopPlayback();
-  const buffers = await loadBuffers();
+  const buffers = await (_preloaded ?? loadBuffers());
+  _preloaded = null;
   if (!buffers) return false;
 
   const ctx = getAudioCtx();
   const gain = getGain();
+  // compute `when` after loading so scheduling is accurate
+  const when = ctx.currentTime + 0.05;
   _playing = true;
   let remaining = buffers.length;
 
