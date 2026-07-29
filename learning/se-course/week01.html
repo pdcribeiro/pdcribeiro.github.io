@@ -743,28 +743,6 @@ private void checkInvariant() {
       if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
     });
 
-    // ── touch swipe support ──
-    let touchStartX = 0;
-    let touchStartY = 0;
-    const wrap = document.getElementById('slidesWrap');
-
-    wrap.addEventListener('touchstart', (e) => {
-      const touch = e.changedTouches[0];
-      touchStartX = touch.clientX;
-      touchStartY = touch.clientY;
-    }, { passive: true });
-
-    wrap.addEventListener('touchend', (e) => {
-      const touch = e.changedTouches[0];
-      const dx = touch.clientX - touchStartX;
-      const dy = touch.clientY - touchStartY;
-      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 30) {
-        e.preventDefault();
-        if (dx < 0) next();
-        else prev();
-      }
-    }, { passive: false });
-
     // ── TAB LOGIC for BankAccount (slide index 7) ──
     const tabContainer = document.getElementById('bankTabs');
     if (tabContainer) {
