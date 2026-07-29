@@ -104,6 +104,16 @@
       opacity: 1;
       pointer-events: auto;
     }
+/* Assignment slide tweaks */
+.slide iframe {
+  background: #fff; /* white background while loading */
+}
+.slide details summary {
+  font-weight: 600;
+}
+.slide details summary::-webkit-details-marker {
+  color: #0055cc; /* make the triangle blue */
+}
 
     /* ───────────── TYPOGRAPHY ───────────── */
     .slide h1 {
@@ -636,6 +646,48 @@ private void checkInvariant() {
       </p>
       <p style="font-size:13px; color:#8a8a8a; margin-top:20px;">End of Week 1 · Tap ← to review</p>
     </div>
+
+<!-- ============ SLIDE 15: ASSIGNMENT (PS1) ============ -->
+<div class="slide" data-index="14">
+  <h1>🧪 Problem Set 1: DateRange</h1>
+  
+  <div style="background:#f6f4f0; padding:12px 14px; border-radius:6px; margin-bottom:14px;">
+    <p style="font-size:15px; margin:0;">
+      <strong>Your task:</strong> Write a full specification (Javadoc comments) 
+      for the <code>DateRange</code> class below. Do <em>not</em> change the 
+      implementation. Then, list <strong>3 hidden edge cases</strong> that 
+      the current code fails.
+    </p>
+  </div>
+
+  <!-- myCompiler.io Embed -->
+  <div style="background:#f0eee9; border-radius:6px; overflow:hidden; margin-bottom:12px;">
+    <iframe 
+      src="https://www.myCompiler.io/embed/B6a2cYBGEYX"
+      style="width:100%; aspect-ratio:4/3; border:none; display:block;"
+      allowfullscreen
+      loading="lazy">
+    </iframe>
+  </div>
+
+  <!-- Collapsible Hint -->
+  <details style="background:#f6f4f0; padding:10px 14px; border-radius:6px; font-size:15px;">
+    <summary style="font-weight:600; cursor:pointer;">💡 Hint</summary>
+    <p style="margin-top:8px; margin-bottom:0;">
+      Try calling <code>contains()</code> with a date that is exactly the 
+      <strong>end date</strong> of the range. What does your spec say it should return?
+    </p>
+    <p style="margin-top:6px; margin-bottom:0; font-size:14px; color:#5a5a5a;">
+      Also, what happens when you call <code>intersect()</code> on two ranges 
+      that don’t overlap?
+    </p>
+  </details>
+
+  <p style="font-size:13px; color:#5a5a5a; margin-top:12px; border-top:1px solid #e0ded9; padding-top:12px;">
+    📋 <strong>Submission:</strong> Copy your annotated code from the compiler 
+    and paste it into your LMS, along with your 3 edge cases.
+  </p>
+</div>
 
     <!-- INVISIBLE CLICK ZONES -->
     <div class="click-zones" id="clickZones">
