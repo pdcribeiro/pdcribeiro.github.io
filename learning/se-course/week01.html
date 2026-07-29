@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Week 1 · Specs & Invariants</title>
+  <style>
+    /* ───────────── RESET & BASE ───────────── */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #fdfcf8;
+      color: #1a1a1a;
+      touch-action: pan-y; /* allow vertical scroll, but we handle horizontal */
+    }
+
+    /* ───────────── APP SHELL ───────────── */
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      height: 100vh;
+      height: 100dvh; /* dynamic viewport for mobile */
+      display: flex;
+      flex-direction: column;
+      padding: 16px 18px 12px 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ───────────── TOP BAR ───────────── */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #5a5a5a;
+      letter-spacing: 0.3px;
+      padding-bottom: 8px;
+      flex-shrink: 0;
+    }
+    .top-bar .counter {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ───────────── PROGRESS BAR ───────────── */
+    .progress-track {
+      width: 100%;
+      height: 3px;
+      background: #e6e4df;
+      border-radius: 2px;
+      margin-bottom: 18px;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #1a1a1a;
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.25s ease;
+    }
+    /* dot indicators */
+    .dots {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+    .dots span {
+      display: block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #dcdcdc;
+      transition: background 0.2s;
+    }
+    .dots span.active {
+      background: #1a1a1a;
+    }
+
+    /* ───────────── SLIDES CONTAINER ───────────── */
+    .slides-wrap {
+      flex: 1 1 auto;
+      position: relative;
+      overflow: hidden;
+      min-height: 0; /* flex override */
+    }
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 4px 0 8px 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      -webkit-overflow-scrolling: touch;
+    }
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* ───────────── TYPOGRAPHY ───────────── */
+    .slide h1 {
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 12px;
+      letter-spacing: -0.3px;
+    }
+    .slide h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 16px 0 8px 0;
+    }
+    .slide p {
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 14px;
+      color: #1a1a1a;
+    }
+    .slide .muted {
+      color: #5a5a5a;
+      font-size: 15px;
+    }
+    .slide ul, .slide ol {
+      padding-left: 22px;
+      margin-bottom: 14px;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    .slide li { margin-bottom: 6px; }
+    .slide code {
+      font-family: "SF Mono", "Cascadia Code", "Courier New", monospace;
+      font-size: 0.9em;
+      background: #f0eee9;
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+    .slide pre {
+      background: #f0eee9;
+      padding: 14px 16px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      font-family: "SF Mono", "Cascadia Code", "Courier New", monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin-bottom: 14px;
+      border-left: 3px solid #b0b0b0;
+    }
+    .slide pre .highlight {
+      background: #d4e2f0;
+      padding: 1px 2px;
+      border-radius: 2px;
+    }
+    hr {
+      border: 0;
+      border-top: 1px solid #e0ded9;
+      margin: 16px 0;
+    }
+    .block-label {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #5a5a5a;
+      margin-bottom: 4px;
+    }
+
+    /* ───────────── TABS (Screen 8) ───────────── */
+    .tabs {
+      display: flex;
+      gap: 24px;
+      border-bottom: 2px solid #dcdcdc;
+      margin-bottom: 12px;
+    }
+    .tabs button {
+      background: none;
+      border: none;
+      font-size: 16px;
+      font-weight: 400;
+      padding: 8px 0 6px 0;
+      cursor: pointer;
+      color: #5a5a5a;
+      font-family: inherit;
+      border-bottom: 3px solid transparent;
+      transition: border-color 0.15s, color 0.15s;
+      margin-bottom: -2px;
+    }
+    .tabs button.active {
+      font-weight: 600;
+      color: #1a1a1a;
+      border-bottom-color: #1a1a1a;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    /* ───────────── SPEC STRENGTH (Screen 11) ───────────── */
+    .strength-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #f6f4f0;
+      padding: 16px;
+      border-radius: 8px;
+      margin: 12px 0;
+    }
+    .strength-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px dashed #d0cec8;
+      padding-bottom: 8px;
+    }
+    .strength-row:last-child { border-bottom: 0; padding-bottom: 0; }
+    .strength-label { font-weight: 500; }
+    .strength-value { font-family: monospace; font-size: 15px; background: #fff; padding: 2px 10px; border-radius: 4px; }
+    .arrow-indicator {
+      text-align: center;
+      font-size: 20px;
+      letter-spacing: 6px;
+      color: #0055cc;
+      margin: 2px 0;
+    }
+
+    /* ───────────── PITFALLS ───────────── */
+    .pitfall {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+      align-items: flex-start;
+    }
+    .pitfall .icon { font-size: 20px; flex-shrink: 0; width: 28px; text-align: center; }
+    .pitfall .text { font-size: 15px; line-height: 1.5; }
+    .pitfall .text strong { font-weight: 600; }
+
+    /* ───────────── SUMMARY GRID ───────────── */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 12px 0;
+    }
+    .summary-card {
+      background: #f6f4f0;
+      padding: 12px 10px;
+      border-radius: 6px;
+      border-left: 3px solid #1a1a1a;
+    }
+    .summary-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #5a5a5a; }
+    .summary-card .value { font-size: 14px; font-weight: 500; line-height: 1.4; margin-top: 2px; }
+
+    /* ───────────── NAVIGATION ───────────── */
+    .nav-area {
+      display: flex;
+      justify-content: space-between;
+      padding-top: 14px;
+      border-top: 1px solid #e0ded9;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+    .nav-btn {
+      font-size: 16px;
+      color: #0055cc;
+      text-decoration: none;
+      font-weight: 500;
+      padding: 10px 4px;
+      min-width: 70px;
+      text-align: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      touch-action: manipulation;
+    }
+    .nav-btn:disabled {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+    .nav-btn.next { text-align: right; }
+    .nav-btn.prev { text-align: left; }
+
+    /* ───────────── CLICK ZONES (invisible) ───────────── */
+    .click-zones {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .click-zones > div {
+      pointer-events: auto;
+      height: 100%;
+      cursor: pointer;
+    }
+    .zone-prev { width: 30%; }
+    .zone-next { width: 70%; }
+
+    /* ───────────── SCROLLBAR STYLING ───────────── */
+    .slide::-webkit-scrollbar { width: 4px; }
+    .slide::-webkit-scrollbar-track { background: transparent; }
+    .slide::-webkit-scrollbar-thumb { background: #d0cec8; border-radius: 4px; }
+
+    /* ───────────── RESPONSIVE TWEAKS ───────────── */
+    @media (max-width: 400px) {
+      .app { padding: 12px 14px 10px 14px; }
+      .slide h1 { font-size: 20px; }
+      .slide p, .slide li { font-size: 15px; }
+      .summary-grid { grid-template-columns: 1fr; }
+    }
+    @media (min-width: 600px) {
+      .app { padding: 28px 32px 20px 32px; }
+      .slide h1 { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <span>Week 1 · Specs &amp; Invariants</span>
+    <span class="counter" id="counter">1 / 14</span>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+  <div class="dots" id="dots"></div>
+
+  <!-- SLIDES WRAPPER -->
+  <div class="slides-wrap" id="slidesWrap">
+
+    <!-- ============ SLIDE 1: TITLE ============ -->
+    <div class="slide active" data-index="0">
+      <h1>Static vs. Dynamic Checking, Specifications, and Invariants</h1>
+      <p style="font-size:18px; font-weight:300; color:#3a3a3a; margin-top:4px;">
+        MIT 6.031 × CMU 17-313 × Stanford CS 210A
+      </p>
+      <hr>
+      <p class="muted"><strong>Week 1</strong> · Formal rigor before writing code.</p>
+      <p class="muted" style="margin-top:20px; font-size:14px;">
+        Tap the right side of the screen to begin →
+      </p>
+      <div style="margin-top:30px; font-size:13px; color:#8a8a8a; border-top:1px solid #eee; padding-top:16px;">
+        “Correctness is not what the code does; it is what the spec says it should do.”
+      </div>
+    </div>
+
+    <!-- ============ SLIDE 2: CONTRACT ============ -->
+    <div class="slide" data-index="1">
+      <h1>The Contract Analogy</h1>
+      <p><strong>Caller</strong> (client) and <strong>Implementer</strong> (supplier) sign a contract.</p>
+      <ul>
+        <li><strong>Caller</strong> must meet the <em>preconditions</em>.</li>
+        <li><strong>Implementer</strong> guarantees <em>postconditions</em> and <em>invariants</em>.</li>
+      </ul>
+      <p class="muted">Protects both sides:</p>
+      <ul>
+        <li>Caller knows what to expect.</li>
+        <li>Implementer knows what they can assume.</li>
+      </ul>
+      <p style="font-size:14px; color:#5a5a5a; background:#f0eee9; padding:10px 14px; border-radius:6px;">
+        ⚡ Without a spec, testing only catches surface errors. With a spec, you can reason compositionally.
+      </p>
+    </div>
+
+    <!-- ============ SLIDE 3: ARIANE 5 ============ -->
+    <div class="slide" data-index="2">
+      <h1>Real Bug: Ariane 5</h1>
+      <p><strong>Flight 501</strong> – reused spec from Ariane 4 without checking horizontal bias preconditions.</p>
+      <ul>
+        <li>Overflow in a 64-bit conversion.</li>
+        <li>Rocket self-destructed 37 seconds after launch.</li>
+        <li><em>The code “worked”</em> in the old context but violated the new spec’s implicit assumptions.</li>
+      </ul>
+      <p class="muted" style="margin-top:12px;">💡 Lesson: Specifications must be explicit, precise, and revisited when the environment changes.</p>
+    </div>
+
+    <!-- ============ SLIDE 4: SYNTAX ============ -->
+    <div class="slide" data-index="3">
+      <h1>Pre / Post Syntax</h1>
+      <p>Java-style with JML annotations (<code>@requires</code>, <code>@ensures</code>).</p>
+      <pre>/**
+ * @requires x &gt;= 0
+ * @ensures Math.abs(result - Math.sqrt(x)) &lt; 1e-9
+ */
+public double sqrt(double x);</pre>
+      <ul>
+        <li><strong>@requires</strong> – what must be true <em>before</em> the call.</li>
+        <li><strong>@ensures</strong> – what the method guarantees <em>after</em>, if preconditions are met.</li>
+      </ul>
+      <p class="muted" style="font-size:14px;">If a caller violates a precondition, behavior is undefined (or an exception is thrown).</p>
+    </div>
+
+    <!-- ============ SLIDE 5: findMax SPEC ============ -->
+    <div class="slide" data-index="4">
+      <h1><code>findMax</code> Spec</h1>
+      <pre>/**
+ * @requires arr != null &amp;&amp; arr.length &gt; 0
+ * @ensures forall i in [0, arr.length-1] :: result &gt;= arr[i]
+ * @ensures exists i in [0, arr.length-1] :: result == arr[i]
+ */
+public int findMax(int[] arr);</pre>
+      <p>Why non‑null and non‑empty? <span class="muted">(No maximum over an empty set.)</span></p>
+      <p style="background:#f6f4f0; padding:8px 12px; border-radius:4px; font-size:14px;">
+        ✅ Implementation may throw <code>NullPointerException</code> / <code>IllegalArgumentException</code> defensively – still meets the spec.
+      </p>
+    </div>
+
+    <!-- ============ SLIDE 6: CLASS INVARIANTS ============ -->
+    <div class="slide" data-index="5">
+      <h1>Class Invariants</h1>
+      <p>A property that must hold for <strong>every instance</strong> of the class <em>at all times</em> between public method calls.</p>
+      <ul>
+        <li><code>bankAccount.balance &gt;= 0</code></li>
+        <li><code>date.month</code> in 1..12</li>
+        <li><code>SortedList</code>: <code>list[i] &lt;= list[i+1]</code></li>
+      </ul>
+      <p><strong>Enforced in:</strong></p>
+      <ul>
+        <li>Constructor – establishes the invariant.</li>
+        <li>Every public mutator – checks/repairs at the end.</li>
+      </ul>
+      <p class="muted">Private helpers may temporarily break invariants, but public methods must restore them.</p>
+    </div>
+
+    <!-- ============ SLIDE 7: BAD BankAccount ============ -->
+    <div class="slide" data-index="6">
+      <h1>❌ BAD: No Invariant</h1>
+      <pre>public class BankAccount {
+    private int balance;
+
+    public BankAccount(int initial) {
+        balance = initial;   // no check!
+    }
+    public void withdraw(int amount) {
+        balance -= amount;   // can go negative
+    }
+    public void deposit(int amount) {
+        balance += amount;
+    }
+    public int getBalance() { return balance; }
+}</pre>
+      <p class="muted">⚠️ Client can withdraw more than available – violates business rule.</p>
+    </div>
+
+    <!-- ============ SLIDE 8: FIXED BankAccount (with TABS) ============ -->
+    <div class="slide" data-index="7">
+      <h1>✅ Fixed: Invariant Enforced</h1>
+      <p style="font-size:14px;">We add <code>checkInvariant()</code> and call it after every mutation.</p>
+
+      <div class="tabs" id="bankTabs">
+        <button class="active" data-tab="broken">❌ Broken</button>
+        <button data-tab="fixed">✅ Fixed</button>
+      </div>
+
+      <!-- TAB: BROKEN -->
+      <div class="tab-content active" id="tab-broken">
+        <pre>public void withdraw(int amount) {
+    if (amount &gt; balance) {
+        throw new IllegalArgumentException();
+    }
+    balance -= amount;
+    // ❌ no invariant check
+}</pre>
+        <p class="muted" style="font-size:13px;">After withdrawal, the invariant <em>might</em> still hold, but we are not verifying it.</p>
+      </div>
+
+      <!-- TAB: FIXED -->
+      <div class="tab-content" id="tab-fixed">
+        <pre>public void withdraw(int amount) {
+    if (amount &gt; balance) {
+        throw new IllegalArgumentException();
+    }
+    balance -= amount;
+    <span class="highlight">checkInvariant();</span>  // ✅ crucial!
+}
+
+private void checkInvariant() {
+    assert balance &gt;= 0 : "balance negative";
+}</pre>
+        <p class="muted" style="font-size:13px;">✅ Invariant checked at the end of <em>every</em> public method (including constructor).</p>
+      </div>
+    </div>
+
+    <!-- ============ SLIDE 9: STATIC vs DYNAMIC ============ -->
+    <div class="slide" data-index="8">
+      <h1>Static vs. Dynamic Checking</h1>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:12px 0;">
+        <div style="background:#f0eee9; padding:12px; border-radius:6px;">
+          <div style="font-weight:700; font-size:15px;">🔍 Static</div>
+          <ul style="font-size:14px; padding-left:16px; margin-top:4px;">
+            <li>Compile‑time</li>
+            <li>Type safety, nullness</li>
+            <li>Zero runtime cost</li>
+            <li>Conservative</li>
+          </ul>
+        </div>
+        <div style="background:#f0eee9; padding:12px; border-radius:6px;">
+          <div style="font-weight:700; font-size:15px;">⚡ Dynamic</div>
+          <ul style="font-size:14px; padding-left:16px; margin-top:4px;">
+            <li>Runtime (<code>assert</code>)</li>
+            <li>Semantic properties</li>
+            <li>Only as good as tests</li>
+            <li>Can be disabled</li>
+          </ul>
+        </div>
+      </div>
+      <p class="muted" style="font-size:14px;">Use static for structure; dynamic for business rules.</p>
+    </div>
+
+    <!-- ============ SLIDE 10: ASSERTIONS vs EXCEPTIONS ============ -->
+    <div class="slide" data-index="9">
+      <h1>Assertions vs. Exceptions</h1>
+      <ul>
+        <li><strong><code>assert</code></strong> – for internal invariants; can be disabled; indicates <em>programmer error</em>.</li>
+        <li><strong><code>IllegalArgumentException</code></strong> – for input validation from untrusted external callers.</li>
+      </ul>
+      <div style="background:#f6f4f0; padding:12px; border-radius:6px; margin-top:10px;">
+        <p style="font-size:15px; margin:0;"><strong>🚫 Never</strong> use <code>assert</code> to validate user input – it may be turned off in production.</p>
+      </div>
+      <p class="muted" style="margin-top:12px;">Eiffel (Bertrand Meyer) has language‑level support for Design by Contract.</p>
+    </div>
+
+    <!-- ============ SLIDE 11: SPEC STRENGTH ============ -->
+    <div class="slide" data-index="10">
+      <h1>Specification Strength</h1>
+      <p>A spec <strong>S2</strong> is <em>stronger</em> than <strong>S1</strong> if:</p>
+      <ul>
+        <li>S2’s precondition is <strong>weaker</strong> (more callers), OR</li>
+        <li>S2’s postcondition is <strong>stronger</strong> (more guarantees).</li>
+      </ul>
+      <div class="strength-grid">
+        <div class="strength-row">
+          <span class="strength-label">Spec A (partial)</span>
+          <span class="strength-value">@requires x &gt;= 0</span>
+        </div>
+        <div class="strength-row">
+          <span class="strength-label">Spec B (total)</span>
+          <span class="strength-value">@requires true</span>
+        </div>
+        <div class="arrow-indicator">◄──── WEAKER PRECONDITION = STRONGER SPEC ────►</div>
+        <div style="display:flex; justify-content:space-between; font-size:13px; color:#5a5a5a;">
+          <span>Easier to implement</span>
+          <span>Easier to call</span>
+        </div>
+      </div>
+      <p class="muted" style="font-size:14px;">Weaker precondition → stronger spec → harder to implement.</p>
+    </div>
+
+    <!-- ============ SLIDE 12: PITFALLS ============ -->
+    <div class="slide" data-index="11">
+      <h1>Common Pitfalls</h1>
+
+      <div class="pitfall">
+        <span class="icon">❌</span>
+        <div class="text"><strong>Over‑specifying (leaking implementation)</strong><br>
+        <span class="muted">Bad:</span> <code>@ensures result == sortedCopy(arr)[0]</code><br>
+        <span class="muted">Good:</span> <code>@ensures result &gt;= all elements</code></div>
+      </div>
+
+      <div class="pitfall">
+        <span class="icon">❌</span>
+        <div class="text"><strong>Forgetting to check invariants after every public method</strong><br>
+        Even getters that return mutable objects can break invariants.</div>
+      </div>
+
+      <div class="pitfall">
+        <span class="icon">❌</span>
+        <div class="text"><strong>Using <code>assert</code> for public input validation</strong><br>
+        Assertions can be disabled → use <code>IllegalArgumentException</code> for public APIs.</div>
+      </div>
+
+      <div class="pitfall">
+        <span class="icon">❌</span>
+        <div class="text"><strong>Confusing pre with post</strong><br>
+        <code>@requires result &gt; 0</code> is wrong – <code>result</code> belongs in <code>@ensures</code>.</div>
+      </div>
+    </div>
+
+    <!-- ============ SLIDE 13: SUMMARY ============ -->
+    <div class="slide" data-index="12">
+      <h1>Summary</h1>
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="label">Spec</div>
+          <div class="value">Contract between caller &amp; implementer</div>
+        </div>
+        <div class="summary-card">
+          <div class="label">Pre / Post</div>
+          <div class="value">Weaker pre = stronger spec</div>
+        </div>
+        <div class="summary-card">
+          <div class="label">Invariant</div>
+          <div class="value">Check in constructor &amp; every public method</div>
+        </div>
+        <div class="summary-card">
+          <div class="label">Assert vs Exception</div>
+          <div class="value"><code>assert</code> for internals; <code>throws</code> for public</div>
+        </div>
+      </div>
+      <p style="font-size:14px; color:#5a5a5a; background:#f6f4f0; padding:10px 14px; border-radius:6px; margin-top:6px;">
+        🧠 <em>“Correctness is defined by specs, not by ‘it seems to work.’”</em>
+      </p>
+    </div>
+
+    <!-- ============ SLIDE 14: READING ============ -->
+    <div class="slide" data-index="13">
+      <h1>Suggested Reading</h1>
+      <ul>
+        <li><strong>Primary:</strong> <em>Java by Design</em> – Ch. 1–2 (Design by Contract with JML)</li>
+        <li><strong>Foundational:</strong> Bertrand Meyer, <em>Object‑Oriented Software Construction</em> (Eiffel)</li>
+        <li><strong>Online:</strong> MIT 6.031 Reading 5 – <em>Specifications</em></li>
+        <li><strong>Formal:</strong> JML (Java Modeling Language) quick reference</li>
+      </ul>
+      <hr>
+      <p style="font-size:14px; color:#5a5a5a;">
+        ✏️ <strong>Think about:</strong> <em>If you add a new public method, must you strengthen or weaken the class invariant?</em>
+      </p>
+      <p style="font-size:13px; color:#8a8a8a; margin-top:20px;">End of Week 1 · Tap ← to review</p>
+    </div>
+
+    <!-- INVISIBLE CLICK ZONES -->
+    <div class="click-zones" id="clickZones">
+      <div class="zone-prev" id="zonePrev"></div>
+      <div class="zone-next" id="zoneNext"></div>
+    </div>
+
+  </div><!-- /slides-wrap -->
+
+  <!-- NAVIGATION BUTTONS -->
+  <div class="nav-area">
+    <button class="nav-btn prev" id="prevBtn" disabled>← Back</button>
+    <button class="nav-btn next" id="nextBtn">Next →</button>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+  (function() {
+    'use strict';
+
+    const slides = document.querySelectorAll('.slide');
+    const total = slides.length;
+    let current = 0;
+
+    const counter = document.getElementById('counter');
+    const progressFill = document.getElementById('progressFill');
+    const dotsContainer = document.getElementById('dots');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const zonePrev = document.getElementById('zonePrev');
+    const zoneNext = document.getElementById('zoneNext');
+
+    // ── build dots ──
+    for (let i = 0; i < total; i++) {
+      const dot = document.createElement('span');
+      dot.dataset.index = i;
+      dotsContainer.appendChild(dot);
+    }
+    const dots = dotsContainer.querySelectorAll('span');
+
+    function updateUI() {
+      // slides
+      slides.forEach((el, i) => {
+        el.classList.toggle('active', i === current);
+      });
+      // counter
+      counter.textContent = (current + 1) + ' / ' + total;
+      // progress
+      progressFill.style.width = ((current + 1) / total * 100) + '%';
+      // dots
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === current);
+      });
+      // buttons
+      prevBtn.disabled = (current === 0);
+      nextBtn.disabled = (current === total - 1);
+    }
+
+    function goTo(index) {
+      if (index < 0) index = 0;
+      if (index >= total) index = total - 1;
+      if (index === current) return;
+      current = index;
+      updateUI();
+      // scroll the slide to top
+      const activeSlide = slides[current];
+      if (activeSlide) activeSlide.scrollTop = 0;
+    }
+
+    function next() { if (current < total - 1) goTo(current + 1); }
+    function prev() { if (current > 0) goTo(current - 1); }
+
+    // ── event listeners ──
+    prevBtn.addEventListener('click', prev);
+    nextBtn.addEventListener('click', next);
+
+    zonePrev.addEventListener('click', prev);
+    zoneNext.addEventListener('click', next);
+
+    // keyboard
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+    });
+
+    // ── touch swipe support ──
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const wrap = document.getElementById('slidesWrap');
+
+    wrap.addEventListener('touchstart', (e) => {
+      const touch = e.changedTouches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+    }, { passive: true });
+
+    wrap.addEventListener('touchend', (e) => {
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - touchStartX;
+      const dy = touch.clientY - touchStartY;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 30) {
+        e.preventDefault();
+        if (dx < 0) next();
+        else prev();
+      }
+    }, { passive: false });
+
+    // ── TAB LOGIC for BankAccount (slide index 7) ──
+    const tabContainer = document.getElementById('bankTabs');
+    if (tabContainer) {
+      const buttons = tabContainer.querySelectorAll('button');
+      buttons.forEach(btn => {
+        btn.addEventListener('click', function() {
+          // deactivate all tabs
+          buttons.forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          const target = this.dataset.tab;
+          // show corresponding content
+          document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+          const targetEl = document.getElementById('tab-' + target);
+          if (targetEl) targetEl.classList.add('active');
+        });
+      });
+    }
+
+    // ── init ──
+    updateUI();
+
+  })();
+</script>
+
+</body>
+</html>
