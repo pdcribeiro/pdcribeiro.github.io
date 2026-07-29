@@ -318,6 +318,10 @@
     }
     .zone-prev { width: 30%; }
     .zone-next { width: 70%; }
+/* Disable invisible touch zones on slides with interactive content */
+.no-touch-nav .click-zones {
+  pointer-events: none;
+}
 
     /* ───────────── SCROLLBAR STYLING ───────────── */
     .slide::-webkit-scrollbar { width: 4px; }
@@ -647,7 +651,7 @@ private void checkInvariant() {
     </div>
 
 <!-- ============ SLIDE 15: ASSIGNMENT (PS1) ============ -->
-<div class="slide" data-index="14">
+<div class="slide no-touch-nav" data-index="14">
   <h1>🧪 Problem Set 1: DateRange</h1>
   
   <div style="background:#f6f4f0; padding:12px 14px; border-radius:6px; margin-bottom:14px;">
