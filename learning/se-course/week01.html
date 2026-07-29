@@ -300,29 +300,6 @@
     .nav-btn.next { text-align: right; }
     .nav-btn.prev { text-align: left; }
 
-    /* ───────────── CLICK ZONES (invisible) ───────────── */
-    .click-zones {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      pointer-events: none;
-      z-index: 10;
-    }
-    .click-zones > div {
-      pointer-events: auto;
-      height: 100%;
-      cursor: pointer;
-    }
-    .zone-prev { width: 30%; }
-    .zone-next { width: 70%; }
-/* Disable invisible touch zones on slides with interactive content */
-.no-touch-nav .click-zones {
-  pointer-events: none;
-}
-
     /* ───────────── SCROLLBAR STYLING ───────────── */
     .slide::-webkit-scrollbar { width: 4px; }
     .slide::-webkit-scrollbar-track { background: transparent; }
@@ -651,7 +628,7 @@ private void checkInvariant() {
     </div>
 
 <!-- ============ SLIDE 15: ASSIGNMENT (PS1) ============ -->
-<div class="slide no-touch-nav" data-index="14">
+<div class="slide" data-index="14">
   <h1>🧪 Problem Set 1: DateRange</h1>
   
   <div style="background:#f6f4f0; padding:12px 14px; border-radius:6px; margin-bottom:14px;">
@@ -692,12 +669,6 @@ private void checkInvariant() {
   </p>
 </div>
 
-    <!-- INVISIBLE CLICK ZONES -->
-    <div class="click-zones" id="clickZones">
-      <div class="zone-prev" id="zonePrev"></div>
-      <div class="zone-next" id="zoneNext"></div>
-    </div>
-
   </div><!-- /slides-wrap -->
 
   <!-- NAVIGATION BUTTONS -->
@@ -721,8 +692,6 @@ private void checkInvariant() {
     const dotsContainer = document.getElementById('dots');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
-    const zonePrev = document.getElementById('zonePrev');
-    const zoneNext = document.getElementById('zoneNext');
 
     // ── build dots ──
     for (let i = 0; i < total; i++) {
@@ -767,9 +736,6 @@ private void checkInvariant() {
     // ── event listeners ──
     prevBtn.addEventListener('click', prev);
     nextBtn.addEventListener('click', next);
-
-    zonePrev.addEventListener('click', prev);
-    zoneNext.addEventListener('click', next);
 
     // keyboard
     document.addEventListener('keydown', (e) => {
