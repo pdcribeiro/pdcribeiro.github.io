@@ -155,7 +155,10 @@
       slider.value = Math.max(40, Math.min(240, Number(value)));
       bpm.value = slider.value;
       bpm.textContent = slider.value;
+      localStorage.setItem('metronome:bpm', slider.value);
     }
+
+    setTempo(localStorage.getItem('metronome:bpm') ?? slider.value);
 
     function tick() {
       const now = audio.currentTime;
