@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f4f0">
+  <title>Metronome</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f4f0;
+      color: #20211f;
+      font-synthesis: none;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    main {
+      width: min(100%, 360px);
+      display: grid;
+      justify-items: center;
+      gap: 34px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: #777872;
+    }
+
+    .tempo {
+      display: flex;
+      align-items: baseline;
+      gap: 9px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    output {
+      min-width: 3ch;
+      text-align: center;
+      font-size: clamp(76px, 22vw, 104px);
+      line-height: 1;
+      font-weight: 500;
+      letter-spacing: -.08em;
+    }
+
+    .unit { color: #8b8c85; font-size: 14px; }
+
+    .controls {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 48px 1fr 48px;
+      align-items: center;
+      gap: 18px;
+    }
+
+    button {
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .step {
+      width: 48px;
+      height: 48px;
+      border: 1px solid #ddddd6;
+      border-radius: 50%;
+      background: transparent;
+      font-size: 22px;
+      color: #555650;
+      transition: background .15s, border-color .15s;
+    }
+
+    .step:hover { background: #ebeae4; border-color: #cecec6; }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #343630;
+      cursor: pointer;
+    }
+
+    .play {
+      width: 100%;
+      min-height: 54px;
+      border: 0;
+      border-radius: 999px;
+      background: #252622;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      transition: transform .15s, background .15s;
+    }
+
+    .play:hover { background: #3b3c36; }
+    .play:active { transform: scale(.98); }
+    .hint { margin: -18px 0 0; color: #92938c; font-size: 12px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main aria-label="Metronome">
+    <h1>Metronome</h1>
+    <div class="tempo"><output id="bpm" aria-live="polite">120</output><span class="unit">BPM</span></div>
+    <div class="controls">
+      <button class="step" id="decrease" type="button" aria-label="Decrease tempo">−</button>
+      <input id="slider" type="range" min="40" max="240" value="120" aria-label="Tempo">
+      <button class="step" id="increase" type="button" aria-label="Increase tempo">+</button>
+    </div>
+    <button class="play" id="toggle" type="button">Start</button>
+    <p class="hint">Space to start or stop</p>
+  </main>
+
+  <script>
+    const bpm = document.querySelector('#bpm');
+    const slider = document.querySelector('#slider');
+    const toggle = document.querySelector('#toggle');
+    let audio;
+    let timer;
+    let nextBeat = 0;
+    let playing = false;
+
+    function setTempo(value) {
+      slider.value = Math.max(40, Math.min(240, Number(value)));
+      bpm.value = slider.value;
+      bpm.textContent = slider.value;
+    }
+
+    function tick() {
+      const now = audio.currentTime;
+      while (nextBeat < now + 0.1) {
+        const oscillator = audio.createOscillator();
+        const gain = audio.createGain();
+        oscillator.frequency.value = 1000;
+        gain.gain.setValueAtTime(0.0001, nextBeat);
+        gain.gain.exponentialRampToValueAtTime(0.22, nextBeat + 0.003);
+        gain.gain.exponentialRampToValueAtTime(0.0001, nextBeat + 0.045);
+        oscillator.connect(gain).connect(audio.destination);
+        oscillator.start(nextBeat);
+        oscillator.stop(nextBeat + 0.05);
+        nextBeat += 60 / Number(slider.value);
+      }
+    }
+
+    async function start() {
+      audio ||= new (window.AudioContext || window.webkitAudioContext)();
+      await audio.resume();
+      nextBeat = audio.currentTime;
+      playing = true;
+      toggle.textContent = 'Stop';
+      timer = setInterval(tick, 25);
+      tick();
+    }
+
+    function stop() {
+      playing = false;
+      clearInterval(timer);
+      toggle.textContent = 'Start';
+    }
+
+    toggle.addEventListener('click', () => playing ? stop() : start());
+    slider.addEventListener('input', () => setTempo(slider.value));
+    document.querySelector('#decrease').addEventListener('click', () => setTempo(Number(slider.value) - 1));
+    document.querySelector('#increase').addEventListener('click', () => setTempo(Number(slider.value) + 1));
+    document.addEventListener('keydown', event => {
+      if (event.code === 'Space' && !['INPUT', 'BUTTON'].includes(document.activeElement.tagName)) {
+        event.preventDefault();
+        playing ? stop() : start();
+      }
+    });
+  </script>
+</body>
+</html>
